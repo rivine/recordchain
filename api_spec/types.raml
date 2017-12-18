@@ -1,0 +1,225 @@
+
+# for capnp see Users/kristofdespiegeleer/code/github/jumpscale/core9/JumpScale9/data/blockchain/schemas, need to generate
+bdomain:
+  type: object
+  description: blockchain domain
+  properties:
+    id:
+      required: true
+      description: is increment id for any domain in a blockchain, is stored in itself in bdomain 1 (always)
+      type: number
+      format: uint32
+    uid:
+      required: true
+      description: is unique id which stays the same even after mods
+      type: number
+      format: uint32    
+    moddate:
+      required: true
+      description: last modification date
+      type: number
+      format: uint32
+    author:
+      required: true
+      description: id of author who created this bobject
+      type: number
+      format: uint32
+    name:
+      required: true
+      description: name of the domain, needs to be unique
+      type: string
+    description:
+      required: false
+      description: freely to be given description by owner of the domain
+      type: string      
+    signature:
+      required: true
+      description: signature done by digital.me private key of author (8 bytes)
+      type: string    
+    admins:
+      required: true
+      description: list of owners which are people who administer this domain
+      type: number[]
+      format: int32    
+    addr:
+      required: false
+      description: is the address given by the digital.me system, is for the master of this blockchain
+      type: string        
+    hash:
+      required: true
+      description: md5 of (id+moddate+author+name+signature+owners(sorted)+addr+hash previous message)
+      type: string
+
+bobject:
+  type: object
+  description: blockchain object
+  properties:
+    id:
+      required: true
+      description: is incremental id for any object in a blockchain, unique for all changes
+      type: number
+      format: uint32
+    uid:
+      required: false
+      description: is unique id which stays the same even after mods, there needs to be lookup table
+      type: number
+      format: uint32          
+    key:
+      required: true
+      description: secret or key, can be used to give someone access to data of this obj, max 32 bytes
+      type: string       
+    domain:
+      required: true
+      description: is unique id for the domain in which this bobject lives e.g. user.system
+      type: number
+      format: uint32
+    moddate:
+      required: true
+      description: last modification date
+      type: number
+      format: uint32
+    author:
+      required: true
+      description: id of author who created this bobject
+      type: number
+      format: uint32
+    data:
+      required: true
+      description: the capnp data
+      type: string
+    signature:
+      required: true
+      description: signature done by digital.me private key of author (8 bytes)
+      type: string
+    hash:
+      required: true
+      description: md5 of (id+domain+moddate+author+data+signature+hash previous message)
+      type: string
+    compression_type:
+      required: false
+      description: is the compression type of the message, if not specified then non compressed
+      enum: [ none, blosc, snappy ]
+    acl:
+      required: true
+      description: link to acl object to allow someone access or not
+      type: number
+      format: uint32
+  example:
+    id: 10    
+    name: "Rabbit From Egypt"
+    digitalme_url: "rabbit.luxor.egypt"
+    alias:
+    - "rabbit"
+    - "gouny1"
+    compression_type: "blosc"
+    addr: "192.168.1.1"
+
+#stored on bobj
+user:
+  type: object
+  properties:
+    uid:
+      required: true
+      description: is unique id for a user, increments
+      type: number
+      format: int32        
+    alias:
+      required: true
+      description: chosen name(s), does not have to be unique, public readable, only relevant in all groups you are part off.
+      type: string[]
+    key_pub:
+      required: false
+      description: public key which is used for validation & encryption
+      type: string[]
+    addr:
+      required: false
+      description: is the address given by the digital.me system, is unique per user & can change
+      type: string
+            
+  example:
+    id: 10    
+    addr: "rabbit.luxor.egypt"
+    alias:
+    - "rabbit"
+    - "gouny1"
+      
+#stored on bobj
+group:
+  type: object
+  properties:
+    uid:
+      required: true
+      description: is unique id for a group, increments
+      type: number
+      format: int32      
+    alias:
+      required: true
+      description: chosen name(s), does not have to be unique, public readable, only relevant in all parent groups
+      type: string[]
+    owners:
+      required: true
+      description: list of owners which are people who administer this group and can add/remove users
+      type: number[]
+      format: int32
+    key_pub:
+      required: false
+      description: public key which is used for validation & encryption
+      type: string[]
+    addr:
+      required: false
+      description: is the address given by the digital.me system, is unique per group & can change
+      type: string
+  example:
+    id: 10    
+    addr: "rabbitgroup.luxor.egypt"
+    owners: [1,2]
+    alias:
+    - "gig.engineering"
+
+acl:
+  type: object
+  properties:
+    uid:
+      required: true
+      description: is unique id for the acl, increments
+      type: number
+      format: int32
+    aci:
+      required: true
+      description: list of access control items
+      type: ACI[]
+    hash:
+      required: true
+      description: md5 hash of concatenation of ACI hashes, used to find this acl to avoid duplicates
+      type: text      
+
+aci:
+  type: object
+  properties:
+    uid:
+      required: true
+      description: is unique id for the acl, increments
+      type: number
+      format: int32  
+    groups:
+      required: false
+      description: link to group(s)
+      type: number[]
+      format: int32
+    users:
+      required: false
+      description: link to user(s)
+      type: number[]
+      format: int32      
+    right:
+      required: true
+      description: """
+        text e.g. rwdl- (admin read write delete list -), freely to be chosen
+        admin means all rights (e.g. on / = namespace or filesystem level all rights for everything)
+        '-' means remove all previous ones (is to stop recursion), if group=0,user=0 then is for all users & all groups
+      """
+      type: text
+    hash:
+      required: true
+      description: md5 hash of id+sorted_groups+sorted_users+right, used to make sure we only link acl once
+      type: text

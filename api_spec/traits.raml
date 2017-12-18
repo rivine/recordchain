@@ -1,0 +1,33 @@
+#%RAML 1.0 traits
+
+stdresponse:
+  responses:
+    '200':
+      body:
+        application/json:
+          type: <<resourcePathName | !singularize | !uppercamelcase>>
+
+stdresponsetype:
+  responses:
+    '200':
+      body:
+        application/json:
+          type: <<ttype>>
+
+authfailure:
+  responses:
+    '403':
+      body:
+        application/json:
+          type: string
+      description: Authentication failure or  <<resourcePathName | !singularize | !lowercase >> not viewable
+
+listresponse:
+    displayName:  list<<resourcePathName | !pluralize  | !uppercamelcase >>
+    description: Get a list of <<resourcePathName | !pluralize  | !lowercase >>
+    responses:
+      '200':
+        body:
+          application/json:
+            type: <<resourcePathName | !singularize | !uppercamelcase>>[]
+        description: Array of <<resourcePathName | !singularize | !uppercamelcase>> objects

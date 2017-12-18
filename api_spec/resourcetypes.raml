@@ -1,0 +1,97 @@
+
+std_id:
+  displayName: '{id}'
+  uriParameters:
+    id:
+      description: Object identifier
+      type: string
+      displayName: Object identifier
+
+std_id_post:
+  displayName: '{id}'
+  uriParameters:
+    id:
+      description: Object identifier
+      type: string
+      displayName: Object identifier
+  post:
+    is: [stdresponse]
+    displayName: update<<resourcePathName | !singularize | !uppercamelcase>>
+    description: Update <<resourcePathName | !singularize>> configuration
+    body:
+      application/json:
+        type: <<resourcePathName | !singularize | !uppercamelcase>>
+
+std_id_get_post:
+  displayName: '{id}'
+  uriParameters:
+    id:
+      description: Object identifier <<descr>>
+      type: string
+      displayName: Object identifier
+
+  get:
+    is: [stdresponse,authfailure]
+    displayName: get<<resourcePathName | !singularize | !uppercamelcase>>
+    description: Get <<resourcePathName | !singularize>>, <<descr>>
+
+  post:
+    is: [stdresponse,authfailure]
+    displayName: update<<resourcePathName | !singularize | !uppercamelcase>>
+    description: Update <<resourcePathName | !singularize>>
+    body:
+      application/json:
+        type: <<resourcePathName | !singularize | !uppercamelcase>>
+
+std_id_get_post_del:
+  displayName: '{id}'
+  uriParameters:
+    id:
+      description: <<descr>>
+      type: string
+
+  get:
+    is: [stdresponse,authfailure]
+    displayName: get<<resourcePathName | !singularize | !uppercamelcase>>
+    description: Get <<resourcePathName | !singularize>>, <<descr>>
+
+  post:
+    is: [stdresponse,authfailure]
+    displayName: update<<resourcePathName | !singularize | !uppercamelcase>>
+    description: Update <<resourcePathName | !singularize>>
+    body:
+      application/json:
+        type: <<resourcePathName | !singularize | !uppercamelcase>>
+
+  delete:
+    is: [stdresponse,authfailure]
+    displayName: delete<<resourcePathName | !singularize | !uppercamelcase>>
+    description: Delete <<resourcePathName | !singularize>>
+    body: {}
+    responses:
+      '200':
+        # body:
+          # application/json:
+          #    type: <<resourcePathName | !singularize | !uppercamelcase>>DeleteStatus
+        description: <<resourcePathName | !singularize | !uppercamelcase>> deleted
+
+std_root_list:
+  displayName: list<<resourcePathName | !singularize | !uppercamelcase >>
+  get:
+    is: [listresponse,authfailure]
+
+std_root_get:
+  displayName: get<<resourcePathName | !singularize | !uppercamelcase >>
+  get:
+    is: [stdresponse]
+
+std_root_get_id:
+  displayName: '{id}'
+  uriParameters:
+    id:
+      description: <<descr>>
+      type: string
+      displayName: Object identifier
+
+  get:
+    is: [listresponse,authfailure]

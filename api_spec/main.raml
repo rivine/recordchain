@@ -1,0 +1,42 @@
+#%RAML 1.0
+title: User/Group example api
+version: 0.8.0
+baseUri: 'http://127.0.0.1:5000/'
+mediaType: application/json
+protocols:
+  - HTTPS
+
+types: !include types.raml
+types: !include types_md.raml
+resourceTypes:  !include resourcetypes.raml
+traits: !include traits.raml
+
+/user:
+  type: {std_root_list}
+  '/{id}':
+    type: {std_id_get_post_del: {descr: id=int} }
+
+/group:
+  type: {std_root_list}
+  '/{id}':
+    type: {std_id_get_post_del: {descr: id=int} }
+
+/bobject:
+  type: {std_root_list}
+  '/{id}':
+    type: {std_id_get_post_del: {descr: id=int} }
+
+/bdomain:
+  type: {std_root_list}
+  '/{id}':
+    type: {std_id_get_post_del: {descr: id=int} }
+
+/acl:
+  type: {std_root_list}
+  '/{id}':
+    type: {std_id_get_post_del: {descr: id=int} }
+
+/dir:
+  type: {std_root_list}
+  '/{id}':
+    type: {std_id_get_post_del: {descr: id=int} }

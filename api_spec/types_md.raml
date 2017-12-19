@@ -54,13 +54,12 @@ special:
       type: string    
     type:
       required: true
-      description: """
+      description: |
         type of the special object
           0 => socket       (S_IFSOCK)
           1 => block device (S_IFBLK)
           2 => char. device (S_IFCHR)
-          3 => fifo pipe    (S_IFIFO)        
-        """
+          3 => fifo pipe    (S_IFIFO)
       enum: [ socket, block, char, fifo ]
     data:
       required: false

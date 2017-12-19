@@ -210,14 +210,13 @@ aci:
       required: false
       description: link to user(s)
       type: number[]
-      format: int32      
+      format: int32
     right:
       required: true
-      description: """
+      description: |
         text e.g. rwdl- (admin read write delete list -), freely to be chosen
         admin means all rights (e.g. on / = namespace or filesystem level all rights for everything)
         '-' means remove all previous ones (is to stop recursion), if group=0,user=0 then is for all users & all groups
-      """
       type: text
     hash:
       required: true

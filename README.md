@@ -5,13 +5,12 @@ like a blockchain but then based on records like in a db
 
 ## Main entities 
 
-### Chain
-
-Stores all bdomains
+### Blockchain
+We have 2 separate chains 1 for bdomains and 1 for bobjects
 
 
 ### Bdomain (Blockchain Domain)
-Domains where BObjects live in.
+BDomains are stored in a blockchain
 * id: incremental ID assigned to the domain.
 * uid: unique id that stays the same even after modifications 
 * name: human readable name for the domain.
@@ -21,11 +20,12 @@ Domains where BObjects live in.
 * signature: author signature.
 * addr: address given by digital.me
 * admins: ids of the admins of this domain.
-* hash: (id+moddate+author+name+signature+owners(sorted)+addr+hash previous domain?) 
+* hash: (id+moddate+author+name+signature+owners(sorted)+addr+hash previous domain) 
+
 
 ### BObjects
-always stored in BDomain
-* id: incremental ID assigned to the domain.
+Bobjects stored in their own separate chain
+* id: incremental ID assigned to the object.
 * uid: unique id that stays the same even after modifications (lookup table how does it practically works?)
 * key: secret or key to access the data.
 * domain: the domain where the bobject belongs.
@@ -33,7 +33,7 @@ always stored in BDomain
 * author: domain creator id (int)
 * data: capnp data (User/Group/ACL/ACI)
 * signature: author signature.
-* hash: (id+domain+moddate+author+data+signature+hash previous bobject in the bdomain)
+* hash: (id+domain+moddate+author+data+signature+hash previous bobject)
 * compression_type: none, blosc, or snappy.
 * acl:  link to acl object to allow someone access or not?
 

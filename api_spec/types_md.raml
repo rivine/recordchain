@@ -124,6 +124,24 @@ link_bobject:
       format: uint32   
   
 
+#only used for dirs & files, if other items underneith dir inherit from dir       
+posix:
+  type: object
+  properties:
+    mode:
+      required: false
+      description: posix mode
+      type: number
+      format: uint16
+    uname:
+      required: true
+      description: posix uname
+      type: string
+    gname:
+      required: true
+      description: posix gname (group)
+      type: string
+
 dir:
   type: object
   properties:
@@ -180,22 +198,3 @@ dir:
       type: number
       format: uint32
       
-
-#only used for dirs & files, if other items underneith dir inherit from dir       
-posix:
-  type: object
-  properties:
-    mode:
-      required: false
-      description: posix mode
-      type: number
-      format: uint16
-    uname:
-      required: true
-      description: posix uname
-      type: string
-    gname:
-      required: true
-      description: posix gname (group)
-      type: string
-

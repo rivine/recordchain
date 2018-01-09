@@ -6,8 +6,11 @@ mediaType: application/json
 protocols:
   - HTTPS
 
-types: !include types.raml
+types: !include types_bdomain_bobj.raml
+types: !include types_user_group.raml
+types: !include types_acl.raml
 types: !include types_md.raml
+
 resourceTypes:  !include resourcetypes.raml
 traits: !include traits.raml
 

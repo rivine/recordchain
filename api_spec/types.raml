@@ -32,10 +32,6 @@ bdomain:
       required: false
       description: freely to be given description by owner of the domain
       type: string      
-    signature:
-      required: true
-      description: signature done by digital.me private key of author (8 bytes)
-      type: string    
     admins:
       required: true
       description: list of owners which are people who administer this domain
@@ -45,9 +41,9 @@ bdomain:
       required: false
       description: is the address given by the digital.me system, is for the master of this blockchain
       type: string        
-    hash:
+    signature:
       required: true
-      description: md5 of (id+moddate+author+name+signature+owners(sorted)+addr+hash previous message)
+      description: signature with priv key of author of md5(id+moddate+author+name+signature+owners(sorted)+addr+signature previous message)
       type: string
 
 bobject:
@@ -89,21 +85,12 @@ bobject:
       type: string
     signature:
       required: true
-      description: signature done by digital.me private key of author (8 bytes)
-      type: string
-    hash:
-      required: true
-      description: md5 of (id+domain+moddate+author+data+signature+hash previous message)
+      description: signature with priv key of author of md5(id+domain+moddate+author+data+signature+signature previous message)
       type: string
     compression_type:
       required: false
       description: is the compression type of the message, if not specified then non compressed
       enum: [ none, blosc, snappy ]
-    acl:
-      required: true
-      description: link to acl object to allow someone access or not
-      type: number
-      format: uint32
   example:
     id: 10    
     name: "Rabbit From Egypt"

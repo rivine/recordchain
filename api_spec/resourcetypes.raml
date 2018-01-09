@@ -20,7 +20,7 @@ std_id_post:
     description: Update <<resourcePathName | !singularize>> configuration
     body:
       application/json:
-        type: <<resourcePathName | !singularize | !uppercamelcase>>
+        type: <<resourcePathName | !singularize >>
 
 std_id_get_post:
   displayName: '{id}'
@@ -41,7 +41,7 @@ std_id_get_post:
     description: Update <<resourcePathName | !singularize>>
     body:
       application/json:
-        type: <<resourcePathName | !singularize | !uppercamelcase>>
+        type: <<resourcePathName | !singularize >>
 
 std_id_get_post_del:
   displayName: '{id}'
@@ -61,7 +61,7 @@ std_id_get_post_del:
     description: Update <<resourcePathName | !singularize>>
     body:
       application/json:
-        type: <<resourcePathName | !singularize | !uppercamelcase>>
+        type: <<resourcePathName | !singularize >>
 
   delete:
     is: [stdresponse,authfailure]
@@ -73,7 +73,7 @@ std_id_get_post_del:
         # body:
           # application/json:
           #    type: <<resourcePathName | !singularize | !uppercamelcase>>DeleteStatus
-        description: <<resourcePathName | !singularize | !uppercamelcase>> deleted
+        description: <<resourcePathName | !singularize | !uppercamelcase >> deleted
 
 std_root_list:
   displayName: list<<resourcePathName | !singularize | !uppercamelcase >>

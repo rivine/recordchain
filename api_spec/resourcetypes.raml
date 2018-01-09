@@ -73,7 +73,7 @@ std_id_get_post_del:
         # body:
           # application/json:
           #    type: <<resourcePathName | !singularize | !uppercamelcase>>DeleteStatus
-        description: <<resourcePathName | !singularize >> deleted
+        description: <<resourcePathName | !singularize | !uppercamelcase >> deleted
 
 std_root_list:
   displayName: list<<resourcePathName | !singularize | !uppercamelcase >>

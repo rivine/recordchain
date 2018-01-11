@@ -1,5 +1,5 @@
 # recordchain
-like a blockchain but then based on records like in a db
+Chained database which stores users/teams/directory information, also ACL's capnp format on top of [0-db](https://github.com/zero-os/0-db)
 
 ![Chain](chain.png)
 

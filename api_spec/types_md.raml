@@ -6,9 +6,13 @@ fileblock:
   type: object
   properties:
     hash:
-      required: true
+      required: false
       description: File hash stored as key on the backend (of the block)
       type: string
+    zstormetadata:
+      required: false
+      description: metadata of zstor
+      type: string    
     key:
       required: false
       description: Encryption key (is optional, if not given then not encrypted)
@@ -36,9 +40,9 @@ file:
       description: UInt16 for size in 4kbytes, is same for all parts of file (apart from last one)
       type: number
       format: uint16 
-    key:
+    blocks:
       required: true
-      description: list of the hashes of the blocks
+      description: list of the parts of the file
       blocks: FileBlock[]
     posix:
       required: false
@@ -83,7 +87,7 @@ link:
       type: uint32     
     destname:
       required: true
-      description: id to directory where link points too
+      description: name of the file or other item in the directory
       type: uint32   
     type:
       required: true
@@ -124,6 +128,7 @@ link_bobject:
       format: uint32   
   
 
+<<<<<<< HEAD
 #only used for dirs & files, if other items underneith dir inherit from dir       
 posix:
   type: object
@@ -141,6 +146,29 @@ posix:
       required: true
       description: posix gname (group)
       type: string
+=======
+metadata:
+  type: object
+  properties:
+    name:
+      required: true
+      description: name of this bobject, to show in dir
+      type: string 
+    data:
+      required: true
+      description: metadata of zstor
+      type: string
+    category:
+      required: false
+      description: "category of the metadata, optional"
+      type: string
+    moddate:
+      required: true
+      description: epoch
+      type: number
+      format: uint32   
+  
+>>>>>>> cc7d926857c1920b71aca48e488bd6fd77e58e17
 
 dir:
   type: object
@@ -171,27 +199,31 @@ dir:
     files:
       required: true
       description: list of the file objects
-      blocks: file[] 
+      type: file[] 
     special_items:
       required: true
       description: list of the special objects
-      blocks: special[]       
+      type: special[]       
     link_items:
       required: true
       description: list of the special objects
-      blocks: link[]   
+      type: link[]   
+    metadata_items:
+      required: true
+      description: list of the metadata objects
+      type: metadata[]         
     bobject_items:
       required: true
       description: list of the blockchain objects
-      blocks: link_bobject[]
+      type: link_bobject[]
     subdirs:
       required: true
       description: link to other dir's which are under this dir, destname prop not used, can use Link obj for this
-      blocks: link[]   
+      type: link[]   
     posix:
       required: false
       description: posix object if storing files and used for filesystem
-      posix: posix
+      type: posix
     acl:
       required: true
       description: link to acl object to allow someone access or not

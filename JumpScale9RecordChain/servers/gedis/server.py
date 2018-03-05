@@ -5,7 +5,6 @@ import signal
 import gevent.signal
 from gevent.pool import Pool
 from gevent.server import StreamServer
-
 from .protocol import CommandParser, ResponseWriter
 
 JSBASE = j.application.jsbase_get_class()
@@ -102,34 +101,37 @@ class RedisServer(StreamServer, JSBASE):
         self._cmds[cmd] = callback
 
     def __handle_connection(self, socket, address):
-        self.logger.info('connection from %s', address)
+        self.logger.info('connection from {}'.format(address))
         parser = CommandParser(socket)
         response = ResponseWriter(socket)
 
         try:
             while True:
+                # import ipdb; ipdb.set_trace()
                 request = parser.read_request()
+                print("REQUEST: ", request)
                 cmd = request[0]
-
-                if not cmd in self._cmds:
+                if cmd not in self._cmds:
                     response.error('command not supported')
                     continue
 
                 # execute command callback
                 try:
                     result = self._cmds[cmd](request)
+                    print("Result: ",result)
                 except Exception as e:
                     print("exception in redis server")
                     eco = j.errorhandler.parsePythonExceptionObject(e)
                     response.error(str(eco))
-                self.logger.debug("response:%s:%s:%s"%(address,cmd,result))
+                    continue
+                self.logger.debug("response:{}:{}:{}".format(address,cmd,result))
                 response.encode(result)
 
         except ConnectionError as err:
-            self.logger.info('connection error: %s', str(err))
+            self.logger.info('connection error: {}'.format(str(err)))
         finally:
             parser.on_disconnect()
-            self.logger.info('close connection from %s', address)
+            self.logger.info('close connection from {}'.format(address))
 
     def start(self):
         self.logger.info("init server")

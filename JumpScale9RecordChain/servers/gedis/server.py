@@ -109,7 +109,6 @@ class RedisServer(StreamServer, JSBASE):
             while True:
                 # import ipdb; ipdb.set_trace()
                 request = parser.read_request()
-                print("REQUEST: ", request)
                 cmd = request[0]
                 if cmd not in self._cmds:
                     response.error('command not supported')
@@ -118,7 +117,6 @@ class RedisServer(StreamServer, JSBASE):
                 # execute command callback
                 try:
                     result = self._cmds[cmd](request)
-                    print("Result: ",result)
                 except Exception as e:
                     print("exception in redis server")
                     eco = j.errorhandler.parsePythonExceptionObject(e)

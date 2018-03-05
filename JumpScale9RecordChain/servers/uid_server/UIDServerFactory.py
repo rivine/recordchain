@@ -48,7 +48,7 @@ class UIDServerFactory(JSBASE):
         error=False
         try:
             r.execute_command("ERROR") #should raise error
-        except as Exception(e):
+        except Exception as e:
             error=True
         assert error
 

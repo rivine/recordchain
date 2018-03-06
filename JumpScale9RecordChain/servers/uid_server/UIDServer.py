@@ -13,14 +13,16 @@ def ping(request):
 
 
 class UIDServer(ServerClass):
-    def __init__(self,host='localhost', port=9999):
+    def __init__(self,host='127.0.0.1', port=9999):
         ServerClass.__init__(self, host=host, port=port)
         self.register_command('PING', ping)
+        self.register_command('TESTA', self.testa)
+        self.register_command('TESTB', self.testb)
 
     def testb(self, request):
-        return b"testworked"
+        return "testworked"
 
-    def test(self, request):
+    def testa(self, request):
         return "testworked"
 
 

@@ -43,7 +43,8 @@ class ResponseWriter(object):
         elif isinstance(value, str):
             self._bulk(value)
         elif isinstance(value, bytes):
-            self._bulk(self.encoder.decode(value))
+            # import ipdb; ipdb.set_trace()
+            self._bulk(value.decode())
 
     def status(self, msg="OK"):
         """Send a status."""

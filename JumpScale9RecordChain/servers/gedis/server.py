@@ -107,7 +107,6 @@ class RedisServer(StreamServer, JSBASE):
 
         try:
             while True:
-                # import ipdb; ipdb.set_trace()
                 request = parser.read_request()
                 cmd = request[0]
                 if cmd not in self._cmds:
@@ -115,6 +114,7 @@ class RedisServer(StreamServer, JSBASE):
                     continue
 
                 # execute command callback
+                result = None
                 try:
                     result = self._cmds[cmd](request)
                 except Exception as e:

@@ -2,21 +2,65 @@
 from JumpScale9 import j
 
 JSBASE = j.application.jsbase_get_class()
+import os
 
 from .SchemaProperty import SchemaProperty
 
+# import pystache
+
 
 class Schema(JSBASE):
-    def __init__(self):
+    def __init__(self, text=None):
         JSBASE.__init__(self)
+        self.properties = []
+        self.lists = []
+        self._template = None
+        self._obj_class = None
+        if text:
+            self._schema_from_text(text)
 
-    def schema_from_text(self, schema):
+    def _proptype_get(self, txt):
+
+        # import pudb; pudb.set_trace()
+
+        if "\\n" in txt:
+            proptype = j.data.types.multiline
+            defvalue = proptype.fromString(txt)
+
+        elif "'" in txt or "\"" in txt:
+            proptype = j.data.types.string
+            defvalue = proptype.fromString(txt)
+
+        elif "." in txt:
+            proptype = j.data.types.float
+            defvalue = proptype.fromString(txt)
+
+        elif "true" in txt.lower() or "false" in txt.lower():
+            proptype = j.data.types.bool
+            defvalue = proptype.fromString(txt)
+
+        elif "[]" in txt:
+            proptype = j.data.types.list
+            defvalue = []
+
+        elif j.data.types.int.checkString(txt):
+            proptype = j.data.types.int
+            defvalue = j.data.types.int.fromString(txt)
+
+        else:
+            raise RuntimeError("cannot find type for:%s" % txt)
+
+        return (proptype, defvalue)
+
+    def _schema_from_text(self, schema):
+        self.logger.debug("load schema:\n%s" % schema)
         systemprops = {}
+        self.properties = []
 
         errors = []
 
         def proptype(prop):
-            
+            j.data.types
 
         def process(line):
             propname, line = line.split("=", 1)
@@ -27,16 +71,29 @@ class Schema(JSBASE):
                 line, comment = line.split("#", 1)
                 line = line.strip()
                 comment = comment.strip()
+            else:
+                comment = ""
 
             if "(" in line:
                 proptype = line.split("(")[1].split(")")[0].strip().lower()
                 line = line.split("(")[0].strip()
+                proptype = j.data.types.get(proptype)
+                defvalue = proptype.fromString(line)
+            else:
+                proptype, defvalue = self._proptype_get(line)
 
-            if '"' in post:
-                #string or Numeric
+            if ":" in propname:
+                # self.logger.debug("alias:%s"%propname)
+                propname, alias = propname.split(":", 1)
+            else:
+                alias = propname
+
+            return (propname, alias, proptype, defvalue, comment)
 
         nr = 0
         for line in schema.split("\n"):
+            line = line.strip()
+            self.logger.debug("L:%s" % line)
             nr += 1
             if line.strip() == "":
                 continue
@@ -45,22 +102,74 @@ class Schema(JSBASE):
                 systemprop_val = line.split("=")[1].strip()
                 systemprops[systemprop_name] = systemprop_val
                 continue
-            if line..startswith("#"):
+            if line.startswith("#"):
                 continue
             if "=" not in line:
-                errors.append((nr, "did not find =, need to be there to define field"))
+                errors.append(
+                    (nr, "did not find =, need to be there to define field"))
                 continue
-            process(line)
-            
 
-    def test(self):
-        schema = """
-        @name = test
-        nr = 0
-        date_start = 0 (D)
-        description = ""
-        token_price = " USD"
-        cost_estimate:hw_cost = 0.0
-        U = 0.0
-        pool_type = "managed,unmanaged" (E)
-        """
+            propname, alias, proptype, defvalue, comment = process(line)
+
+            p = SchemaProperty()
+
+            p.name = propname
+            p.default = defvalue
+            p.comment = comment
+            p.js9type = proptype
+            p.alias = alias
+
+            if p.js9type.NAME is "list":
+                self.lists.append(p)
+            else:
+                self.properties.append(p)
+
+        for key, val in systemprops.items():
+            self.__dict__[key] = val
+
+        for s in self.properties:
+            self.__dict__["_%s_type" % s.name] = s
+
+        for s in self.lists:
+            self.__dict__["_%s_type" % s.name] = s
+
+    @property
+    def code_template(self):
+        if self._template == None:
+            self._template = j.data.schema.template_engine.get_template(
+                "template_obj.py")
+        return self._template
+
+    @property
+    def code(self):
+        #make sure the defaults render
+        for prop in self.properties:
+            prop.default_as_python_code
+        for prop in self.lists:
+            prop.default_as_python_code
+        code = self.code_template.render(obj=self)
+        print(code)
+        return code
+
+    @property
+    def objclass(self):
+        if self._obj_class is None:
+            path = j.data.schema.code_generation_dir + "dbobj_%s.py" % self.name
+            j.sal.fs.writeFile(path,self.code)
+            exec("from dbobj_%s import %s"% (self.name, self.name))
+            self._obj_class = eval(self.name)
+        return self._obj_class
+
+    def get(self,data={}):
+        return self.objclass(schema=self,data=data)
+
+
+    def __str__(self):
+        out=""
+        for item in self.properties:
+            out += str(item) + "\n"
+        for item in self.lists:
+            out += str(item) + "\n"
+        return out
+
+    __repr__=__str__

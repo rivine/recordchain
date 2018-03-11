@@ -53,7 +53,6 @@ class UIDServerFactory(JSBASE):
         self.logger.info("[+]Test passed")
 
         #PERFORMANCE TEST
-        #NEED TO ACHIEVE +500 rec/sec
         def perf_test():
             futures = []
             MAX_NUM = 200000
@@ -77,6 +76,7 @@ class UIDServerFactory(JSBASE):
         def bench(times=5):
             return sum([perf_test() for i in range(times)]) / times
 
+        #[+]Average: 6624.2 commands/second
         self.logger.info("[+]Average: {} commands/second".format(bench()))
 
     
@@ -103,10 +103,10 @@ class UIDServerFactory(JSBASE):
         self.logger.info("First assersions passed")
         try:
             for i in range(100):
-                k = r.execute_command("SET a{} dmdm".format(i))
-                self.logger.info("NEW KEY: {}".format(k))
-                value = r.execute_command("GET {}".format(k.decode()))
-                print("VAL: ", value)
+                k = r.execute_command("SETF", "a{}".format(i), "dmdm")
+                # self.logger.info("NEW KEY: {}".format(k))
+                value = r.execute_command("GETF", k)
+                # print("VAL: ", value)
                 assert value == b"dmdm"
         except Exception as e:
             print("ERROR: ", e)
@@ -115,7 +115,6 @@ class UIDServerFactory(JSBASE):
         self.logger.info("[+]Test passed")
 
         #PERFORMANCE TEST
-        #NEED TO ACHIEVE +500 rec/sec
         def perf_test():
             futures = []
             MAX_NUM = 200000
@@ -123,7 +122,7 @@ class UIDServerFactory(JSBASE):
             self.logger.info("Started benching with {}".format(MAX_NUM))
             with ThreadPoolExecutor(max_workers=4) as executor:
                 for i in range(MAX_NUM):
-                    future = executor.submit(r.execute_command, "TESTA")
+                    future = executor.submit(r.execute_command, "SETF", b"AKEY", b"AVALUE")
                     futures.append(future)
             
             self.logger.debug("FUTURES LEN: ", len(futures))
@@ -139,4 +138,5 @@ class UIDServerFactory(JSBASE):
         def bench(times=5):
             return sum([perf_test() for i in range(times)]) / times
 
-        # self.logger.info("[+]Average: {} commands/second".format(bench())) 
+        # * [+]Average: 3883.2 commands/second
+        self.logger.info("[+]Average: {} commands/second".format(bench())) 

@@ -14,20 +14,20 @@ class ModelBaseData(ModelBase3):
     @property
     def data(self):
         if self._data is None:
-            self._data = j.data.capnp.getObj(self.dbobj.dataSchema, binaryData=self.dbobj.data)
+            self._data = j.data.capnp3.getObj(self.dbobj.dataSchema, binaryData=self.dbobj.data)
         return self._data
 
     @property
     def dataSchema(self):
-        return j.data.capnp.getSchema(self.dbobj.dataSchema)
+        return j.data.capnp3.getSchema(self.dbobj.dataSchema)
 
     @property
     def dataJSON(self):
-        return j.data.capnp.getJSON(self.data)
+        return j.data.capnp3.getJSON(self.data)
 
     @property
     def dataBinary(self):
-        return j.data.capnp.getBinaryData(self.data)
+        return j.data.capnp3.getBinaryData(self.data)
 
 
 def getText(text):

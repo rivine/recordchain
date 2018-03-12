@@ -44,7 +44,7 @@ class Capnp(JSBASE):
     """
 
     def __init__(self):
-        self.__jslocation__ = "j.data.capnp"
+        self.__jslocation__ = "j.data.capnp3"
         self.__imports__ = "pycapnp"
         self._schema_cache = {}
         self._capnpVarDir = j.sal.fs.joinPaths(j.dirs.VARDIR, "capnp")
@@ -71,7 +71,7 @@ class Capnp(JSBASE):
         example to use:
             ```
             #if we use a modelBaseClass do something like
-            ModelBaseWithData = j.data.capnp.getModelBaseClass()
+            ModelBaseWithData = j.data.capnp3.getModelBaseClass()
             class MyModelBase(ModelBaseWithData):
                 def index(self):
                     # put indexes in db as specified
@@ -85,7 +85,7 @@ class Capnp(JSBASE):
 
             mydb=j.data.kvs.getMemoryStore(name="mymemdb")
 
-            collection=j.data.capnp.getModelCollection(schema=ModelCapnp,category="issue",modelBaseClass=MyModelBase,db=mydb)
+            collection=j.data.capnp3.getModelCollection(schema=ModelCapnp,category="issue",modelBaseClass=MyModelBase,db=mydb)
 
             ```
         """
@@ -206,7 +206,7 @@ class Capnp(JSBASE):
 
     def test(self):
         '''
-        js9 'j.data.capnp.test()'
+        js9 'j.data.capnp3.test()'
         '''
         import time
         capnpschema = '''
@@ -224,6 +224,7 @@ class Capnp(JSBASE):
 
           #name of actor e.g. node.ssh (role is the first part of it)
           name @1 :Text;
+          descr @2 :Text;
 
         }
         '''

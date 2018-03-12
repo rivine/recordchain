@@ -30,7 +30,7 @@ class ModelBaseCollection3(JSBASE):
         @param category str: category of the model. need to be the same as the category of the single model class
         @param namespace: namespace used to store these object in key-value store
         @param modelBaseClass: important to pass the class not the object. Class used to create instance of this category.
-                               Need to inherits from JumpScale9.data.capnp.ModelBase.ModelBase
+                               Need to inherits from ModelBase.ModelBase
         @param db: connection object to the key-value store
         @param indexDb: connection object to the key-value store used for indexing
         """

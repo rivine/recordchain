@@ -14,7 +14,17 @@ class ZDBServers(JSConfigBase):
         super().__init__(child_class=ZDBServer)
         self.rootdir = j.sal.fs.joinPaths(j.dirs.VARDIR, 'zdb')
 
-    def get_by_params(self, instance="main", rootdir=None, addr="127.0.0.1", port=9900):
+    def get_by_params(self, instance="main", adminsecret="", mode = "direct", rootdir=None, addr="127.0.0.1", port=9900, verbose = True, id_enable=True, reset=False):
+        """
+        read more info at https://github.com/rivine/0-db/blob/master/README.md
+        mode: user,direct,seq
+
+        id_enable means we have an index file where we keep relation between id & position in the database (zdb), based on int
+
+        """
+
+        if mode not in ["user","seq","direct"]:
+            raise RuntimeError("only supported modes are: user,seq,direct, got:%s"%mode)            
 
         if not rootdir:
             rootdir = self.rootdir
@@ -25,18 +35,26 @@ class ZDBServers(JSConfigBase):
         data["path"] = path
         data["addr"] = addr
         data["port"] = int(port)
+        data["mode"] = mode
+        data["adminsecret_"] = adminsecret
+        data["verbose"] = verbose
+        data["id_enable"] = id_enable
 
-        return self.get(instance=instance, data=data)
+        s = self.get(instance=instance, data=data)
+        if reset:
+            s.destroy()
+
+        return s
 
     def build(self):
         j.tools.prefab.local.zero_os.zos_db.build(install=True)
 
     def test(self):
         """
-        js9 'servers.zdb.test()'
+        js9 'j.servers.zdb.test()'
         """
-        self.build()
-        db = self.get_by_params()
+        # self.build()
+        db = self.get_by_params(instance="test",adminsecret="1234",reset=True)
         db.start()
-        cl = db.client
+        cl = db.client_get()
         cl.test()

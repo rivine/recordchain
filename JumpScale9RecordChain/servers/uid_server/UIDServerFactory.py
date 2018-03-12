@@ -142,3 +142,51 @@ class UIDServerFactory(JSBASE):
         if dobenchmarks:
             # * [+]Average: 3883.2 commands/second
             self.logger.info("[+]Average: {} commands/second".format(bench())) 
+
+
+    def test3(self, dobenchmarks=True):
+        """
+        js9 'j.servers.uidserver.test()'
+
+        will start in tmux the server & then connect to it using redisclient
+
+        """
+        cmd = "js9 'j.servers.uidserver.start()'"
+        j.tools.tmux.execute(cmd, session='main', window='uidserver',pane='main', session_reset=False, window_reset=True)
+
+        redis_client = j.clients.redis_config.get_by_params(
+            instance='uidserver', ipaddr='localhost', port=9999, password='', unixsocket='', ardb_patch=False, set_patch=True)
+        r = redis_client.redis
+
+        self.logger.info("[+]Test passed")
+
+        #PERFORMANCE TEST
+        def perf_test():
+            futures = []
+            MAX_NUM = 200000
+            start = now()
+            self.logger.info("Started benching INCR with {}".format(MAX_NUM))
+            r.execute_command("SETF", b"AKEY", b"1")
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                for i in range(MAX_NUM):
+                    future = executor.submit(r.execute_command, "INCRF", b"AKEY")
+                    futures.append(future)
+            
+            self.logger.debug("FUTURES LEN: ", len(futures))
+            ## ASSERT ALL DONE
+            while not all([f.done() for f in futures]):
+                continue
+
+            delta = now() - start          
+            donefutures_len = len(futures)
+            self.logger.debug("DONE COMMANDS {} in {} seconds  =>  {} command/second".format( donefutures_len, delta, donefutures_len/int(delta)))
+            print(r.execute_command("GETF", b"AKEY", b"1"))
+
+            return int(donefutures_len / delta)
+
+        def bench(times=5):
+            return sum([perf_test() for i in range(times)]) / times
+
+        if dobenchmarks:
+            #* [+]Average: 7992.6 commands/second
+            self.logger.info("[+]Average: {} commands/second".format(bench()))

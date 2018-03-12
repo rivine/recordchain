@@ -114,9 +114,10 @@ class RedisServer(StreamServer, JSBASE):
                     continue
 
                 # execute command callback
-                result = None
+                result = ""
                 try:
                     result = self._cmds[cmd](request)
+                    self.logger.info( "Callback done and result {} , type {}".format(result, type(result)) )
                 except Exception as e:
                     print("exception in redis server")
                     eco = j.errorhandler.parsePythonExceptionObject(e)

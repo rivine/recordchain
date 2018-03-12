@@ -32,6 +32,8 @@ class ResponseWriter(object):
         """Respond with data."""
         # data = self.encoder.encode(value)
         # self._write(data)
+        # data = self.encoder.encode(value)
+        # self._write(data)
         if isinstance(value, (list, tuple)):
             self._write('*%d\r\n' % len(value))
             for v in value:
@@ -43,8 +45,7 @@ class ResponseWriter(object):
         elif isinstance(value, str):
             self._bulk(value)
         elif isinstance(value, bytes):
-            # import ipdb; ipdb.set_trace()
-            self._bulk(value.decode())
+            self._bulkbytes(value)
 
     def status(self, msg="OK"):
         """Send a status."""
@@ -60,9 +61,15 @@ class ResponseWriter(object):
         data = ["$", str(len(value)), "\r\n", value, "\r\n"]
         self._write("".join(data))
 
+    def _bulkbytes(self, value):
+        data = [b"$", str(len(value)).encode(), b"\r\n", value, b"\r\n"]
+        self._write(b"".join(data))
+
     def _write(self, data):
         if not self.dirty:
             self.dirty = True
+
         if isinstance(data, str):
-            data = data.encode('utf-8')
+            data = data.encode()
+        # print("SENDING {} {} on wire".format(data, type(data)))
         self.socket.sendall(data)

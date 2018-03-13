@@ -14,6 +14,7 @@ class SchemaProperty(JSBASE):
         self.isList = False
         self.enumeration = []
         self.comment = ""
+        self.pointer_type = None
 
     @property
     def default_as_python_code(self):

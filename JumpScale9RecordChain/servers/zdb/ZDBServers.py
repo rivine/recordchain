@@ -46,6 +46,14 @@ class ZDBServers(JSConfigBase):
 
         return s
 
+    def start(self,instance="test",adminsecret="", mode = "direct", rootdir=None, addr="127.0.0.1", port=9900, id_enable=True, reset=False):
+        """
+        js9 'j.servers.zdb.start(instance="test",port=8888,reset=True)'
+        """
+        s= self.get_by_params(instance=instance,adminsecret=adminsecret,mode =mode,rootdir=rootdir,addr=addr,port=port,id_enable=id_enable,reset=reset)
+        s.start()
+
+
     def build(self):
         j.tools.prefab.local.zero_os.zos_db.build(install=True)
 

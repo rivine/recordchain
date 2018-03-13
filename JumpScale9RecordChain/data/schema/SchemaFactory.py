@@ -54,8 +54,6 @@ class SchemaFactory(JSBASE):
         U = 0.0
         #pool_type = "managed,unmanaged" (E)  #NOT DONE FOR NOW
         """
-        # self.template_engine
-        # self.template_engine.autoescape=True
 
 
         s = self.schema_from_text(schema)

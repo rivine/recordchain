@@ -6,7 +6,6 @@ import os
 
 from .SchemaProperty import SchemaProperty
 
-# import pystache
 
 
 class Schema(JSBASE):
@@ -16,12 +15,11 @@ class Schema(JSBASE):
         self.lists = []
         self._template = None
         self._obj_class = None
+        self.hash = ""
         if text:
             self._schema_from_text(text)
 
     def _proptype_get(self, txt):
-
-        # import pudb; pudb.set_trace()
 
         if "\\n" in txt:
             proptype = j.data.types.multiline
@@ -54,6 +52,9 @@ class Schema(JSBASE):
 
     def _schema_from_text(self, schema):
         self.logger.debug("load schema:\n%s" % schema)
+
+        self.hash = j.data.hash.blake2_string(schema)
+
         systemprops = {}
         self.properties = []
 
@@ -66,6 +67,13 @@ class Schema(JSBASE):
             propname, line = line.split("=", 1)
             propname = propname.strip()
             line = line.strip()
+
+            if "!" in line:
+                line, pointer_type = line.split("!", 1)
+                pointer_type = pointer_type.strip()
+                line=line.strip()
+            else:
+                pointer_type = None
 
             if "#" in line:
                 line, comment = line.split("#", 1)
@@ -88,7 +96,7 @@ class Schema(JSBASE):
             else:
                 alias = propname
 
-            return (propname, alias, proptype, defvalue, comment)
+            return (propname, alias, proptype, defvalue, comment, pointer_type)
 
         nr = 0
         for line in schema.split("\n"):
@@ -109,7 +117,7 @@ class Schema(JSBASE):
                     (nr, "did not find =, need to be there to define field"))
                 continue
 
-            propname, alias, proptype, defvalue, comment = process(line)
+            propname, alias, proptype, defvalue, comment, pointer_type = process(line)
 
             p = SchemaProperty()
 
@@ -118,6 +126,7 @@ class Schema(JSBASE):
             p.comment = comment
             p.js9type = proptype
             p.alias = alias
+            p.pointer_type = pointer_type
 
             if p.js9type.NAME is "list":
                 self.lists.append(p)
@@ -136,9 +145,14 @@ class Schema(JSBASE):
     @property
     def code_template(self):
         if self._template == None:
-            self._template = j.data.schema.template_engine.get_template(
-                "template_obj.py")
+            self._template = j.data.schema.template_engine.get_template("template_obj.py")
         return self._template
+
+    @property
+    def capnp_template(self):
+        if self._template == None:
+            self._template = j.data.schema.template_engine.get_template("schema.capnp")
+        return self._template        
 
     @property
     def code(self):

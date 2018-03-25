@@ -53,12 +53,11 @@ class ZDBClient(JSConfigBase):
 
         redis = j.clients.redis.get(ipaddr=self.config.data['addr'],
                                     port=self.config.data['port'],
-                                    password=self.config.data['secret_'],
                                     fromcache=False)
 
         self.client = self._patch_redis_client(redis)
 
-        if self.config.data["adminsecret_"] is not "":
+        if self.config.data["adminsecret_"] is not "" and self.config.data["adminsecret_"] is not None:
             self.client.execute_command("AUTH", self.config.data["adminsecret_"])
 
         self.id_enable = bool(self.config.data["id_enable"])
@@ -83,7 +82,7 @@ class ZDBClient(JSConfigBase):
 
         def namespace_init(nsname, secret):
             # means the namespace does already exists
-            if secret is not "":
+            if secret is "":
                 self.client.execute_command("SELECT", nsname)
             else:
                 self.client.execute_command("SELECT", nsname, secret)

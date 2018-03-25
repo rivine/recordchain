@@ -14,6 +14,7 @@ class Schema(JSBASE):
         self.properties = []
         self.lists = []
         self._template = None
+        self._capnp_template = None
         self._obj_class = None
         self.hash = ""
         if text:
@@ -136,11 +137,20 @@ class Schema(JSBASE):
         for key, val in systemprops.items():
             self.__dict__[key] = val
 
+        nr=0
         for s in self.properties:
+            s.nr = nr
             self.__dict__["_%s_type" % s.name] = s
+            nr+=1
 
         for s in self.lists:
+            s.nr = nr
             self.__dict__["_%s_type" % s.name] = s
+            nr+=1
+
+    @property
+    def capnp_id(self):
+        return self.hash[0:16]
 
     @property
     def code_template(self):
@@ -150,9 +160,9 @@ class Schema(JSBASE):
 
     @property
     def capnp_template(self):
-        if self._template == None:
-            self._template = j.data.schema.template_engine.get_template("schema.capnp")
-        return self._template        
+        if self._capnp_template == None:
+            self._capnp_template = j.data.schema.template_engine.get_template("schema.capnp")
+        return self._capnp_template        
 
     @property
     def code(self):
@@ -162,8 +172,15 @@ class Schema(JSBASE):
         for prop in self.lists:
             prop.default_as_python_code
         code = self.code_template.render(obj=self)
+        # print(code)
+        return code
+
+    @property
+    def capnp_schema(self):
+        code = self.capnp_template.render(obj=self)
         print(code)
         return code
+
 
     @property
     def objclass(self):

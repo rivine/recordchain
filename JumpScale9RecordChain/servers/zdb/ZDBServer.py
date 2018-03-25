@@ -66,6 +66,10 @@ class ZDBServer(JSConfigBase):
                                                   verbose=self.config.data['verbose'],
                                                   mode=mode,
                                                   adminsecret=self.config.data['adminsecret_'])
+        self.logger.info("waiting for zdb server to start on (%s:%s)"%(self.config.data['addr'],self.config.data['port']))
+        res = j.sal.nettools.waitConnectionTest(self.config.data['addr'],self.config.data['port'])
+        if res is False:
+            raise RuntimeError("could not start zdb:'%s' (%s:%s)"%self.instance,self.config.data['addr'],self.config.data['port'])
 
     def stop(self):
         j.tools.prefab.local.zero_os.zos_db.stop(self.instance)

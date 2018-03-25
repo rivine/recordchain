@@ -17,22 +17,33 @@ class UIDServerFactory(JSBASE):
     def get(self):
         return UIDServer()
 
-    def configure(self,adminsecret="1234tf",secret="1234",reset=True):
-        j.servers.zdb.start(instance="uid_db",port=9902,mode="user",reset=reset)
-        for ns in ["user","group","schema"]:
-            j.clients.zdb.get_by_params(instance="uids_%s"%ns, namespace=ns, secret=secret, port=9902, adminsecret=adminsecret, mode="user", id_enable=False)
+    def configure(self,adminsecret="1234tf",secret="1234",reset=True,start=True):
+        """
+        js9 'j.servers.uidserver.configure()'
+        """ 
+        if start:        
+            j.servers.zdb.configure(instance="uid_db",port=9902,mode="user",reset=reset,adminsecret=adminsecret)
+            s=j.servers.zdb.get(instance="uid_db")
+            s.start()
+        for ns in ["user","group","schema","uid"]:
+            j.clients.zdb.configure(instance="uids_%s"%ns, namespace=ns, secret=secret, port=9902, adminsecret=adminsecret, mode="user", id_enable=False)
 
     def start(self,background=True):
         """
         js9 'j.servers.uidserver.start()'
         """
         if background:
-            j.servers.zdb.start(instance="uid_db",port=9902,mode="user",reset=False)
+            j.servers.zdb.start(instance="uid_db")                        
             cmd = "js9 'j.servers.uidserver.start(background=False)'"
             j.tools.tmux.execute(cmd, session='main', window='uidserver',pane='main', session_reset=False, window_reset=True)
-            j.sal.nettools.waitConnectionTest("localhost",9901)
+            self.logger.info("waiting for uidserver to start on port 9901")
+            res = j.sal.nettools.waitConnectionTest("localhost",9901)
+            if res is False:
+                raise RuntimeError("could not start uidserver: localhost:9901")
+            self.logger.info("UID SERVER STARTED ON :%s"%9901)
+
         else:
-            s = GedisExampleServer(port=9901)
+            s = UIDServer(port=9901)
             s.start()
 
 
@@ -43,8 +54,6 @@ class UIDServerFactory(JSBASE):
         will start in tmux the server & then connect to it using redisclient
 
         """
-<<<<<<< HEAD
-=======
         cmd = "js9 'j.servers.uidserver.start()'"
         j.tools.tmux.execute(cmd, session='main', window='uidserver',pane='main', session_reset=False, window_reset=True)
 
@@ -147,4 +156,3 @@ class UIDServerFactory(JSBASE):
         if dobenchmarks:
             #* [+]Average: 7992.6 commands/second
             self.logger.info("[+]Average: {} commands/second".format(bench()))
->>>>>>> c2e54e9e8a0f16bdd4e135a7a78214d41b5b00f0

@@ -4,6 +4,7 @@ from JumpScale9 import j
 JSBASE = j.application.jsbase_get_class()
 
 from .Schema import *
+from .List0 import List0
 import sys
 
 class SchemaFactory(JSBASE):
@@ -17,9 +18,28 @@ class SchemaFactory(JSBASE):
             sys.path.append(self.code_generation_dir)
         j.sal.fs.touch(self.code_generation_dir+"/__init__.py")
         self.logger.debug("codegendir:%s"%self.code_generation_dir)
+        self.db = j.clients.redis.core_get()
+        self.schemas = {}
 
-    def schema_from_text(self,txt):
-        return Schema(text=txt)
+    def schema_from_text(self, txt):
+        s = Schema(text=txt)
+        self.schemas[s.url] = s
+        return s
+
+    def schema_from_id(self, url):
+        """
+        url e.g. despiegk.test
+        """
+        url = url.lower().strip()
+        if url in self.schemas:
+            return self.schemas[url]
+        schema_txt = self.db.get("schemas:%s"%url)
+        if schema_txt == None:
+            raise InputError("could not find schema with url:%s"%url)
+        s = self.schema_from_text(schema_txt)
+        return s
+
+        
 
     @property
     def template_engine(self):
@@ -34,6 +54,8 @@ class SchemaFactory(JSBASE):
         return self._template_engine
         
 
+    def list_base_class_get(self):
+        return List0
 
     def test(self):
         """
@@ -63,6 +85,48 @@ class SchemaFactory(JSBASE):
 
         from IPython import embed;embed(colors='Linux')
 
-    
+    def test2(self):
+        """
+        js9 'j.data.schema.test2()'
+        """
+        schema0 = """
+        @url = despiegk.test.group
+        @name = Group
+        description = ""
+        llist = "" (LO) !despiegk.test.users
+        listnum = "" (LI)
+        """
+
+        schema1 = """
+        @url = despiegk.test.users
+        @name = User
+        nr = 4
+        date_start = 0 (D)
+        description = ""
+        token_price = "10 USD" (N)
+        cost_estimate:hw_cost = 0.0 (N) #this is a comment
+        """
 
 
+        s1 = self.schema_from_text(schema1)
+        s0 = self.schema_from_text(schema0)
+
+        print(s0)
+        o=s1.get()
+
+        print (s1.capnp_schema)
+        print (s0.capnp_schema)
+
+        from IPython import embed;embed(colors='Linux')    
+
+    def test_list(self):
+        """
+        js9 'j.data.schema.test_list()'
+        """    
+
+        lc=self.list_base_class_get()
+        l=lc()
+        for i in range(100):
+            l.append(i)
+
+        from IPython import embed;embed(colors='Linux')

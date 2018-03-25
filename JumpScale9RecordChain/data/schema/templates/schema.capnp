@@ -1,18 +1,14 @@
-@0x93c1ac9f09464fc9;
+@0x{{obj.capnp_id}};
 
-struct Issue {
+struct {{obj.name}} {
 
-    # capnp_schema_get
-    state @0 :State;
-    enum State {
-    new @0;
-    ok @1;
-    error @2;
-    disabled @3;
-    }
+    {% for prop in obj.properties %}
+    {{prop.capnp_schema}}
+    {% endfor %}
 
-    #name of actor e.g. node.ssh (role is the first part of it)
-    name @1 :Text;
-    descr @2 :Text;
+    {% for prop in obj.lists %}
+    {{prop.capnp_schema}}
+    {% endfor %}
+
 
 }

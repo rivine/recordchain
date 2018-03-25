@@ -14,12 +14,14 @@ class ZDBServers(JSConfigBase):
         super().__init__(child_class=ZDBServer)
         self.rootdir = j.sal.fs.joinPaths(j.dirs.VARDIR, 'zdb')
 
-    def get_by_params(self, instance="main", adminsecret="", mode = "direct", rootdir=None, addr="127.0.0.1", port=9900, verbose = True, id_enable=True, reset=False):
+    def configure(self, instance="main", adminsecret="", mode = "user", rootdir=None, addr="127.0.0.1", port=9900, verbose = True, id_enable=True, reset=False):
         """
         read more info at https://github.com/rivine/0-db/blob/master/README.md
         mode: user,direct,seq
 
         id_enable means we have an index file where we keep relation between id & position in the database (zdb), based on int
+
+        js9 'j.servers.zdb.configure(instance="main",port=8888,reset=True)'
 
         """
 
@@ -46,15 +48,17 @@ class ZDBServers(JSConfigBase):
 
         return s
 
-    def start(self,instance="test",adminsecret="", mode = "direct", rootdir=None, addr="127.0.0.1", port=9900, id_enable=True, reset=False):
+    def start(self,instance="main"):
         """
-        js9 'j.servers.zdb.start(instance="test",port=8888,reset=True)'
+        js9 'j.servers.zdb.start(instance="main")'
         """
-        s= self.get_by_params(instance=instance,adminsecret=adminsecret,mode =mode,rootdir=rootdir,addr=addr,port=port,id_enable=id_enable,reset=reset)
+        s= self.get(instance=instance)
         s.start()
 
-
     def build(self):
+        """
+        js9 'j.servers.zdb.build()'
+        """
         j.tools.prefab.local.zero_os.zos_db.build(install=True)
 
     def test(self):

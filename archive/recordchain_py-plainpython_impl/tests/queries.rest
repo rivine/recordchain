@@ -1,0 +1,219 @@
+
+###
+
+POST http://localhost:5000/bdomains HTTP/1.1
+content-type: application/json
+
+{
+    "name": "bdom1"
+}
+###
+
+POST http://localhost:5000/bdomains HTTP/1.1
+content-type: application/json
+
+{
+    "name": "bdom2"
+}
+### 
+
+GET http://localhost:5000/bdomains HTTP/1.1
+
+###
+
+GET http://localhost:5000/bdomains/1 HTTP/1.1
+###
+
+GET http://localhost:5000/bdomains/2 HTTP/1.1
+
+
+
+###
+POST http://localhost:5000/bobjects HTTP/1.1
+content-type: application/json
+
+{
+    "author_id":2,
+    "data":"",
+    "key":"magickey",
+    "name":"first obj"
+}
+###
+
+POST http://localhost:5000/bobjects HTTP/1.1
+content-type: application/json
+
+{
+    "author_id":2,
+    "data":"",
+    "key":"magickey",
+    "name": "second obj"
+}
+###
+
+GET http://localhost:5000/bobjects HTTP/1.1
+
+###
+
+GET http://localhost:5000/bobjects/1 HTTP/1.1
+
+
+###
+
+GET http://localhost:5000/bobjects/2 HTTP/1.1
+
+###
+
+
+POST http://localhost:5000/users HTTP/1.1
+content-type: application/json
+
+{
+    "author_id":2,
+    "key":"magickey",
+    "name":"2nd obj",
+    "data":
+    {
+        "alias": "xmonader",
+        "key_pub": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCeq1MFCQOv3OCLO1HxdQl8V0CxAwt5AzdsNOL91wmHiG9ocgnq2yipv7qz+uCS0AdyOSzB9umyLcOZl2apnuyzSOd+2k6Cj9ipkgVx4nx4q5W1xt4MWIwKPfbfBA9gDMVpaGYpT6ZEv2ykFPnjG0obXzIjAaOsRthawuEF8bPZku1yi83SDtpU7I0pLOl3oifuwPpXTAVkK6GabSfbCJQWBDSYXXM20eRcAhIMmt79zo78FNItHmWpfPxPTWlYW02f7vVxTN/LUeRFoaNXXY+cuPxmcmXp912kW0vhK9IvWXqGAEuSycUOwync/yj+8f7dRU7upFGqd6bXUh67iMl7 ahmed@ahmedheaven",
+        "addr": "xmon.cs.eg"
+    }
+}
+### 
+
+POST http://localhost:5000/users HTTP/1.1
+content-type: application/json
+
+{
+    "author_id":2,
+    "key":"magickey",
+    "name":"second userobj",
+    "data":
+    {
+        "alias": "dmdm",
+        "key_pub": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCeq1MFCQOv3OCLO1HxdQl8V0CxAwt5AzdsNOL91wmHiG9ocgnq2yipv7qz+uCS0AdyOSzB9umyLcOZl2apnuyzSOd+2k6Cj9ipkgVx4nx4q5W1xt4MWIwKPfbfBA9gDMVpaGYpT6ZEv2ykFPnjG0obXzIjAaOsRthawuEF8bPZku1yi83SDtpU7I0pLOl3oifuwPpXTAVkK6GabSfbCJQWBDSYXXM20eRcAhIMmt79zo78FNItHmWpfPxPTWlYW02f7vVxTN/LUeRFoaNXXY+cuPxmcmXp912kW0vhK9IvWXqGAEuSycUOwync/yj+8f7dRU7upFGqd6bXUh67iMl7 ahmed@ahmedheaven",
+        "addr": "dmmd.cs.eg"
+    }
+}
+
+### 
+GET http://localhost:5000/users HTTP/1.1
+
+###
+
+
+GET http://localhost:5000/users/1 HTTP/1.1
+
+### 
+POST http://localhost:5000/groups HTTP/1.1
+content-type: application/json
+
+{
+    "author_id":2,
+    "data":"",
+    "key":"magickey",
+    "name":"group1 obj",
+    "data": {
+        "alias": "devteam.cs.eg",
+        "key_pub": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCeq1MFCQOv3OCLO1HxdQl8V0CxAwt5AzdsNOL91wmHiG9ocgnq2yipv7qz+uCS0AdyOSzB9umyLcOZl2apnuyzSOd+2k6Cj9ipkgVx4nx4q5W1xt4MWIwKPfbfBA9gDMVpaGYpT6ZEv2ykFPnjG0obXzIjAaOsRthawuEF8bPZku1yi83SDtpU7I0pLOl3oifuwPpXTAVkK6GabSfbCJQWBDSYXXM20eRcAhIMmt79zo78FNItHmWpfPxPTWlYW02f7vVxTN/LUeRFoaNXXY+cuPxmcmXp912kW0vhK9IvWXqGAEuSycUOwync/yj+8f7dRU7upFGqd6bXUh67iMl7 ahmed@ahmedheaven",
+        "addr": "dev.cs.eg"
+    }
+}
+### 
+POST http://localhost:5000/groups HTTP/1.1
+content-type: application/json
+
+{
+    "author_id":2,
+    "data":"",
+    "key":"magickey",
+    "name":"group2 obj",
+    "data": {
+        "alias": "qateam.cs.eg",
+        "key_pub": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCeq1MFCQOv3OCLO1HxdQl8V0CxAwt5AzdsNOL91wmHiG9ocgnq2yipv7qz+uCS0AdyOSzB9umyLcOZl2apnuyzSOd+2k6Cj9ipkgVx4nx4q5W1xt4MWIwKPfbfBA9gDMVpaGYpT6ZEv2ykFPnjG0obXzIjAaOsRthawuEF8bPZku1yi83SDtpU7I0pLOl3oifuwPpXTAVkK6GabSfbCJQWBDSYXXM20eRcAhIMmt79zo78FNItHmWpfPxPTWlYW02f7vVxTN/LUeRFoaNXXY+cuPxmcmXp912kW0vhK9IvWXqGAEuSycUOwync/yj+8f7dRU7upFGqd6bXUh67iMl7 ahmed@ahmedheaven",
+        "addr": "qa.cs.eg"
+    }
+}
+
+### 
+
+GET http://localhost:5000/groups HTTP/1.1
+
+###
+
+
+GET http://localhost:5000/groups/1 HTTP/1.1
+
+###
+
+GET http://localhost:5000/groups/2 HTTP/1.1
+
+###
+
+
+
+GET http://localhost:5000/acis HTTP/1.1
+
+###
+
+
+GET http://localhost:5000/acis/1 HTTP/1.1
+
+###
+
+
+POST http://localhost:5000/acis HTTP/1.1
+content-type: application/json
+
+{
+    "author_id":2,
+    "data":"",
+    "key":"magickey",
+    "name":"aci obj",
+    "data": {
+        "groups": [0, 1],
+        "users": [1,2],
+        "right": "rw"
+    }
+}
+
+###
+POST http://localhost:5000/acis HTTP/1.1
+content-type: application/json
+
+{
+    "author_id":1,
+    "data":"",
+    "key":"magickey",
+    "name":"aci obj 2",
+    "data": {
+        "groups": [0, 1],
+        "users": [1,2],
+        "right": "rw"
+    }
+}
+### 
+GET http://localhost:5000/acls HTTP/1.1
+
+###
+
+GET http://localhost:5000/acls/1 HTTP/1.1
+
+###
+
+
+POST http://localhost:5000/acls HTTP/1.1
+content-type: application/json
+
+{
+    "author_id":2,
+    "data":"",
+    "key":"magickey",
+    "name":"2nd obj"
+    "data": {
+        "aci":
+    }
+}
+
+
+

@@ -11,10 +11,10 @@ JSBASE = j.application.jsbase_get_class()
 
 class RedisServer(StreamServer, JSBASE):
 
-    def __init__(self, host='0.0.0.0', port=6380):
+    def __init__(self, host='0.0.0.0', port=6380, keyfile="/etc/ssl/private/server.key", certfile="/etc/ssl/certs/server.crt"):
         JSBASE.__init__(self)
         self._server = StreamServer(
-            (host, port), spawn=Pool(), handle=self.__handle_connection)
+            (host, port), spawn=Pool(), handle=self.__handle_connection, keyfile=keyfile, certfile=certfile)
         self._sig_handler = []
         # commands callbacks
         self._cmds = {}

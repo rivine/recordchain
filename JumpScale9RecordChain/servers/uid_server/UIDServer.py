@@ -3,7 +3,7 @@ from JumpScale9 import j
 # import struct
 
 JSBASE = j.application.jsbase_get_class()
-ServerClass = j.servers.gedis.get_base_class()
+ServerClass = j.servers.gedis.baseclass_get()
 
 
 

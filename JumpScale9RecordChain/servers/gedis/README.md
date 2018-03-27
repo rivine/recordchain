@@ -13,7 +13,7 @@ Example server that only implements PING command
 
 from js9 import j
 
-ServerClass = j.servers.gedis.get_base_class()
+ServerClass = j.servers.gedis.baseclass_get()
 
 def ping(request):
     return "PONG"

@@ -2,15 +2,12 @@
 from JumpScale9 import j
 # import struct
 
-JSBASE = j.application.jsbase_get_class()
-ServerClass = j.servers.gedis.get_base_class()
-
-
-
+ServerClass = j.servers.gedis.baseclass_get()
 
 class GedisExampleServer(ServerClass):
-    def __init__(self,host='127.0.0.1', port=8889):
-        ServerClass.__init__(self, host=host, port=port)
+    def __init__(self,instance, data={}, parent=None, interactive=False):
+        ServerClass.__init__(self, instance=instance, data=data,
+                              parent=parent, interactive=interactive)        
 
         self.zdbconn = j.clients.redis.get(port=8888, set_patch=True) # default port for 0-db
         self.mindb = {}

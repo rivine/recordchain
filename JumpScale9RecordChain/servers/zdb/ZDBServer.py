@@ -31,7 +31,7 @@ class ZDBServer(JSConfigBase):
         self._initdir()
 
     def client_get(self, namespace="default", secret=""):
-        return j.clients.zdb.get_by_params(instance=self.instance,
+        return j.clients.zdb.configure(instance=self.instance,
                                            namespace=namespace,
                                            secret=secret,
                                            adminsecret=self.config.data['adminsecret_'],

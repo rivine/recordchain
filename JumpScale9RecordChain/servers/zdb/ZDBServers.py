@@ -66,7 +66,7 @@ class ZDBServers(JSConfigBase):
         js9 'j.servers.zdb.test()'
         """
         # self.build()
-        db = self.get_by_params(instance="test",adminsecret="1234",reset=True)
+        db = self.configure(instance="test",adminsecret="1234",reset=True)
         db.start()
         cl = db.client_get()
         cl.test()

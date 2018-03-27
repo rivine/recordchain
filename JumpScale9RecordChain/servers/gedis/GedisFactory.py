@@ -39,9 +39,9 @@ class GedisFactory(JSConfigBase):
         js9 j.servers.gedisexample.start()'  
         will be different name depending the implementation
         """
-        data = {"port": port, "addr": addr, "secret_": secret, "ssl": ssl}
+        data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl}
         s = self._child_class(
-            instance=instance, data=data, parent=None, interactive=interactive)
+            instance=instance, data=data, parent=self, interactive=interactive)
         if start:
             s.start(background=background)
 

@@ -3,7 +3,6 @@ from pprint import pprint as print
 
 from js9 import j
 
-from .server import RedisServer
 
 JSBASE = j.application.jsbase_get_class()
 

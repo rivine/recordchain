@@ -24,6 +24,7 @@ class GedisExampleServerFactory(BASE):
         BASE.__init__(self)
 
     def test_ssl(self):
+        
         pass
         # TODO:*1
         # - create ssl certificate using j.sal.ssl
@@ -38,7 +39,8 @@ class GedisExampleServerFactory(BASE):
         will start in tmux the server & then connect to it using redisclient
 
         """
-        j.servers.zdb.start(instance="test", port=8888, reset=True)
+        db = j.servers.zdb.configure(instance="test", adminsecret="1234", reset=True, mode="direct", id_enable=True)
+        db.start()
 
         server = self.configure(instance="test",port=8889, addr="localhost", secret="1234", ssl=False, interactive=False, start=True, background=True)
         

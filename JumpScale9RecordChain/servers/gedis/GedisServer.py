@@ -10,7 +10,7 @@ from .protocol import CommandParser, ResponseWriter
 TEMPLATE = """
 addr = "localhost"
 port = "9900"
-ssl = False
+ssl = false
 adminsecret_ = ""
 """
 
@@ -23,30 +23,32 @@ class GedisServer(StreamServer, JSConfigBase):
         """        
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE, interactive=interactive)
-
         host = self.config.data["addr"]
-        port = self.config.data["port"]
-
-        self.server = StreamServer(
-            (host, port), spawn=Pool(), handle=self.__handle_connection, keyfile=self.ssl_priv_key_path, certfile=self.ssl_cert_path)
+        port = int(self.config.data["port"])
+        if self.config.data['ssl']:
+            self.sslkeys_generate()
+            self.server = StreamServer(
+                (host, port), spawn=Pool(), handle=self.__handle_connection, keyfile=self.ssl_priv_key_path, certfile=self.ssl_cert_path)
+        else:
+            self.server = StreamServer(
+                (host, port), spawn=Pool(), handle=self.__handle_connection)
 
         self._sig_handler = []
         # commands callbacks
         self._cmds = {}
 
     def sslkeys_generate(self):
-        #TODO:*1 use j.sal.ssl... put in self.ssl_priv_key_path and self.ssl...
-        pass
+        j.sal.ssl.ca_cert_generate(j.sal.fs.getDirName(self.config.path))
 
     @property
     def ssl_priv_key_path(self):
-        p = self.config.path + "/private.key"
+        p = j.sal.fs.getDirName(self.config.path) + "ca.key"
         if self.config.data["ssl"]:
             return p
             
     @property
     def ssl_cert_path(self):
-        p = self.config.path + "/main.crt"
+        p = j.sal.fs.getDirName(self.config.path) + "ca.crt"
         if self.config.data["ssl"]:
             return p
 
@@ -92,7 +94,7 @@ class GedisServer(StreamServer, JSConfigBase):
             parser.on_disconnect()
             self.logger.info('close connection from {}'.format(address))
 
-    def start(self):
+    def start(self, background=False):
         self.logger.info("init server")
         j.logger.enabled = False
         self._logger = None
@@ -108,6 +110,9 @@ class GedisServer(StreamServer, JSConfigBase):
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
 
         self.logger.info("start server")
+        if background:
+            # TODO run in background
+            pass
         self.server.serve_forever()
 
     def stop(self):
@@ -120,4 +125,4 @@ class GedisServer(StreamServer, JSConfigBase):
             h.cancel()
 
         self.logger.info('stopping server')
-        self._server.stop()
+        self.server.stop()

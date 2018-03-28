@@ -23,7 +23,7 @@ class GedisClientFactory(JSBASE):
 
         return j.clients.redis_config.configure(instance=instance,
             ipaddr=ipaddr ,port=port ,password=password, unixsocket=unixsocket,
-            set_patch=True, ssl=ssl, ssl_keyfile=ssl_keyfile, ssl_certfile=ssl_certfile)
+            set_patch=True, ssl=ssl, ssl_keyfile=ssl_keyfile, ssl_certfile=ssl_certfile).redis
 
             
         

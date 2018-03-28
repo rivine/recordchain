@@ -17,22 +17,23 @@ BASE = j.servers.gedis._self_class_get()
 
 from .GedisExampleServer import GedisExampleServer
 
+def ping(request):
+    return "PONG"
 class GedisExampleServerFactory(BASE):
 
     def __init__(self):
         self.__jslocation__ = "j.servers.gedisexample"
         BASE.__init__(self)
-
-    def test_ssl(self):
         
-        pass
-        # TODO:*1
-        # - create ssl certificate using j.sal.ssl
-        # launch gedis server in tmux
-        # connect to gedis using j.clients.gedis.configure ... using ssl with keyfile & noth
-        # check it all works in different encrytion modes
-
+    def test_ssl(self, dobenchmarks=True):
+        server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, interactive=True, start=False, background=True)
+        self._test(server, dobenchmarks=dobenchmarks)
+        
     def test(self, dobenchmarks=True):
+        server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, interactive=False, start=False, background=True)
+        self._test(server, dobenchmarks=dobenchmarks)
+
+    def _test(self, server, dobenchmarks=True):
         """
         js9 'j.servers.gedisexample.test()'
 
@@ -41,16 +42,13 @@ class GedisExampleServerFactory(BASE):
         """
         db = j.servers.zdb.configure(instance="test", adminsecret="1234", reset=True, mode="direct", id_enable=True)
         db.start()
-
-        server = self.configure(instance="test",port=8889, addr="localhost", secret="1234", ssl=False, interactive=False, start=True, background=True)
-        
-        r = server.client_get()
-
+        # server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, interactive=False, start=False, background=True)
+        server.register_command('PING', ping)
+        server.start(background=True)
+        r = self.client_get('test')
         # assert True == r.ping()
         # is it binary or can it also return string
         assert r.execute_command("PING") == True
-        assert r.execute_command("TESTB") == b'testworked'
-        assert r.execute_command("TESTA") == b'testworked'
 
         error = False
         try:

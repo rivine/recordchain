@@ -1,7 +1,7 @@
 
 from js9 import j
 import signal
-
+import gevent
 import gevent.signal
 from gevent.pool import Pool
 from gevent.server import StreamServer
@@ -25,6 +25,8 @@ class GedisServer(StreamServer, JSConfigBase):
                               parent=parent, template=TEMPLATE, interactive=interactive)
         host = self.config.data["addr"]
         port = int(self.config.data["port"])
+
+        self.address = '{}:{}'.format(host, port)
         if self.config.data['ssl']:
             self.sslkeys_generate()
             self.server = StreamServer(
@@ -111,9 +113,11 @@ class GedisServer(StreamServer, JSConfigBase):
 
         self.logger.info("start server")
         if background:
-            # TODO run in background
-            pass
-        self.server.serve_forever()
+            from multiprocessing import Process
+            p = Process(target=self.server.serve_forever)
+            p.start()
+        else:
+            self.server.serve_forever()
 
     def stop(self):
         """

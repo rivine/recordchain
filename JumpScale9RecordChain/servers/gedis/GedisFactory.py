@@ -21,36 +21,42 @@ class GedisFactory(JSConfigBase):
         return GedisFactory
 
     def start(self, instance="main", background=False):
-        s = self.get(instance)
+        server = self.get(instance)
+        
         if background:
             cmd = "js9 '%s.start(instance=\"%s\",background=False)'" % (
                 self.__jslocation__, instance)
-            j.tools.tmux.execute(cmd, session='main', window='gedisexample',
+            j.tools.tmux.execute(cmd, session='main', window='gedis',
                                  pane='main', session_reset=False, window_reset=True)
-            j.sal.nettools.waitConnectionTest(
-                s.config.data["addr"], s.config.data["port"])
+            j.sal.nettools.checkListenPort(int(server.config.data["port"]))
         else:
-            s = self.get(instance)
-            s.start()
+            server = self.get(instance, create=False)
+            server.start()
 
     def configure(self, instance="main", port=8889, addr="localhost", secret="", ssl=False, interactive=False, start=False, background=False):
         """
         e.g.
-        js9 j.servers.gedisexample.start()'  
+        js9 j.servers.gedis.start()'  
         will be different name depending the implementation
         """
         data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl}
-        s = self._child_class(
+        server = self._child_class(
             instance=instance, data=data, parent=self, interactive=interactive)
         if start:
-            s.start(background=background)
+            self.start(instance=instance, background=background)
+        return server
 
     def client_get(self, instance):
         """
         will user server arguments to figure out how to get client, is easy for testing
         """
-        c = self.get(instance=instance)
-        print(456789)
-        from IPython import embed
-        embed(colors='Linux')
-        ddd
+        server = self.get(instance=instance)
+        ssl = server.config.data['ssl']
+        if not ssl:
+            cli = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']), ssl= False)
+        else:
+            cli = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']),
+                                            ssl=ssl, ssl_keyfile=server.ssl_priv_key_path, ssl_certfile=server.ssl_cert_path)
+        self.get(instance)
+        return cli
+    

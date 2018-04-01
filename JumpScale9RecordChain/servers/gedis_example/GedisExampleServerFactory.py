@@ -11,26 +11,28 @@ def now(): return time.time()
 JSBASE = j.application.jsbase_get_class()
 import signal
 
-from .GedisExampleServer import GedisExampleServer
 
 BASE = j.servers.gedis._self_class_get()
+JSConfigBase = j.tools.configmanager.base_class_configs
+
 
 from .GedisExampleServer import GedisExampleServer
 
-def ping(request):
-    return "PONG"
-class GedisExampleServerFactory(BASE):
+class GedisExampleServerFactory(BASE,JSConfigBase):
 
-    def __init__(self):
+    def __init__(self):        
         self.__jslocation__ = "j.servers.gedisexample"
-        BASE.__init__(self)
+        JSConfigBase.__init__(self, GedisExampleServer)
         
-    def test_ssl(self, dobenchmarks=True):
-        server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, interactive=True, start=False, background=True)
+    def test_ssl(self, dobenchmarks=False):
+        """
+        js9 'j.servers.gedisexample.test_ssl()'
+        """
+        server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=True, interactive=True, start=True, background=True)
         self._test(server, dobenchmarks=dobenchmarks)
         
     def test(self, dobenchmarks=True):
-        server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, interactive=False, start=False, background=True)
+        server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, interactive=False, start=True, background=True)
         self._test(server, dobenchmarks=dobenchmarks)
 
     def _test(self, server, dobenchmarks=True):
@@ -42,17 +44,16 @@ class GedisExampleServerFactory(BASE):
         """
         db = j.servers.zdb.configure(instance="test", adminsecret="1234", reset=True, mode="direct", id_enable=True)
         db.start()
-        # server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, interactive=False, start=False, background=True)
-        server.register_command('PING', ping)
-        server.start(background=True)
+
         r = self.client_get('test')
         # assert True == r.ping()
         # is it binary or can it also return string
-        assert r.execute_command("PING") == True
+        assert r.redis.execute_command("PING") == True
+        assert r.redis.execute_command("PING2") ==  b'PONG'
 
         error = False
         try:
-            r.execute_command("ERROR")  # should raise error
+            r.redis.execute_command("ERROR")  # should raise error
         except Exception as e:
             error = True
         assert error
@@ -66,9 +67,9 @@ class GedisExampleServerFactory(BASE):
             self.logger.info("Started benching with {}".format(MAX_NUM))
             with ThreadPoolExecutor(max_workers=4) as executor:
                 for i in range(MAX_NUM):
-                    # future = executor.submit(r.execute_command, "TESTA")
+                    # future = executor.submit(r.redis.execute_command, "TESTA")
                     future = executor.submit(
-                        r.execute_command, "SET", b"AKEY", b"AVALUE")
+                        r.redis.execute_command, "SET", b"AKEY", b"AVALUE")
                     futures.append(future)
 
             self.logger.debug("FUTURES LEN: %s" % len(futures))
@@ -107,15 +108,15 @@ class GedisExampleServerFactory(BASE):
 
     #     self.logger.info("Started test2")
     #     # assert True == r.ping()
-    #     assert r.execute_command("PING") == True #is it binary or can it also return string
-    #     assert r.execute_command("TESTB") == b'testworked'
-    #     assert r.execute_command("TESTA") == b'testworked'
+    #     assert r.redis.execute_command("PING") == True #is it binary or can it also return string
+    #     assert r.redis.execute_command("TESTB") == b'testworked'
+    #     assert r.redis.execute_command("TESTA") == b'testworked'
     #     self.logger.info("First assersions passed")
     #     try:
     #         for i in range(100):
-    #             k = r.execute_command("SET", "a{}".format(i), "dmdm")
+    #             k = r.redis.execute_command("SET", "a{}".format(i), "dmdm")
     #             # self.logger.info("NEW KEY: {}".format(k))
-    #             value = r.execute_command("GET", k)
+    #             value = r.redis.execute_command("GET", k)
     #             # print("VAL: ", value)
     #             assert value == b"dmdm"
     #     except Exception as e:
@@ -132,7 +133,7 @@ class GedisExampleServerFactory(BASE):
     #         self.logger.info("Started benching with {}".format(MAX_NUM))
     #         with ThreadPoolExecutor(max_workers=4) as executor:
     #             for i in range(MAX_NUM):
-    #                 future = executor.submit(r.execute_command, "SET", b"AKEY", b"AVALUE")
+    #                 future = executor.submit(r.redis.execute_command, "SET", b"AKEY", b"AVALUE")
     #                 futures.append(future)
 
     #         self.logger.debug("FUTURES LEN: ", len(futures))

@@ -13,7 +13,7 @@ class GedisExampleServer(ServerClass):
         self.mindb = {}
         
 
-    def ping_cmd(self,request):
+    def ping2_cmd(self,request):
         return "PONG"
 
     def testb_cmd(self, request):

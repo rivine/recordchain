@@ -28,6 +28,7 @@ class GedisServer(StreamServer, JSConfigBase):
 
         self.address = '{}:{}'.format(host, port)
         if self.config.data['ssl']:
+            self.logger.info("ssl enabled, keys in %s"%self.ssl_priv_key_path)
             self.sslkeys_generate()
             self.server = StreamServer(
                 (host, port), spawn=Pool(), handle=self.__handle_connection, keyfile=self.ssl_priv_key_path, certfile=self.ssl_cert_path)
@@ -40,7 +41,11 @@ class GedisServer(StreamServer, JSConfigBase):
         self._cmds = {}
 
     def sslkeys_generate(self):
-        j.sal.ssl.ca_cert_generate(j.sal.fs.getDirName(self.config.path))
+        
+        res=j.sal.ssl.ca_cert_generate(j.sal.fs.getDirName(self.config.path))
+        if res:
+            self.logger.info("generated sslkeys for gedis in %s"%self.config.path)
+        
 
     @property
     def ssl_priv_key_path(self):
@@ -96,7 +101,11 @@ class GedisServer(StreamServer, JSConfigBase):
             parser.on_disconnect()
             self.logger.info('close connection from {}'.format(address))
 
-    def start(self, background=False):
+    #DEFAULT COMMAND ALWAYS THERE
+    def ping_cmd(self,request):
+        return "PONG"
+
+    def start(self):
         self.logger.info("init server")
         j.logger.enabled = False
         self._logger = None
@@ -112,12 +121,13 @@ class GedisServer(StreamServer, JSConfigBase):
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
 
         self.logger.info("start server")
-        if background:
-            from multiprocessing import Process
-            p = Process(target=self.server.serve_forever)
-            p.start()
-        else:
-            self.server.serve_forever()
+        #SHOULD NOT IMPLEMENT BACKGROUND HERE HAS BEEN DONE AT FACTORY LEVEL
+        # if background:
+        #     from multiprocessing import Process
+        #     p = Process(target=self.server.serve_forever)
+        #     p.start()
+        # else:
+        self.server.serve_forever()
 
     def stop(self):
         """

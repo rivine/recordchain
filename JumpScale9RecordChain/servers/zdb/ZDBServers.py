@@ -62,7 +62,7 @@ class ZDBServers(JSConfigBase):
         """
         js9 'j.servers.zdb.build()'
         """
-        j.tools.prefab.local.zero_os.zos_db.build(install=True)
+        j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
 
     def test(self):
         """
@@ -74,3 +74,17 @@ class ZDBServers(JSConfigBase):
         db.start()
         cl = db.client_get()
         cl.test()
+
+    def test_seq(self):
+        """
+        js9 'j.servers.zdb.test_seq()'
+        """
+        # self.build()
+        # db = self.configure(instance="test", adminsecret="1234", reset=True, mode="seq", id_enable=False)
+        # db.stop()
+        # db.start()
+        db = self.get("test")
+        cl = db.client_get()
+        nr = cl.nsinfo["entries"]
+        # assert nr == 0
+        from IPython import embed;embed(colors='Linux')

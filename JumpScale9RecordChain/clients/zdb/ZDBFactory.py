@@ -13,7 +13,7 @@ class ZDBFactory(JSConfigBase):
         self.__jslocation__ = "j.clients.zdb"
         super(ZDBFactory, self).__init__(ZDBClient)
 
-    def configure(self, instance="main", namespace="default", secret="", addr="localhost", port=None, adminsecret="", mode="user", id_enable=False, started=False):
+    def configure(self, instance="main", namespace="default", secret="", addr="localhost", port=None, adminsecret="", mode="user", id_enable=False, started=True):
 
         if port is None:
             raise InputError("port cannot be None")

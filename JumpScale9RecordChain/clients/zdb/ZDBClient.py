@@ -2,6 +2,7 @@
 from js9 import j
 from pprint import pprint as print
 import os
+import struct
 import copy
 
 TEMPLATE = """
@@ -83,6 +84,8 @@ class ZDBClient(JSConfigBase):
         nsname = self.config.data["namespace"]
         secret = self.config.data["secret_"]
 
+        self.mode = self.config.data["mode"]
+
         def namespace_init(nsname, secret):
             # means the namespace does already exists
             if secret is "":
@@ -126,7 +129,13 @@ class ZDBClient(JSConfigBase):
 
         @PARAM checknew, if True will return (key,new) and new is bool
         """
-        if self.key_enable:
+        if self.mode=="seq":
+            if id is None:
+                id=""
+            else:
+                id = struct.pack("<I", id)
+            return struct.unpack("<I",self.client.execute_command("SET", id, data))[0]
+        elif self.key_enable:
             if key is None:
                 raise j.exceptions.Input("key cannot be None")
             self.client.execute_command("SET", key, data)
@@ -162,7 +171,10 @@ class ZDBClient(JSConfigBase):
         Arguments:
             key {[type]} - - [description] is id or key
         """
-        if self.key_enable:
+        if self.mode=="seq":
+            id = struct.pack("<I", key)
+            return self.client.execute_command("GET", id)
+        elif self.key_enable:
             return self.client.execute_command("GET", key)
         elif self.id_enable:
             if not j.data.types.int.check(key):
@@ -180,7 +192,10 @@ class ZDBClient(JSConfigBase):
         Arguments:
             key {[type]} - - [description] is id or key
         """
-        if self.id_enable:
+        if self.mode=="seq":
+            id = struct.pack("<I", key)
+            return self.client.execute_command("GET", id) is not None
+        elif self.id_enable:
             if not j.data.types.int.check(key):
                 raise j.exceptions.Input("key needs to be int")
             pos = self._indexfile.get(key)

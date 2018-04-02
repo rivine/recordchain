@@ -4,28 +4,27 @@ from js9 import j
 import time
 from .UIDServer import UIDServer
 
-JSBASE = j.application.jsbase_get_class()
-import signal
+# JSBASE = j.application.jsbase_get_class()
+# import signal
 
-class UIDServerFactory(JSBASE):
+BASE = j.servers.gedis._self_class_get()
+JSConfigBase = j.tools.configmanager.base_class_configs
+
+class UIDServerFactory(BASE,JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = "j.servers.uidserver"
-        JSBASE.__init__(self)
+        JSConfigBase.__init__(self, UIDServer)
 
-    def get(self):
-        return UIDServer()
 
-    def configure(self,adminsecret="1234tf",secret="1234",reset=True,start=True):
+    def configure(self,adminsecret="1234tf",secret="1234",reset=False,start=True):
         """
         js9 'j.servers.uidserver.configure()'
         """ 
-        if start:        
-            j.servers.zdb.configure(instance="uid_db",port=9902,mode="user",reset=reset,adminsecret=adminsecret)
-            s=j.servers.zdb.get(instance="uid_db")
-            s.start()
+        s= j.servers.zdb.configure(instance="uid_db",port=9902,mode="user",reset=reset,adminsecret=adminsecret,start=start)
+        from IPython import embed;embed(colors='Linux')
         for ns in ["user","group","schema","uid"]:
-            j.clients.zdb.configure(instance="uids_%s"%ns, namespace=ns, secret=secret, port=9902, adminsecret=adminsecret, mode="user", id_enable=False)
+            j.clients.zdb.configure(instance="uids_%s"%ns, namespace=ns, secret=secret, port=9902, adminsecret=adminsecret, mode="user", id_enable=False, started=start)
         if start:
             self.start()
 
@@ -57,9 +56,8 @@ class UIDServerFactory(JSBASE):
         """
         self.configure()
         
-        r = j.clients.gedis.configure(instance='uidserver', ipaddr='localhost', port=9901).redis
-
-        # r = j.clients.redis.get(port=9999)
+        rr = self.client_get('test')
+        r=rr.redis
 
         from IPython import embed;embed(colors='Linux')
 

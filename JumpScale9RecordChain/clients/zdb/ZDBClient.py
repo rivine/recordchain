@@ -20,7 +20,7 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class ZDBClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
+    def __init__(self, instance, data={}, parent=None, interactive=False,started=True):
         """
         is connection to ZDB
 
@@ -35,9 +35,9 @@ class ZDBClient(JSConfigBase):
             adminsecret does not have to be set, but when you want to create namespaces it is a must
 
         """
-        self.init(instance=instance, data=data, parent=parent, interactive=interactive)
+        self.init(instance=instance, data=data, parent=parent, interactive=interactive,started=started)
 
-    def init(self, instance, data={}, parent=None, interactive=False, reset=False):
+    def init(self, instance, data={}, parent=None, interactive=False, reset=False,started=True):
 
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
@@ -50,6 +50,9 @@ class ZDBClient(JSConfigBase):
             self._indexfile = j.data.indexfile.get(name=instance, path=ipath, nrbytes=6)
         else:
             self._indexfile = None
+        
+        if not started:
+            return
 
         redis = j.clients.redis.get(ipaddr=self.config.data['addr'],
                                     port=self.config.data['port'],

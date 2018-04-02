@@ -22,18 +22,33 @@ class SchemaProperty(JSBASE):
         return self.js9type.python_code_get(self.default)
 
     @property
+    def name_camel(self):
+        out=""
+        for item in self.name.split("_"):
+            if out is "":
+                out=item.lower()
+            else:
+                out+=item.capitalize()
+        return out
+            
+
+    @property
     def js9_typelocation(self):
         return "j.data.types.%s" % self.js9type.NAME
 
     @property
     def capnp_schema(self):
-        return self.js9type.capnp_schema_get(self.name.lower(),self.nr)
+        return self.js9type.capnp_schema_get(self.name_camel,self.nr)
 
     def __str__(self):
-        if self.default not in [None,0,"",[]]:
-            out = "prop:%-25s (%s)     default:%s"%(self.name,self.js9type.NAME,self.default)
-        else:
+        if not self.js9type.NAME == "list":
             out = "prop:%-25s (%s)"%(self.name,self.js9type.NAME)
+        else:
+            out = "prop:%-25s (%s(%s))"%(self.name,self.js9type.NAME,self.js9type.SUBTYPE.NAME)
+
+        if self.default not in [None,0,"",[]]:
+            out +="   default:%s"%self.default
+
         if self.pointer_type:
             out+=" !%s"%self.pointer_type
         return out

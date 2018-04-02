@@ -13,7 +13,7 @@ class ZDBFactory(JSConfigBase):
         self.__jslocation__ = "j.clients.zdb"
         super(ZDBFactory, self).__init__(ZDBClient)
 
-    def configure(self, instance="main", namespace="default", secret="", addr="localhost", port=None, adminsecret="", mode="user", id_enable=False):
+    def configure(self, instance="main", namespace="default", secret="", addr="localhost", port=None, adminsecret="", mode="user", id_enable=False, started=False):
 
         if port is None:
             raise InputError("port cannot be None")
@@ -26,7 +26,7 @@ class ZDBFactory(JSConfigBase):
         data["id_enable"] = bool(id_enable)
         data["adminsecret_"] = adminsecret
         data["secret_"] = secret
-        return self.get(instance=instance, data=data, create=True, interactive=False)
+        return self.get(instance=instance, data=data, create=True, interactive=False, started=started)
 
     def test(self):
         """

@@ -8,8 +8,8 @@ from .GedisExampleServer import GedisExampleServer
 def now(): return time.time()
 
 
-JSBASE = j.application.jsbase_get_class()
-import signal
+# JSBASE = j.application.jsbase_get_class()
+# import signal
 
 
 BASE = j.servers.gedis._self_class_get()

@@ -14,7 +14,7 @@ class ZDBServers(JSConfigBase):
         super().__init__(child_class=ZDBServer)
         self.rootdir = j.sal.fs.joinPaths(j.dirs.VARDIR, 'zdb')
 
-    def configure(self, instance="main", adminsecret="", mode="user", rootdir=None, addr="127.0.0.1", port=9900, verbose=True, id_enable=True, reset=False):
+    def configure(self, instance="main", adminsecret="", mode="user", rootdir=None, addr="127.0.0.1", port=9900, verbose=True, id_enable=True, reset=False, start=False):
         """
         read more info at https://github.com/rivine/0-db/blob/master/README.md
         mode: user,direct,seq
@@ -45,6 +45,9 @@ class ZDBServers(JSConfigBase):
         instance = self.get(instance=instance, data=data)
         if reset:
             instance.destroy()
+
+        if start:
+            instance.start()
 
         return instance
 

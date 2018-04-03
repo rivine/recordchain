@@ -34,6 +34,7 @@ class GedisClient(JSConfigBase):
 
     @property
     def redis(self):
+        # import ipdb; ipdb.set_trace()
         if self._redis is None:
             d = self.config.data
             addr = d["addr"]
@@ -53,10 +54,11 @@ class GedisClient(JSConfigBase):
             if unixsocket == "":
                 unixsocket = None
 
+
             self._redis = j.clients.redis.get(
                 ipaddr=addr, port=port, password=password, unixsocket=unixsocket,
                 ardb_patch=ardb_patch, set_patch=set_patch, ssl=d["ssl"],
-                ssl_keyfile=ssl_keyfile, ssl_certfile=ssl_certfile,
+                ssl_keyfile=None, ssl_certfile=ssl_certfile,
                 ssl_cert_reqs=None, ssl_ca_certs=None)
 
         return self._redis

@@ -6,15 +6,17 @@ import gevent.signal
 from gevent.pool import Pool
 from gevent.server import StreamServer
 from .protocol import CommandParser, ResponseWriter
+import inspect
+import imp
 
 TEMPLATE = """
 addr = "localhost"
 port = "9900"
-ssl = false
+# ssl = false
 adminsecret_ = ""
 """
-
 JSConfigBase = j.tools.configmanager.base_class_config
+
 
 class GedisServer(StreamServer, JSConfigBase):
 
@@ -27,9 +29,15 @@ class GedisServer(StreamServer, JSConfigBase):
         port = int(self.config.data["port"])
 
         self.address = '{}:{}'.format(host, port)
+        # import ipdb; ipdb.set_trace()
         if self.config.data['ssl']:
             self.logger.info("ssl enabled, keys in %s"%self.ssl_priv_key_path)
             self.sslkeys_generate()
+
+            #############7ossam
+            # there was no session here on tmux, happened first, come here again call it three
+            #4 this appeared on tmux, again on tmux call it 5
+            # outside of tmux after failure this appeared
             self.server = StreamServer(
                 (host, port), spawn=Pool(), handle=self.__handle_connection, keyfile=self.ssl_priv_key_path, certfile=self.ssl_cert_path)
         else:
@@ -38,6 +46,7 @@ class GedisServer(StreamServer, JSConfigBase):
 
         self._sig_handler = []
         # commands callbacks
+        self._cmds_path = j.sal.fs.getParent(self.config.path) + 'cmds.py'
         self._cmds = {}
 
     def sslkeys_generate(self):
@@ -61,29 +70,32 @@ class GedisServer(StreamServer, JSConfigBase):
 
 
     def register_command(self, cmd, callback):
+        # import ipdb;ipdb.set_trace()
         self.logger.info("add cmd %s" % cmd)
-        if isinstance(cmd, str):
-            cmd = cmd.encode('utf-8')
-            cmd = cmd.upper()
-        self._cmds[cmd] = callback
+        content = inspect.getsource(callback)
+        j.sal.fs.writeFile(self._cmds_path, contents='\n'+content, append=True)
+
 
     def __handle_connection(self, socket, address):
+        # import ipdb; ipdb.set_trace()
         self.logger.info('connection from {}'.format(address))
         parser = CommandParser(socket)
         response = ResponseWriter(socket)
+
+        self._cmds = imp.load_source(pathname=self._cmds_path)
 
         try:
             while True:
                 request = parser.read_request()
                 cmd = request[0]
-                if cmd not in self._cmds:
+                if cmd not in self._cmds.__dir__():
                     response.error('command not supported')
                     continue
 
                 # execute command callback
                 result = ""
                 try:
-                    result = self._cmds[cmd](request)
+                    result = getattr(self._cmds, cmd)(request)
                     self.logger.debug(
                         "Callback done and result {} , type {}".format(result, type(result)))
                 except Exception as e:
@@ -113,6 +125,7 @@ class GedisServer(StreamServer, JSConfigBase):
         for item in self.__dir__():
             # self.logger.debug("method:%s"%item)
             if item.endswith("_cmd"):
+                # import ipdb;ipdb.set_trace()
                 item2 = item[:-4]
                 # found a method which is a command
                 cmd = eval("self.%s" % item)

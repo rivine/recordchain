@@ -20,11 +20,13 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class GedisServer(StreamServer, JSConfigBase):
 
-    def __init__(self,instance, data={}, parent=None, interactive=False):
+    def __init__(self,instance, data={}, parent=None, interactive=False,template=None):
         """
         """        
+        if not template:
+            template = TEMPLATE
         JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, template=TEMPLATE, interactive=interactive)
+                              parent=parent, template=template, interactive=interactive)
         host = self.config.data["addr"]
         port = int(self.config.data["port"])
 

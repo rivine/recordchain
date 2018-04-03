@@ -16,6 +16,7 @@ class Schema(JSBASE):
         self._template = None
         self._capnp_template = None
         self._obj_class = None
+        self._capnp = None
         self.hash = ""
         if text:
             self._schema_from_text(text)
@@ -23,33 +24,34 @@ class Schema(JSBASE):
     def _proptype_get(self, txt):
 
         if "\\n" in txt:
-            proptype = j.data.types.multiline
-            defvalue = proptype.fromString(txt)
+            js9type = j.data.types.multiline
+            defvalue = js9type.fromString(txt)
 
         elif "'" in txt or "\"" in txt:
-            proptype = j.data.types.string
-            defvalue = proptype.fromString(txt)
+            js9type = j.data.types.string
+            defvalue = js9type.fromString(txt)
 
         elif "." in txt:
-            proptype = j.data.types.float
-            defvalue = proptype.fromString(txt)
+            js9type = j.data.types.float
+            defvalue = js9type.fromString(txt)
 
         elif "true" in txt.lower() or "false" in txt.lower():
-            proptype = j.data.types.bool
-            defvalue = proptype.fromString(txt)
+            js9type = j.data.types.bool
+            defvalue = js9type.fromString(txt)
 
         elif "[]" in txt:
-            proptype = j.data.types.list
+            js9type = j.data.types._list()
+            js9type.SUBTYPE = j.data.types.string
             defvalue = []
 
         elif j.data.types.int.checkString(txt):
-            proptype = j.data.types.int
-            defvalue = j.data.types.int.fromString(txt)
+            js9type = j.data.types.int
+            defvalue = js9type.fromString(txt)
 
         else:
             raise RuntimeError("cannot find type for:%s" % txt)
 
-        return (proptype, defvalue)
+        return (js9type, defvalue)
 
     def _schema_from_text(self, schema):
         self.logger.debug("load schema:\n%s" % schema)
@@ -84,12 +86,12 @@ class Schema(JSBASE):
                 comment = ""
 
             if "(" in line:
-                proptype = line.split("(")[1].split(")")[0].strip().lower()
-                line = line.split("(")[0].strip()
-                proptype = j.data.types.get(proptype)
-                defvalue = proptype.fromString(line)
+                line_proptype = line.split("(")[1].split(")")[0].strip().lower()
+                line_wo_proptype = line.split("(")[0].strip()
+                js9type = j.data.types.get(line_proptype)
+                defvalue = js9type.fromString(line_wo_proptype)
             else:
-                proptype, defvalue = self._proptype_get(line)
+                js9type, defvalue = self._proptype_get(line)
 
             if ":" in propname:
                 # self.logger.debug("alias:%s"%propname)
@@ -97,7 +99,7 @@ class Schema(JSBASE):
             else:
                 alias = propname
 
-            return (propname, alias, proptype, defvalue, comment, pointer_type)
+            return (propname, alias, js9type, defvalue, comment, pointer_type)
 
         nr = 0
         for line in schema.split("\n"):
@@ -118,14 +120,14 @@ class Schema(JSBASE):
                     (nr, "did not find =, need to be there to define field"))
                 continue
 
-            propname, alias, proptype, defvalue, comment, pointer_type = process(line)
+            propname, alias, js9type, defvalue, comment, pointer_type = process(line)
 
             p = SchemaProperty()
 
             p.name = propname
             p.default = defvalue
             p.comment = comment
-            p.js9type = proptype
+            p.js9type = js9type
             p.alias = alias
             p.pointer_type = pointer_type
 
@@ -140,12 +142,12 @@ class Schema(JSBASE):
         nr=0
         for s in self.properties:
             s.nr = nr
-            self.__dict__["_%s_type" % s.name] = s
+            self.__dict__["property_%s" % s.name] = s
             nr+=1
 
         for s in self.lists:
             s.nr = nr
-            self.__dict__["_%s_type" % s.name] = s
+            self.__dict__["property_%s" % s.name] = s
             nr+=1
 
     @property
@@ -181,6 +183,11 @@ class Schema(JSBASE):
         print(code)
         return code
 
+    @property
+    def capnp(self):
+        if not self._capnp:
+            self._capnp =  j.data.capnp3.getSchemaFromText(self.capnp_schema)
+        return self._capnp
 
     @property
     def objclass(self):

@@ -2,6 +2,7 @@
 from js9 import j
 from pprint import pprint as print
 import os
+import struct
 import copy
 
 TEMPLATE = """
@@ -20,7 +21,7 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class ZDBClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
+    def __init__(self, instance, data={}, parent=None, interactive=False,started=True):
         """
         is connection to ZDB
 
@@ -35,9 +36,9 @@ class ZDBClient(JSConfigBase):
             adminsecret does not have to be set, but when you want to create namespaces it is a must
 
         """
-        self.init(instance=instance, data=data, parent=parent, interactive=interactive)
+        self.init(instance=instance, data=data, parent=parent, interactive=interactive,started=started)
 
-    def init(self, instance, data={}, parent=None, interactive=False, reset=False):
+    def init(self, instance, data={}, parent=None, interactive=False, reset=False,started=True):
 
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
@@ -50,6 +51,9 @@ class ZDBClient(JSConfigBase):
             self._indexfile = j.data.indexfile.get(name=instance, path=ipath, nrbytes=6)
         else:
             self._indexfile = None
+        
+        if not started:
+            return
 
         redis = j.clients.redis.get(ipaddr=self.config.data['addr'],
                                     port=self.config.data['port'],
@@ -79,6 +83,8 @@ class ZDBClient(JSConfigBase):
 
         nsname = self.config.data["namespace"]
         secret = self.config.data["secret_"]
+
+        self.mode = self.config.data["mode"]
 
         def namespace_init(nsname, secret):
             # means the namespace does already exists
@@ -123,7 +129,13 @@ class ZDBClient(JSConfigBase):
 
         @PARAM checknew, if True will return (key,new) and new is bool
         """
-        if self.key_enable:
+        if self.mode=="seq":
+            if id is None:
+                id=""
+            else:
+                id = struct.pack("<I", id)
+            return struct.unpack("<I",self.client.execute_command("SET", id, data))[0]
+        elif self.key_enable:
             if key is None:
                 raise j.exceptions.Input("key cannot be None")
             self.client.execute_command("SET", key, data)
@@ -159,7 +171,10 @@ class ZDBClient(JSConfigBase):
         Arguments:
             key {[type]} - - [description] is id or key
         """
-        if self.key_enable:
+        if self.mode=="seq":
+            id = struct.pack("<I", key)
+            return self.client.execute_command("GET", id)
+        elif self.key_enable:
             return self.client.execute_command("GET", key)
         elif self.id_enable:
             if not j.data.types.int.check(key):
@@ -177,7 +192,10 @@ class ZDBClient(JSConfigBase):
         Arguments:
             key {[type]} - - [description] is id or key
         """
-        if self.id_enable:
+        if self.mode=="seq":
+            id = struct.pack("<I", key)
+            return self.client.execute_command("GET", id) is not None
+        elif self.id_enable:
             if not j.data.types.int.check(key):
                 raise j.exceptions.Input("key needs to be int")
             pos = self._indexfile.get(key)

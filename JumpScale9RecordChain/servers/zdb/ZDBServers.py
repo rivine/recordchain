@@ -14,7 +14,7 @@ class ZDBServers(JSConfigBase):
         super().__init__(child_class=ZDBServer)
         self.rootdir = j.sal.fs.joinPaths(j.dirs.VARDIR, 'zdb')
 
-    def configure(self, instance="main", adminsecret="", mode="user", rootdir=None, addr="127.0.0.1", port=9900, verbose=True, id_enable=True, reset=False):
+    def configure(self, instance="main", adminsecret="", mode="user", rootdir=None, addr="127.0.0.1", port=9900, verbose=True, id_enable=True, reset=False, start=False):
         """
         read more info at https://github.com/rivine/0-db/blob/master/README.md
         mode: user,direct,seq
@@ -46,6 +46,9 @@ class ZDBServers(JSConfigBase):
         if reset:
             instance.destroy()
 
+        if start:
+            instance.start()
+
         return instance
 
     def start(self, instance="main"):
@@ -59,7 +62,7 @@ class ZDBServers(JSConfigBase):
         """
         js9 'j.servers.zdb.build()'
         """
-        j.tools.prefab.local.zero_os.zos_db.build(install=True)
+        j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
 
     def test(self):
         """
@@ -71,3 +74,17 @@ class ZDBServers(JSConfigBase):
         db.start()
         cl = db.client_get()
         cl.test()
+
+    def test_seq(self):
+        """
+        js9 'j.servers.zdb.test_seq()'
+        """
+        # self.build()
+        # db = self.configure(instance="test", adminsecret="1234", reset=True, mode="seq", id_enable=False)
+        # db.stop()
+        # db.start()
+        db = self.get("test")
+        cl = db.client_get()
+        nr = cl.nsinfo["entries"]
+        # assert nr == 0
+        from IPython import embed;embed(colors='Linux')

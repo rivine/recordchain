@@ -64,15 +64,16 @@ class SchemaFactory(JSBASE):
         schema = """
         @url = despiegk.test
         @name = TestObj
+        llist2 = "" (LS)        
         nr = 4
         date_start = 0 (D)
         description = ""
         token_price = "10 USD" (N)
         cost_estimate:hw_cost = 0.0 #this is a comment
         llist = []
-        llist2 = "1,2,3" (LS)
         llist3 = "1,2,3" (LF)
         llist4 = "1,2,3" (L)
+        llist5 = "1,2,3" (LI)
         U = 0.0
         #pool_type = "managed,unmanaged" (E)  #NOT DONE FOR NOW
         """
@@ -80,8 +81,24 @@ class SchemaFactory(JSBASE):
 
         s = self.schema_from_text(schema)
         print(s)
-        # s.code_generate()
+
         o=s.get()
+
+        o.llist.append(1)
+        o.llist2.append("yes")
+        o.llist2.append("no")
+        o.llist3.append(1.2)
+        o.llist4.append(1)
+        o.llist5.append(1)
+        o.llist5.append(2)
+        o.U = 1.1
+        o.nr = 1
+        o.token_price = "10 EUR"
+        o.description = "something"
+
+        o.cobj
+
+
 
         from IPython import embed;embed(colors='Linux')
 

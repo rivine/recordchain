@@ -1,6 +1,6 @@
 @0x{{obj.capnp_id}};
 
-struct {{obj.name}} {
+struct Schema {
 
     {% for prop in obj.properties %}
     {{prop.capnp_schema}}

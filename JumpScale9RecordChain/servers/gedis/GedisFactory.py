@@ -22,8 +22,8 @@ class GedisFactory(JSConfigBase):
 
     def start(self, instance="main", background=False):
         server = self.get(instance)
-        ssl = server.config.data['ssl']        
-        
+        ssl = server.config.data['ssl']
+
         if background:
             cmd = "js9 '%s.start(instance=\"%s\")'" % (
                 self.__jslocation__, instance)
@@ -32,7 +32,7 @@ class GedisFactory(JSConfigBase):
             if res==False:
                 raise RuntimeError("Could not start gedis server on port:%s"%int(server.config.data["port"]))
             cl=self.client_get(instance=instance)
-            assert cl.redis.execute_command("PING") is True
+            assert cl.redis.execute_command("ping") is "PONG"
             self.logger.info("gedis server '%s' started"%instance)
         else:
             server = self.get(instance, create=False)
@@ -46,8 +46,6 @@ class GedisFactory(JSConfigBase):
         """
         data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl}
         server = self._child_class(instance=instance, data=data, parent=self, interactive=interactive)
-        #####7ossam
-        # there was no session here also on tmux, happened second
 
         if start:
             self.start(instance=instance, background=background)
@@ -58,13 +56,10 @@ class GedisFactory(JSConfigBase):
         will user server arguments to figure out how to get client, is easy for testing
         """
         server = self.get(instance=instance)
-        # import ipdb; ipdb.set_trace()
         ssl = server.config.data['ssl']
         if not ssl:
             client = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']), ssl= False)
         else:
             client = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']),ssl=ssl, ssl_keyfile=None, ssl_certfile=server.ssl_cert_path)
-        # import ipdb; ipdb.set_trace()
-        # assert client.redis.execute_command("PING") == True
         return client
     

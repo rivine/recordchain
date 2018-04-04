@@ -23,6 +23,8 @@ class GedisExampleServerFactory(BASE,JSConfigBase):
     def __init__(self):        
         self.__jslocation__ = "j.servers.gedisexample"
         JSConfigBase.__init__(self, GedisExampleServer)
+        self.mindb = {}
+
         
     def test_ssl(self, dobenchmarks=False):
         """

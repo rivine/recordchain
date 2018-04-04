@@ -25,23 +25,22 @@ class GedisClientFactory(JSConfigBase):
         """
         #TODO:*1 need to define well what this keyfile/certfile is
         """
-
         data = {}
         data["addr"] = ipaddr
         data["port"] = port
         data["password_"] = password
         data["unixsocket"] = unixsocket
         data["ssl"] = ssl
-        if ssl_keyfile and ssl_certfile:
+        if ssl_certfile:
             #check if its a path, if yes load
             data["ssl"] = True 
             data["sslkey"] = True #means path will be used for sslkey at redis client
             
-        r =  self.get(instance=instance, data=data)
+        r = self.get(instance=instance, data=data)
 
-        if ssl_keyfile and ssl_certfile:
+        if ssl_certfile:
             #check if its a path, if yes safe the key paths into config
-            r.ssl_keys_save(ssl_keyfile,ssl_certfile)
+            r.ssl_keys_save(ssl_certfile)
 
         return r
 

@@ -27,14 +27,7 @@ class GedisClient(JSConfigBase):
             return p
 
     @property
-    def ssl_keyfile_path(self):
-        p = j.sal.fs.getDirName(self.config.path) + "key.pem"
-        if self.config.data["sslkey"]:
-            return p
-
-    @property
     def redis(self):
-        # import ipdb; ipdb.set_trace()
         if self._redis is None:
             d = self.config.data
             addr = d["addr"]
@@ -49,27 +42,20 @@ class GedisClient(JSConfigBase):
             # NO PATHS IN CONFIG !!!!!!!, needs to come from properties above (convention over configuration)
 
             ssl_certfile = self.ssl_certfile_path if d['ssl'] else None
-            ssl_keyfile = self.ssl_keyfile_path if d['ssl'] else None
 
             if unixsocket == "":
                 unixsocket = None
 
-
+            # import ipdb; ipdb.set_trace()
             self._redis = j.clients.redis.get(
-                ipaddr=addr, port=port, password=password, unixsocket=unixsocket,
-                ardb_patch=ardb_patch, set_patch=set_patch, ssl=d["ssl"],
-                ssl_keyfile=None, ssl_certfile=ssl_certfile,
-                ssl_cert_reqs=None, ssl_ca_certs=None)
+                ipaddr=addr, port=port, password=password, ssl=d["ssl"], ssl_ca_certs=ssl_certfile)
 
         return self._redis
 
-    def ssl_keys_save(self, ssl_keyfile, ssl_certfile):
-        if j.sal.fs.exists(ssl_keyfile):
-            ssl_keyfile = j.sal.fs.readFile(ssl_keyfile)
+    def ssl_keys_save(self,  ssl_certfile):
         if j.sal.fs.exists(ssl_certfile):
             ssl_certfile = j.sal.fs.readFile(ssl_certfile)
         j.sal.fs.writeFile(self.ssl_certfile_path, ssl_certfile)
-        j.sal.fs.writeFile(self.ssl_keyfile_path, ssl_keyfile)
 
     def __str__(self):
         return "gedisclient:%-14s %-25s:%-4s (ssl:%s)" % (self.instance, self.config.data["addr"],  self.config.data["port"], self.config.data["ssl"])

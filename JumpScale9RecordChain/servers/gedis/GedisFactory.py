@@ -32,7 +32,7 @@ class GedisFactory(JSConfigBase):
             if res==False:
                 raise RuntimeError("Could not start gedis server on port:%s"%int(server.config.data["port"]))
             cl=self.client_get(instance=instance)
-            assert cl.redis.execute_command("ping") is "PONG"
+            assert cl.redis.execute_command("ping") == b"PONG"
             self.logger.info("gedis server '%s' started"%instance)
         else:
             server = self.get(instance, create=False)

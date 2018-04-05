@@ -5,6 +5,14 @@ from JumpScale9 import j
 ServerClass = j.servers.gedis.baseclass_get()
 
 class GedisExampleServer(ServerClass):
+    """
+        methods found here will be added to the server,
+        when calling them with redis client make sure you
+        use their name as is, without _cmd in the end
+
+        if it is testtest_cmd, use testtest
+        don't capitilize the whole word
+    """
     def __init__(self,instance, data={}, parent=None, interactive=False):
         ServerClass.__init__(self, instance=instance, data=data,
                               parent=parent, interactive=interactive)

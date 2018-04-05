@@ -28,6 +28,13 @@ class GedisClient(JSConfigBase):
 
     @property
     def redis(self):
+        """
+        this gets you a redis instance, when executing commands you have to send the name of the function without
+        the postfix _cmd as is, do not capitlize it
+        if it is testtest_cmd, then you should call it by testtest
+
+        :return: redis instance
+        """
         if self._redis is None:
             d = self.config.data
             addr = d["addr"]

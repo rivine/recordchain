@@ -22,17 +22,17 @@ class GedisFactory(JSConfigBase):
 
     def start(self, instance="main", background=False):
         server = self.get(instance)
-        ssl = server.config.data['ssl']        
-        
+        ssl = server.config.data['ssl']
+
         if background:
-            cmd = "js9 '%s.start(instance=\"%s\",background=False)'" % (
+            cmd = "js9 '%s.start(instance=\"%s\")'" % (
                 self.__jslocation__, instance)
-            j.tools.tmux.execute(cmd, session='main', window='gedis_%s'%instance,pane='main', session_reset=False, window_reset=True)            
-            res=j.sal.nettools.waitConnectionTest("localhost",int(server.config.data["port"]),timeoutTotal=2)
+            j.tools.tmux.execute(cmd, session='main', window='gedis_%s'%instance,pane='main', session_reset=False, window_reset=True)
+            res=j.sal.nettools.waitConnectionTest("localhost",int(server.config.data["port"]),timeoutTotal=1000)
             if res==False:
                 raise RuntimeError("Could not start gedis server on port:%s"%int(server.config.data["port"]))
             cl=self.client_get(instance=instance)
-            assert cl.redis.execute_command("PING") == True
+            assert cl.redis.execute_command("ping") == b"PONG"
             self.logger.info("gedis server '%s' started"%instance)
         else:
             server = self.get(instance, create=False)
@@ -46,9 +46,10 @@ class GedisFactory(JSConfigBase):
         """
         data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl}
         server = self._child_class(instance=instance, data=data, parent=self, interactive=interactive)
+
         if start:
             self.start(instance=instance, background=background)
-        return server
+        # return server
 
     def client_get(self, instance):
         """
@@ -57,9 +58,8 @@ class GedisFactory(JSConfigBase):
         server = self.get(instance=instance)
         ssl = server.config.data['ssl']
         if not ssl:
-            cli = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']), ssl= False)
+            client = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']), ssl= False)
         else:
-            cli = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']),ssl=ssl, ssl_keyfile=None, ssl_certfile=None)
-        assert cli.redis.execute_command("PING") == True
-        return cli
+            client = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']),ssl=ssl, ssl_keyfile=None, ssl_certfile=server.ssl_cert_path)
+        return client
     

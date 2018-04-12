@@ -3,8 +3,6 @@ import collections
 class List0(collections.MutableSequence):
 
     def __init__(self, parentobj, parent,schema_property):
-        # if type(l) is not list:
-        #     raise ValueError()
         self._inner_list = []
         self._parent = parent
         self._parentobj = parentobj

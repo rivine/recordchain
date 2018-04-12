@@ -18,6 +18,8 @@ class Schema(JSBASE):
         self._obj_class = None
         self._capnp = None
         self.hash = ""
+        self._index_list = None
+        self._SCHEMA = True
         if text:
             self._schema_from_text(text)
 
@@ -99,6 +101,12 @@ class Schema(JSBASE):
             else:
                 alias = propname
 
+            if alias[-1]=="*":
+                alias=alias[:-1]
+
+            if propname in ["id"]:
+                raise RuntimeError("do not use 'id' in your schema, is reserved for system.")
+
             return (propname, alias, js9type, defvalue, comment, pointer_type)
 
         nr = 0
@@ -123,6 +131,10 @@ class Schema(JSBASE):
             propname, alias, js9type, defvalue, comment, pointer_type = process(line)
 
             p = SchemaProperty()
+
+            if propname.endswith("*"):
+                propname=propname[:-1]
+                p.index=True
 
             p.name = propname
             p.default = defvalue
@@ -198,9 +210,19 @@ class Schema(JSBASE):
             self._obj_class = eval(self.name)
         return self._obj_class
 
-    def get(self,data={}):
-        return self.objclass(schema=self,data=data)
+    def get(self,data={},capnpbin=None):
+        return self.objclass(schema=self,data=data,capnpbin=capnpbin)
 
+
+    @property
+    def index_list(self):
+        if self._index_list==None:
+            self._index_list = []
+            for prop in self.properties:
+                if prop.index:
+                    self._index_list.append(prop.alias)
+        return self._index_list                    
+            
 
     def __str__(self):
         out=""

@@ -232,6 +232,8 @@ class ZDBClient(JSConfigBase):
         return res
 
     def list(self, start=None, end=None):
+        if self.id_enable == False:
+            raise RuntimeError("only id_enable supported for list")
         res = self._indexfile.list(start=start, end=end)
         return [i for i in res.keys()]
 
@@ -254,27 +256,44 @@ class ZDBClient(JSConfigBase):
             start {int} -- start id (default: {0})
             end {int} -- end id (default: {0}, which means end of file)
         """
-        if self.id_enable == False:
-            raise RuntimeError("only id_enable supported for iterate")
+        if self.mode=="seq":
+            if start is None:
+                start = 0
+            id=start
+            while True:
+                try:
+                    data = self.get(id)
+                except Exception as e:
+                    from IPython import embed;embed(colors='Linux')
+                if data==None:
+                    break
+                result = method(id, data, result=result)
+                id+=1
+                if end is not None and id > end:
+                    break
+                       
+        else:        
+            if self.id_enable == False:
+                raise RuntimeError("only id_enable supported for iterate")
 
-        if start is not None:
-            id = start
-        else:
-            id = 0
+            if start is not None:
+                id = start
+            else:
+                id = 0
 
-        self._indexfile._f.seek(self._indexfile._offset(id))
+            self._indexfile._f.seek(self._indexfile._offset(id))
 
-        while True:
-            pos = self._indexfile._f.read(self._indexfile.nrbytes)
-            if len(pos) < self._indexfile.nrbytes:
-                break  # EOF
+            while True:
+                pos = self._indexfile._f.read(self._indexfile.nrbytes)
+                if len(pos) < self._indexfile.nrbytes:
+                    break  # EOF
 
-            data = self.client.execute_command("GET", pos)
+                data = self.client.execute_command("GET", pos)
 
-            result = method(id, data, result=result)
-            id += 1
-            if end is not None and id > end:
-                break
+                result = method(id, data, result=result)
+                id += 1
+                if end is not None and id > end:
+                    break
 
         return result
 

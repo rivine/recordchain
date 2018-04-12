@@ -79,7 +79,7 @@ class SchemaFactory(JSBASE):
         """
 
 
-        s = self.schema_from_text(schema)
+        s = j.data.schema.schema_from_text(schema)
         print(s)
 
         o=s.get()

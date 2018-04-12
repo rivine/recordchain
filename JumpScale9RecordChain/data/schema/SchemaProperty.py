@@ -16,6 +16,7 @@ class SchemaProperty(JSBASE):
         self.comment = ""
         self.pointer_type = None
         self.nr=0
+        self.index = False
 
     @property
     def default_as_python_code(self):

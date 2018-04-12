@@ -10,9 +10,10 @@ class {{obj.name}}():
 
         self.changed_list = False
         self.changed_prop = False
+        self.changed_items = {}
 
         if capnpbin != None:
-            self._cobj = self.capnp.from_bytes(capnpbin)
+            self._cobj = self.capnp.from_bytes_packed(capnpbin)
         else:
             self._cobj = self.capnp.new_message()
 
@@ -24,6 +25,9 @@ class {{obj.name}}():
         self.{{ll.alias}} = List0(self,self._cobj.{{ll.name_camel}}, self.schema.property_{{ll.name}})
         {% endfor %}
 
+        self._JSOBJ = True
+
+        self.id = 0
 
     {# generate the properties #}
     {% for prop in obj.properties %}
@@ -34,14 +38,19 @@ class {{obj.name}}():
         {{prop.comment}}
         '''
         {% endif %}
-        return self._cobj.{{prop.name_camel}}
+        if self.changed_prop and "{{prop.name_camel}}" in self.changed_items:
+            return self.changed_items["{{prop.name_camel}}"]
+        else:
+            return self._cobj.{{prop.name_camel}}
         
     @{{prop.alias}}.setter
     def {{prop.alias}}(self,val):
         #will make sure that the input args are put in right format
         val = {{prop.js9_typelocation}}.clean(val)
-        self._cobj.{{prop.name_camel}} = val
-        self.changed_prop = True
+        # self._cobj.{{prop.name_camel}} = val        
+        if self.{{prop.alias}} != val:
+            self.changed_prop = True
+            self.changed_items["{{prop.name_camel}}"] = val
 
     {% if prop.js9type.NAME == "numeric" %}
     @property 
@@ -68,37 +77,54 @@ class {{obj.name}}():
 
     @property
     def cobj(self):
-        if self.changed_list:            
+        if self.changed_list or self.changed_prop:
             ddict = self._cobj.to_dict()
-            print("cobj")
-            {% for prop in obj.lists %}
-            if self.{{prop.alias}}._copied:
-                #means the list was modified
-                if "{{prop.name_camel}}" in ddict:
-                    ddict.pop("{{prop.name_camel}}")
-                ddict["{{prop.name_camel}}"]=[]
-                for item in self.{{prop.name}}._inner_list:
-                    ddict["{{prop.name_camel}}"].append(item)                
-            {% endfor %}
+
+            if self.changed_list:
+                print("cobj")
+                {% for prop in obj.lists %}
+                if self.{{prop.alias}}._copied:
+                    #means the list was modified
+                    if "{{prop.name_camel}}" in ddict:
+                        ddict.pop("{{prop.name_camel}}")
+                    ddict["{{prop.name_camel}}"]=[]
+                    for item in self.{{prop.name}}._inner_list:
+                        ddict["{{prop.name_camel}}"].append(item)                
+                {% endfor %}
+
+            if self.changed_prop:
+                ddict.update(self.changed_items)
+
             try:
                 self._cobj = self.capnp.new_message(**ddict)
             except Exception as e:
                 msg="\nERROR: could not create capnp message\n"
-                msg+=j.data.text.indent(j.data.serializer.json.dumps(ddict,sort_keys=True,indent=True),4)+"\n"
+                try:
+                    msg+=j.data.text.indent(j.data.serializer.json.dumps(ddict,sort_keys=True,indent=True),4)+"\n"
+                except:
+                    msg+=j.data.text.indent(str(ddict),4)+"\n"
                 msg+="schema:\n"
                 msg+=j.data.text.indent(str(self.schema.capnp_schema),4)+"\n"
                 msg+="error was:\n%s\n"%e
                 raise RuntimeError(msg)
+
+            self.changed_reset()
+
         return self._cobj
+
+    @property
+    def data(self):
+        try:
+            return self.cobj.to_bytes_packed()
+        except:
+            return self.cobj.as_builder().to_bytes_packed()
 
     def changed_reset(self):
         self.changed_list = False
         self.changed_prop = False
-        {% for prop in obj.lists %}
-        if self.{{prop.name}}._copied:
-            #means the list was modified
-            self.{{prop.name}}._inner_list = []
-            self.{{prop.name}}._copied = False                     
+        self.changed_items = {}
+        {% for ll in obj.lists %}    
+        self.{{ll.alias}} = List0(self,self._cobj.{{ll.name_camel}}, self.schema.property_{{ll.name}})
         {% endfor %}
         
         
@@ -106,12 +132,13 @@ class {{obj.name}}():
     def ddict(self):
         d={}
         {% for prop in obj.properties %}
-        d["{{prop.name}}"] = self._cobj.{{prop.name_camel}}
+        d["{{prop.name}}"] = self.{{prop.alias}}
         {% endfor %}
         {% for prop in obj.lists %}
         #check if the list has the right type
-        d["{{prop.name}}"] = self.{{prop.name}}.pylist
+        d["{{prop.name}}"] = self.{{prop.alias}}.pylist
         {% endfor %}
+        d["id"]=self.id
         return d
 
     @property
@@ -121,12 +148,13 @@ class {{obj.name}}():
         """
         d={}
         {% for prop in obj.properties %}
-        d["{{prop.name}}"] = {{prop.js9_typelocation}}.toHR(self._cobj.{{prop.name_camel}})
+        d["{{prop.name}}"] = {{prop.js9_typelocation}}.toHR(self.{{prop.alias}})
         {% endfor %}
         {% for prop in obj.lists %}
         #check if the list has the right type
-        d["{{prop.name}}"] = self.{{prop.name}}.pylist
+        d["{{prop.name}}"] = self.{{prop.alias}}.pylist
         {% endfor %}
+        d["id"]=self.id
         return d
 
     @property

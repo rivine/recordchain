@@ -64,11 +64,12 @@ class ZDBServers(JSConfigBase):
         """
         j.tools.prefab.local.zero_os.zos_db.build(install=True,reset=True)
 
-    def test(self):
+    def test(self,build=False):
         """
-        js9 'j.servers.zdb.test()'
+        js9 'j.servers.zdb.test(build=True)'
         """
-        # self.build()
+        if build:
+            self.build()
         db = self.configure(instance="test", adminsecret="1234", reset=True, mode="direct", id_enable=True)
         db.stop()
         db.start()
@@ -80,11 +81,26 @@ class ZDBServers(JSConfigBase):
         js9 'j.servers.zdb.test_seq()'
         """
         # self.build()
-        # db = self.configure(instance="test", adminsecret="1234", reset=True, mode="seq", id_enable=False)
-        # db.stop()
-        # db.start()
+        db = self.configure(instance="test", adminsecret="1234", reset=True, mode="seq", id_enable=False)
+        db.stop()
+        db.start()
         db = self.get("test")
         cl = db.client_get()
         nr = cl.nsinfo["entries"]
-        # assert nr == 0
-        from IPython import embed;embed(colors='Linux')
+        assert nr == 0
+
+        for i in range(10):
+            id=cl.set("test")
+            assert cl.get(id)==b"test"
+
+        nr = cl.nsinfo["entries"]
+        assert nr == 10
+            
+        cl.set("test2",2)
+        assert cl.get(2)==b"test2"
+
+        def m(id,data,result):
+            print("%s:%s"%(id,data))
+
+        cl.iterate(m)
+            

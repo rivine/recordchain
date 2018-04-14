@@ -18,6 +18,9 @@ class SchemaProperty(JSBASE):
         self.nr=0
         self.index = False
 
+        if self.name in ["schema"]:
+            raise RuntimeError("cannot have property name:%s"%self.name)
+
     @property
     def default_as_python_code(self):
         return self.js9type.python_code_get(self.default)

@@ -31,7 +31,7 @@ class GedisServer(StreamServer, JSConfigBase):
         port = int(self.config.data["port"])
 
         self.address = '{}:{}'.format(host, port)
-        # import ipdb; ipdb.set_trace()
+
         if self.config.data['ssl']:
             self.logger.info("ssl enabled, keys in %s"%self.ssl_priv_key_path)
             self.sslkeys_generate()
@@ -68,18 +68,19 @@ class GedisServer(StreamServer, JSConfigBase):
 
 
     def register_command(self, cmd, callback):
-        # import ipdb;ipdb.set_trace()
+
         self.logger.info("add cmd %s" % cmd)
         content = inspect.getsource(callback)
+
+        #remove the self. if written as class style
         lines = content.splitlines()
         content = ""
         for line in lines:
             line = line.replace("self,", "")
             content = content + line[4:] + "\n"
-        content
-
+        
         if not j.sal.fs.exists(path=self._cmds_path):
-            j.sal.fs.writeFile(self._cmds_path, contents=content, append=True)
+            j.sal.fs.writeFile(self._cmds_path, contents=content)
         else:
             __cmds = imp.load_source(name="cmds.py", pathname=self._cmds_path)
             if cmd+"_cmd" not in __cmds.__dir__():

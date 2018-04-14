@@ -46,5 +46,5 @@ class RaftServerFactory(JSConfigBase):
         """
         js9 'j.servers.raftserver.test()'
         """
-        self.start_local(nrservers=3,startport=6000,cmd="j.servers.raftserver.example_server_class_get()")
+        self.start_local(nrservers=4,startport=6000,cmd="j.servers.raftserver.example_server_class_get()")
 

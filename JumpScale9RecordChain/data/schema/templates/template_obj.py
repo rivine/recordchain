@@ -81,7 +81,8 @@ class {{obj.name}}():
             ddict = self._cobj.to_dict()
 
             if self.changed_list:
-                print("cobj")
+                # print("cobj")
+                pass
                 {% for prop in obj.lists %}
                 if self.{{prop.alias}}._copied:
                     #means the list was modified
@@ -89,7 +90,10 @@ class {{obj.name}}():
                         ddict.pop("{{prop.name_camel}}")
                     ddict["{{prop.name_camel}}"]=[]
                     for item in self.{{prop.name}}._inner_list:
-                        ddict["{{prop.name_camel}}"].append(item)                
+                        if self.{{prop.name}}.schema_property.pointer_type is not None:
+                            #use data in stead of rich object
+                            item = item.data
+                        ddict["{{prop.name_camel}}"].append(item)
                 {% endfor %}
 
             if self.changed_prop:
@@ -114,10 +118,14 @@ class {{obj.name}}():
 
     @property
     def data(self):
-        try:
-            return self.cobj.to_bytes_packed()
-        except:
-            return self.cobj.as_builder().to_bytes_packed()
+        self.cobj.clear_write_flag()
+        return self.cobj.to_bytes_packed()
+        # from IPython import embed;embed(colors='Linux')
+        # sds
+        # try:
+        #     return self.cobj.to_bytes_packed()
+        # except:
+        #     return self.cobj.as_builder().to_bytes_packed()
 
     def changed_reset(self):
         self.changed_list = False

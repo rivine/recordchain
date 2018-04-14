@@ -164,7 +164,7 @@ class Schema(JSBASE):
 
     @property
     def capnp_id(self):
-        return self.hash[0:16]
+        return "f"+self.hash[1:16]  #first bit needs to be 1
 
     @property
     def code_template(self):
@@ -213,6 +213,8 @@ class Schema(JSBASE):
     def get(self,data={},capnpbin=None):
         return self.objclass(schema=self,data=data,capnpbin=capnpbin)
 
+    def new(self):
+        return self.get()
 
     @property
     def index_list(self):

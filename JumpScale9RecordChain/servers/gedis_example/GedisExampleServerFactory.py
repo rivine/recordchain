@@ -35,16 +35,18 @@ class GedisExampleServerFactory(BASE,JSConfigBase):
         self._test(server, dobenchmarks=dobenchmarks)
         
     def test(self, dobenchmarks=True):
+        """
+        js9 'j.servers.gedisexample.test(dobenchmarks=False)'
+        js9 'j.servers.gedisexample.test(dobenchmarks=True)'
+
+        will start in tmux the server & then connect to it using redisclient
+
+        """        
         server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, interactive=False, start=True, background=True)
         self._test(server, dobenchmarks=dobenchmarks)
 
     def _test(self, server, dobenchmarks=True):
-        """
-        js9 'j.servers.gedisexample.test()'
 
-        will start in tmux the server & then connect to it using redisclient
-
-        """
         db = j.servers.zdb.configure(instance="test", adminsecret="1234", reset=True, mode="direct", id_enable=True)
         db.start()
 

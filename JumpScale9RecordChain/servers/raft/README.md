@@ -11,4 +11,4 @@ we need to test this implementation well, come up with strategies where we have 
 Do up to 30 nodes, see what happens if random nodes get killed.
 Ofcourse test very well for 3 too because its easier to spot issues.
 
-
+see also https://github.com/bakwc/PySyncObj/issues/78

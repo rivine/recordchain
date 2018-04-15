@@ -28,7 +28,7 @@ class RaftServerFactory(JSConfigBase):
     def example_server_class_get(self):
         return RaftServer
 
-    def start_local(self,nrservers=3,startport=4000,cmd="j.servers.raftserver.example_server_class_get()" ):
+    def start_local(self,nrservers=3,startport=4000,cmd="j.servers.raftserver.example_server_class_get()" ,secret="1233"):
         """
         start local cluster of 5 nodes, will be run in tmux
         """
@@ -38,7 +38,7 @@ class RaftServerFactory(JSConfigBase):
 
         members=members.rstrip(",")
 
-        cluster = self.get_by_params( instance="main", secret="1233", members =members,cmd=cmd)
+        cluster = self.get_by_params( instance="main", secret=secret, members =members,cmd=cmd)
         cluster.start(background=True)
 
 
@@ -48,3 +48,8 @@ class RaftServerFactory(JSConfigBase):
         """
         self.start_local(nrservers=4,startport=6000,cmd="j.servers.raftserver.example_server_class_get()")
 
+    def test_nopasswd(self):
+        """
+        js9 'j.servers.raftserver.test_nopasswd()'
+        """
+        self.start_local(nrservers=30,startport=6000,cmd="j.servers.raftserver.example_server_class_get()",secret="")

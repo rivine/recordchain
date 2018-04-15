@@ -41,7 +41,7 @@ class RaftCluster(JSConfigBase):
 
             cmd0=self.config.data["cmd"]
             secret=self.config.data["secret_"]
-            cmd = "js9 'cl=%s;cl(port=%s,members=\"%s\",secret=\"%s\" )'"%(cmd0,port,members,secret)
+            cmd = "mkdir -p /tmp/raft;cd /tmp/raft;js9 'cl=%s;cl(port=%s,members=\"%s\",secret=\"%s\" )'"%(cmd0,port,members,secret)
             print(cmd)
             j.tools.tmux.execute(cmd, session='main', window='raft_%s'%port,pane='main', session_reset=False, window_reset=True)
 

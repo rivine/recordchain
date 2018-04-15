@@ -83,7 +83,9 @@ class List0(collections.MutableSequence):
         """
         return new subitem, only relevant when there are pointer_types used
         """
-        return self.pointer_schema.new()
+        s=self.pointer_schema.new()
+        self.append(s)
+        return s
 
     @property
     def pointer_schema(self):

@@ -22,10 +22,12 @@ class RaftServer(JSBASE):
 
         cfg = SyncObjConf(autoTick=True)
         cfg.onReady = self.onReady
-        cfg.password = secret
+        if secret is not "" and secret is not None:
+            print("SECRET")
+            cfg.password = secret
 
         cfg.appendEntriesPeriod = 0.01
-        # cfg.appendEntriesUseBatch = True 
+        cfg.appendEntriesUseBatch = True 
         cfg.raftMinTimeout = 0.4
         cfg.raftMaxTimeout = 1.4
         cfg.dynamicMembershipChange = True
@@ -34,11 +36,12 @@ class RaftServer(JSBASE):
         cfg.connectionRetryTime = 5.0  #connect to other down nodes every so many secs
         cfg.connectionTimeout = 3.5
         cfg.leaderFallbackTimeout = 10.0
-        # cfg.journalFile = "/tmp/raft_%s"%self.port        
-        # cfg.leaderFallbackTimeout = True
+        cfg.journalFile = "/tmp/raft/raft_%s"%self.port        
+        cfg.leaderFallbackTimeout = True
         cfg.logCompactionMinEntries = 1000
         cfg.logCompactionMinTime = 60
-    
+
+
         
         self.logger.debug("port:%s"%self.port)
         self.logger.debug("members:%s"%remotes)
@@ -89,7 +92,7 @@ class RaftServer(JSBASE):
             time.sleep(0.001)
             last = time.time()
 
-            if last > previnsert+0.1:
+            if last > previnsert+0.001:
                 # print("insert")                                
                 c = self.dict1.get('test:%s' % self.port)
                 c = c + 1
@@ -105,7 +108,7 @@ class RaftServer(JSBASE):
                 
                 previnsert = last
     
-            if last > prevprint+1.0:
+            if last > prevprint+2.0:
                 print(self.dict1.items())
 
                 prevprint = last

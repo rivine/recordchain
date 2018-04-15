@@ -9,6 +9,9 @@ from .protocol import CommandParser, ResponseWriter
 import inspect
 import imp
 
+from .GedisCmds import GedisCmds
+from .GedisServerBase import GedisServerBase
+
 TEMPLATE = """
 addr = "localhost"
 port = "9900"
@@ -20,9 +23,9 @@ JSConfigBase = j.tools.configmanager.base_class_config
 
 class GedisServer(StreamServer, JSConfigBase):
 
-    def __init__(self,instance, data={}, parent=None, interactive=False,template=None):
+    def __init__(self, instance, data={}, parent=None, interactive=False, template=None):
         """
-        """        
+        """
         if not template:
             template = TEMPLATE
         JSConfigBase.__init__(self, instance=instance, data=data,
@@ -33,7 +36,8 @@ class GedisServer(StreamServer, JSConfigBase):
         self.address = '{}:{}'.format(host, port)
 
         if self.config.data['ssl']:
-            self.logger.info("ssl enabled, keys in %s"%self.ssl_priv_key_path)
+            self.logger.info("ssl enabled, keys in %s" %
+                             self.ssl_priv_key_path)
             self.sslkeys_generate()
 
             self.server = StreamServer(
@@ -43,48 +47,47 @@ class GedisServer(StreamServer, JSConfigBase):
                 (host, port), spawn=Pool(), handle=self.__handle_connection)
 
         self._sig_handler = []
-        # commands callbacks
-        self._cmds_path = j.sal.fs.getParent(self.config.path) + 'cmds.py'
-        self._cmds = {}
+
+
+        self.cmds_add(namespace="system", class_=GedisServerBase)
 
     def sslkeys_generate(self):
-        
-        res=j.sal.ssl.ca_cert_generate(j.sal.fs.getDirName(self.config.path))
+
+        res = j.sal.ssl.ca_cert_generate(j.sal.fs.getDirName(self.config.path))
         if res:
-            self.logger.info("generated sslkeys for gedis in %s"%self.config.path)
-        
+            self.logger.info("generated sslkeys for gedis in %s" %
+                             self.config.path)
 
     @property
     def ssl_priv_key_path(self):
         p = j.sal.fs.getDirName(self.config.path) + "ca.key"
         if self.config.data["ssl"]:
             return p
-            
+
     @property
     def ssl_cert_path(self):
         p = j.sal.fs.getDirName(self.config.path) + "ca.crt"
         if self.config.data["ssl"]:
             return p
 
+    # def register_command(self, cmd, callback):
 
-    def register_command(self, cmd, callback):
+    #     self.logger.info("add cmd %s" % cmd)
+    #     content = inspect.getsource(callback)
 
-        self.logger.info("add cmd %s" % cmd)
-        content = inspect.getsource(callback)
+    #     #remove the self. if written as class style
+    #     lines = content.splitlines()
+    #     content = ""
+    #     for line in lines:
+    #         line = line.replace("self,", "")
+    #         content = content + line[4:] + "\n"
 
-        #remove the self. if written as class style
-        lines = content.splitlines()
-        content = ""
-        for line in lines:
-            line = line.replace("self,", "")
-            content = content + line[4:] + "\n"
-        
-        if not j.sal.fs.exists(path=self._cmds_path):
-            j.sal.fs.writeFile(self._cmds_path, contents=content)
-        else:
-            __cmds = imp.load_source(name="cmds.py", pathname=self._cmds_path)
-            if cmd+"_cmd" not in __cmds.__dir__():
-                j.sal.fs.writeFile(self._cmds_path, contents='\n' + content, append=True)
+    #     if not j.sal.fs.exists(path=self._cmds_path):
+    #         j.sal.fs.writeFile(self._cmds_path, contents=content)
+    #     else:
+    #         __cmds = imp.load_source(name="cmds.py", pathname=self._cmds_path)
+    #         if cmd+"_cmd" not in __cmds.__dir__():
+    #             j.sal.fs.writeFile(self._cmds_path, contents='\n' + content, append=True)
 
     def __handle_connection(self, socket, address):
         self.logger.info('connection from {}'.format(address))
@@ -103,7 +106,8 @@ class GedisServer(StreamServer, JSConfigBase):
                 # execute command callback
                 result = ""
                 try:
-                    result = getattr(self._cmds, cmd.decode("utf-8")+"_cmd")(request)
+                    result = getattr(self._cmds, cmd.decode(
+                        "utf-8")+"_cmd")(request)
                     self.logger.debug(
                         "Callback done and result {} , type {}".format(result, type(result)))
                 except Exception as e:
@@ -121,14 +125,16 @@ class GedisServer(StreamServer, JSConfigBase):
             parser.on_disconnect()
             self.logger.info('close connection from {}'.format(address))
 
-    #DEFAULT COMMAND ALWAYS THERE
-    def ping_cmd(self,request):
-        return "PONG"
-
     def start(self):
         self.logger.info("init server")
         j.logger.enabled = False
         self._logger = None
+
+        self.cmds =
+
+        from IPython import embed
+        embed(colors='Linux')
+        sssss
 
         for item in self.__dir__():
             # self.logger.debug("method:%s"%item)
@@ -142,7 +148,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
 
         self.logger.info("start server")
-        #SHOULD NOT IMPLEMENT BACKGROUND HERE HAS BEEN DONE AT FACTORY LEVEL
+        # SHOULD NOT IMPLEMENT BACKGROUND HERE HAS BEEN DONE AT FACTORY LEVEL
         # if background:
         #     from multiprocessing import Process
         #     p = Process(target=self.server.serve_forever)
@@ -161,3 +167,16 @@ class GedisServer(StreamServer, JSConfigBase):
 
         self.logger.info('stopping server')
         self.server.stop()
+
+    def cmds_add(self, namespace, path=None, class_=None):
+
+        if not path:
+            classname = j.sal.fs.getBaseName(path).split(".", 1)[0]
+            dname = j.sal.fs.getDirName(path)
+            if dname not in sys.path:
+                sys.path.append(dname)
+
+            exec("from .%s import %s" % (classname, classname))
+            class_ = eval(classname)
+
+        self.cmds[name] = GedisCmds(self, namespace=namespace, class_=class_)

@@ -13,7 +13,7 @@ class SchemaFactory(JSBASE):
         self.__jslocation__ = "j.data.schema"
         JSBASE.__init__(self)
         self._template_engine = None
-        self.code_generation_dir = j.dirs.VARDIR+"/codegeneration/"
+        self.code_generation_dir = j.dirs.VARDIR+"/codegen/schema/"
         j.sal.fs.createDir(self.code_generation_dir)
         if self.code_generation_dir not in sys.path:
             sys.path.append(self.code_generation_dir)
@@ -24,7 +24,8 @@ class SchemaFactory(JSBASE):
 
     def schema_from_text(self, txt):
         s = Schema(text=txt)
-        self.schemas[s.url] = s
+        if s.url is not "":
+            self.schemas[s.url] = s
         return s
 
     def schema_add(self, txt):
@@ -62,7 +63,7 @@ class SchemaFactory(JSBASE):
         # schema_txt = self.db.get("schemas:%s"%url)
         # if schema_txt == None:
         else:
-            raise InputError("could not find schema with url:%s" % url)
+            raise RuntimeError("could not find schema with url:%s" % url)
         # s = self.schema_from_text(schema_txt)
         # return s
 
@@ -85,6 +86,14 @@ class SchemaFactory(JSBASE):
     def test(self):
         """
         js9 'j.data.schema.test()'
+        """
+        self.test1()
+        self.test2()
+        self.test3()
+
+    def test1(self):
+        """
+        js9 'j.data.schema.test1()'
         """
         schema = """
         @url = despiegk.test
@@ -123,7 +132,7 @@ class SchemaFactory(JSBASE):
         o.cobj
 
         schema = """
-        @url = despiegk.test
+        @url = despiegk.test2
         @name = TestObj
         llist2 = "" (LS)        
         nr = 4
@@ -133,17 +142,20 @@ class SchemaFactory(JSBASE):
         cost_estimate:hw_cost = 0.0 #this is a comment
         llist = []
 
-        @url = despiegk.test2
+        @url = despiegk.test3
         @name = TestObj2
         llist = []
         description = ""
         """
         j.data.schema.schema_add(schema)
-        s1 = self.schema_from_url("despiegk.test")
-        s2 = self.schema_from_url("despiegk.test2")
+        s1 = self.schema_from_url("despiegk.test2")
+        s2 = self.schema_from_url("despiegk.test3")
 
-        from IPython import embed
-        embed(colors='Linux')
+        o1 = s1.get()
+        o2 = s2.get()
+        o2.llist.append("1")
+
+        print("TEST 1 OK")
 
     def test2(self):
         """
@@ -176,8 +188,8 @@ class SchemaFactory(JSBASE):
         print(s1.capnp_schema)
         print(s0.capnp_schema)
 
-        from IPython import embed
-        embed(colors='Linux')
+        print("TEST 2 OK")
+
 
     def test3(self):
         """
@@ -196,16 +208,22 @@ class SchemaFactory(JSBASE):
         @url = jumpscale.gedis.serverschema
         @name = GedisServerSchema
         cmds = (LO) !jumpscale.gedis.cmd
+
+        @url = jumpscale.gedis.cmd1
+        @name = GedisServerCmd1
+        cmd = (O) !jumpscale.gedis.cmd
+        cmd2 = (O) !jumpscale.gedis.cmd
+        
         """
         self.schema_add(SCHEMA)
         s1 = self.schema_from_url("jumpscale.gedis.cmd")
         s2 = self.schema_from_url("jumpscale.gedis.serverschema")
+        s3 = self.schema_from_url("jumpscale.gedis.cmd1")
 
         o = s2.get()
         for i in range(4):
             oo = o.cmds.new()
             oo.name = "test%s"%i
-            o.cmds.append(oo)
 
         assert o.cmds[2].name=="test2" 
         o.cmds[2].name="testxx"
@@ -219,6 +237,19 @@ class SchemaFactory(JSBASE):
 
         print (o.data)
 
+        o3 = s3.get()
+        o3.cmd.name = "test"
+        o3.cmd2.name = "test"
+        assert o3.cmd.name == "test"
+        assert o3.cmd2.name == "test"
+
+        bdata = o3.data
+        o4 = s3.get(capnpbin=bdata)
+        assert o4.ddict == o3.ddict
+
+        assert o3.data == o4.data
+
+        print("TEST 3 OK")
 
 
     # def test_list(self):

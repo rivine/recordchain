@@ -8,7 +8,7 @@ from gevent.server import StreamServer
 from .protocol import CommandParser, ResponseWriter
 import inspect
 import imp
-
+import sys
 from .GedisCmds import GedisCmds
 from .GedisServerBase import GedisServerBase
 
@@ -48,8 +48,41 @@ class GedisServer(StreamServer, JSConfigBase):
 
         self._sig_handler = []
 
-
+        #PREPARE FOR CODE GENERATION
+        self._template_engine = None    
+        self.code_generation_dir = j.dirs.VARDIR+"/codegen/gedis/"
+        j.sal.fs.createDir(self.code_generation_dir)
+        if self.code_generation_dir not in sys.path:
+            sys.path.append(self.code_generation_dir)
+        j.sal.fs.touch(self.code_generation_dir+"/__init__.py")
+        self.logger.debug("codegendir:%s" % self.code_generation_dir)
+            
         self.cmds_add(namespace="system", class_=GedisServerBase)
+
+    @property
+    def template_engine(self):
+        if self._template_engine is None:
+            from jinja2 import Environment, PackageLoader
+
+            self._template_engine = Environment(
+                loader=PackageLoader(
+                    'JumpScale9RecordChain.servers.gedis', 'templates'),
+                trim_blocks=True,
+                lstrip_blocks=True,
+            )
+        return self._template_engine
+
+    @property
+    def code_server_template(self):
+        if self._template == None:
+            self._template = j.data.schema.template_engine.get_template("template_server.py")
+        return self._template
+
+    @property
+    def code_client_template(self):
+        if self._template == None:
+            self._template = j.data.schema.template_engine.get_template("template_client.py")
+        return self._template        
 
     def sslkeys_generate(self):
 
@@ -130,7 +163,7 @@ class GedisServer(StreamServer, JSConfigBase):
         j.logger.enabled = False
         self._logger = None
 
-        self.cmds =
+        self.cmds = {}
 
         from IPython import embed
         embed(colors='Linux')
@@ -170,7 +203,7 @@ class GedisServer(StreamServer, JSConfigBase):
 
     def cmds_add(self, namespace, path=None, class_=None):
 
-        if not path:
+        if path is not None:
             classname = j.sal.fs.getBaseName(path).split(".", 1)[0]
             dname = j.sal.fs.getDirName(path)
             if dname not in sys.path:

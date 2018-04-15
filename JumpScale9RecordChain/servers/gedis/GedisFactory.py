@@ -39,13 +39,13 @@ class GedisFactory(JSConfigBase):
             server = self.get(instance, create=False)
             server.start()
 
-    def configure(self, instance="main", port=8889, addr="localhost", secret="", ssl=False, interactive=False, classpaths=[], start=False, background=True):
+    def configure(self, instance="main", port=8889, addr="localhost", secret="", ssl=False, interactive=False, start=False, background=True):
         """
         e.g.
         js9 j.servers.gedis.start()'  
         will be different name depending the implementation
         """
-        data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl, "classpaths": classpaths}
+        data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl}
         server = self._child_class(instance=instance, data=data, parent=self, interactive=interactive)
 
         if start:

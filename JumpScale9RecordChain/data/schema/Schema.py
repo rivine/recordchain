@@ -20,6 +20,8 @@ class Schema(JSBASE):
         self.hash = ""
         self._index_list = None
         self._SCHEMA = True
+        self.url = ""
+        self.name = ""
         if text:
             self._schema_from_text(text)
 
@@ -90,8 +92,13 @@ class Schema(JSBASE):
             if "(" in line:
                 line_proptype = line.split("(")[1].split(")")[0].strip().lower()
                 line_wo_proptype = line.split("(")[0].strip()
-                js9type = j.data.types.get(line_proptype)
-                defvalue = js9type.fromString(line_wo_proptype)
+                if line_proptype=="o": #special case where we have subject directly attached
+                    js9type = j.data.types.get("jo")
+                    js9type.SUBTYPE = pointer_type
+                    defvalue = ""
+                else:
+                    js9type = j.data.types.get(line_proptype)
+                    defvalue = js9type.fromString(line_wo_proptype)
             else:
                 js9type, defvalue = self._proptype_get(line)
 
@@ -162,6 +169,7 @@ class Schema(JSBASE):
             self.__dict__["property_%s" % s.name] = s
             nr+=1
 
+
     @property
     def capnp_id(self):
         return "f"+self.hash[1:16]  #first bit needs to be 1
@@ -204,10 +212,11 @@ class Schema(JSBASE):
     @property
     def objclass(self):
         if self._obj_class is None:
-            path = j.data.schema.code_generation_dir + "dbobj_%s.py" % self.name
+            url = self.url.replace(".","_")
+            path = j.data.schema.code_generation_dir + "dbobj_%s.py" % url
             j.sal.fs.writeFile(path,self.code)
-            exec("from dbobj_%s import %s"% (self.name, self.name))
-            self._obj_class = eval(self.name)
+            exec("from dbobj_%s import ModelOBJ"% (url))
+            self._obj_class = eval("ModelOBJ")
         return self._obj_class
 
     def get(self,data={},capnpbin=None):

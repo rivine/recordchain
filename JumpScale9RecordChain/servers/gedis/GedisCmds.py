@@ -34,6 +34,7 @@ class GedisCmds(JSBASE):
         self.schema = j.data.schema.schema_from_url("jumpscale.gedis.api")
 
         self.data = self.schema.new()
+        self.name = namespace
         self.data.namespace = namespace
 
         for name,item in inspect.getmembers(class_):
@@ -49,6 +50,25 @@ class GedisCmds(JSBASE):
                 code = inspect.getsource(item)
                 cmd.code,cmd.comment,cmd.schema_in, cmd.schema_out= self.source_process(code)    
 
+        self.process()
+
+        code = self.code
+
+        from IPython import embed;embed(colors='Linux')
+        l
+
+    def process(self):
+        for cmd in self.data.cmds:
+            schema_in=j.data.schema.schema_from_text(cmd.schema_in)
+            schema_out=j.data.schema.schema_from_text(cmd.schema_out)
+            from IPython import embed;embed(colors='Linux')
+            k
+            
+
+    @property
+    def code(self):
+        code = self.server.code_server_template.render(obj=self)
+        return code
 
     def source_process(self,txt):
         """

@@ -5,7 +5,6 @@ from pprint import pprint as print
 from .BCDB import BCDB
 
 
-
 JSConfigBase = j.tools.configmanager.base_class_configs
 
 
@@ -15,16 +14,16 @@ class BCDBFactory(JSConfigBase):
         self.__jslocation__ = "j.data.bcdb"
         super().__init__(child_class=BCDB)
 
-    def db_start(self,instance,adminsecret,port=8888,reset=False):
+    def db_start(self, instance, adminsecret, port=8888, reset=False):
         self.instance_last = instance
-        s=j.servers.zdb.configure(instance=instance,port=port,mode="direct",reset=reset,adminsecret=adminsecret,start=True,id_enable=True)
+        s = j.servers.zdb.configure(instance=instance, port=port, mode="direct", reset=reset, adminsecret=adminsecret, start=True, id_enable=True)
 
-    def get(self,instance):
-        s=j.servers.zdb.get(instance=instance)
-        data={}
-        data["zdb_adminsecret_"]= s.config.data["adminsecret_"]
-        data["zdb_port"]= s.config.data["port"]
-        bcdb =  self._child_class(instance=instance, data=data, parent=self, interactive=False)
+    def get(self, instance):
+        s = j.servers.zdb.get(instance=instance)
+        data = {}
+        data["zdb_adminsecret_"] = s.config.data["adminsecret_"]
+        data["zdb_port"] = s.config.data["port"]
+        bcdb = self._child_class(instance=instance, data=data, parent=self, interactive=False)
         bcdb.server = s
         return bcdb
 
@@ -58,17 +57,16 @@ class BCDBFactory(JSConfigBase):
         name* = ""    
         email* = ""
         nr = 0
-        """        
+        """
 
         def load():
-            self.db_start("test",adminsecret="g007g",reset=True)
-            db=self.get("test")
-            t = db.table_get(name="t1",schema=schema)
-            t2 = db.table_get(name="t1",schema=schema2)
-            
+            self.db_start("test", adminsecret="g007g", reset=True)
+            db = self.get("test")
+            t = db.table_get(name="t1", schema=schema)
+            t2 = db.table_get(name="t1", schema=schema2)
 
             for i in range(10):
-                o=t.new()
+                o = t.new()
                 o.llist.append(1)
                 o.llist2.append("yes")
                 o.llist2.append("no")
@@ -76,43 +74,41 @@ class BCDBFactory(JSConfigBase):
                 o.U = 1.1
                 o.nr = 1
                 o.token_price = "10 EUR"
-                o.description = "something"            
-                o.name="name%s"%i
-                o.email="info%s@something.com"%i
-                o2=t.set(o)   
-                assert o2.id == i  
+                o.description = "something"
+                o.name = "name%s" % i
+                o.email = "info%s@something.com" % i
+                o2 = t.set(o)
+                assert o2.id == i
 
-            _,index,o3=t.get(o2.id)
+            _, index, o3 = t.get(o2.id)
             assert o3.id == o2.id
 
-            assert o3.ddict==o2.ddict
-            assert o3.ddict==o.ddict
+            assert o3.ddict == o2.ddict
+            assert o3.ddict == o.ddict
 
         load()
 
-        db=self.get("test")
-        t = db.table_get(name="t1",schema=schema)
-        
+        db = self.get("test")
+        t = db.table_get(name="t1", schema=schema)
 
-        res=t.find(name="name1",email="info2@something.com")
-        assert len(res)==0
+        res = t.find(name="name1", email="info2@something.com")
+        assert len(res) == 0
 
-        res=t.find(name="name2")
-        assert len(res)==1
+        res = t.find(name="name2")
+        assert len(res) == 1
         assert res[0].name == "name2"
 
-        res=t.find(name="name2",email="info2@something.com")
-        assert len(res)==1
+        res = t.find(name="name2", email="info2@something.com")
+        assert len(res) == 1
         assert res[0].name == "name2"
 
-
-        o=res[0]
+        o = res[0]
         o.name = "name2"
-        assert o.changed_prop == False  #because data did not change, was already that data
+        assert o.changed_prop == False  # because data did not change, was already that data
         o.name = "name3"
-        assert o.changed_prop == True  #now it really changed
+        assert o.changed_prop == True  # now it really changed
 
         assert o.ddict["name"] == "name3"
 
-        from IPython import embed;embed(colors='Linux')   
-
+        from IPython import embed
+        embed(colors='Linux')

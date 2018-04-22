@@ -4,8 +4,9 @@ from js9 import j
 
 JSBASE = j.application.jsbase_get_class()
 
+
 class GedisServerBase(JSBASE):
-    
+
     def __init__(self):
         JSBASE.__init__(self)
 
@@ -20,8 +21,8 @@ class GedisServerBase(JSBASE):
         res = [] (LS)
         ```
 
-        """  
-        return a+b             
+        """
+        return a+b
 
     def api_meta(self):
         """
@@ -31,5 +32,5 @@ class GedisServerBase(JSBASE):
         res = (O) !jumpscale.gedis.api
         ```
 
-        """  
-        return a+b          
+        """
+        return a+b

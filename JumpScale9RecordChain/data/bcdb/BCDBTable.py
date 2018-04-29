@@ -10,7 +10,7 @@ JSBASE = j.application.jsbase_get_class()
 
 class BCDBTable(JSBASE):
 
-    def __init__(self,bcdb,name,schema):
+    def __init__(self,bcdb,schema,name=""):
         """
         """
 
@@ -19,7 +19,6 @@ class BCDBTable(JSBASE):
         self.bcdb = bcdb
 
         s=bcdb.server
-        self.db =  self.bcdb.server.client_get(namespace=name, secret=s.config.data["adminsecret_"])
 
         self.name = name
 
@@ -29,6 +28,13 @@ class BCDBTable(JSBASE):
             pass
         else:
             raise RuntimeError("input needs to be schema in text or obj format")
+
+        if self.name=="":
+            self.name = schema.name
+            if not schema.name:
+                raise RuntimeError("schema name cannot be empty")
+
+        self.db =  self.bcdb.server.client_get(namespace=self.name, secret=s.config.data["adminsecret_"])
 
         self.schema = schema
         self.index = j.core.db  #only for now
@@ -64,7 +70,7 @@ class BCDBTable(JSBASE):
         # j.sal.fs.remove(ipath)
         # self._initdir()
 
-    def set(self,data,id=0):
+    def set(self,data,id=0,hook=None):
         """
         if string -> will consider to be json
         if binary -> will consider data for capnp
@@ -98,6 +104,9 @@ class BCDBTable(JSBASE):
 
         l=[0,index,bdata]
         data = msgpack.packb(l)
+
+        if hook:
+            obj = hook(obj,index)
 
         if id==0:
             #means a new one
@@ -137,7 +146,7 @@ class BCDBTable(JSBASE):
     def new(self):
         return self.schema.get()
 
-    def get(self,id,capnp=False):
+    def get(self,id,capnp=False,hook=None):
         """
         @PARAM capnp if true will return data as capnp binary object
         @RETURN meta,index,obj 
@@ -151,13 +160,17 @@ class BCDBTable(JSBASE):
         meta, index, bdata = msgpack.unpackb(data)
 
         if capnp:
+            if hook:
+                obj = hook(obj,index)
             return meta, index, bdata
         else:
             obj = self.schema.get(capnpbin=bdata)
             obj.id = id
+            if hook:
+                obj = hook(obj)
             return meta, index, obj
 
-    def find(self,**args):
+    def find(self,hook=None,**args):
         res=[]
         for key,val in args.items():
             indexkey=self._index_key+":%s"%key
@@ -178,7 +191,12 @@ class BCDBTable(JSBASE):
 
         res = [set(item) for item in res]
         res3 = reduce(set.intersection, res)
-        res4 = [self.get(item)[2] for item in res3]
+        res4=[]
+        for item in res3:
+            obj=self.get(item)[2]
+            if hook:
+                obj = hook(obj)
+            res4.append(obj)     
         return res4
 
 

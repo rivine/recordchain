@@ -6,14 +6,25 @@ from js9 import j
 from .GedisServer import GedisServer
 import os
 JSConfigBase = j.tools.configmanager.base_class_configs
+import sys
 
-from .GedisServerExample import GedisServerExample
 
 class GedisFactory(JSConfigBase):
 
     def __init__(self):
         self.__jslocation__ = "j.servers.gedis"
         JSConfigBase.__init__(self, GedisServer)
+
+        #PREPARE FOR CODE GENERATION
+        self._template_engine = None    
+        self._template_code_server = None
+        self._code_model_template = None
+        self.code_generation_dir = j.dirs.VARDIR+"/codegen/gedis/"
+        j.sal.fs.createDir(self.code_generation_dir)
+        if self.code_generation_dir not in sys.path:
+            sys.path.append(self.code_generation_dir)
+        j.sal.fs.touch(self.code_generation_dir+"/__init__.py")
+        self.logger.debug("codegendir:%s" % self.code_generation_dir)        
 
     def baseclass_get(self):
         return self._child_class
@@ -39,18 +50,21 @@ class GedisFactory(JSConfigBase):
             server = self.get(instance, create=False)
             server.start()
 
-    def configure(self, instance="main", port=8889, addr="localhost", secret="", ssl=False, interactive=False, start=False, background=True):
+    def configure(self, instance="main", port=8889, addr="localhost", secret="", ssl=False, path="", interactive=False, start=False, background=True):
         """
         e.g.
-        js9 j.servers.gedis.start()'  
+        js9 'j.servers.gedis.start()'  
         will be different name depending the implementation
         """
-        data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl}
+        if path=="":
+            path = j.sal.fs.getcwd()
+        data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl, "path":path}
         server = self._child_class(instance=instance, data=data, parent=self, interactive=interactive)
 
         if start:
             self.start(instance=instance, background=background)
-        # return server
+        return server
+
 
     def client_get(self, instance):
         """
@@ -64,6 +78,35 @@ class GedisFactory(JSConfigBase):
             client = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']),ssl=ssl, ssl_keyfile=None, ssl_certfile=server.ssl_cert_path)
         return client
 
+    @property
+    def template_engine(self):
+        if self._template_engine is None:
+            from jinja2 import Environment, PackageLoader
+
+            self._template_engine = Environment(
+                loader=PackageLoader('JumpScale9RecordChain.servers.gedis', 'templates'),
+                trim_blocks=True,
+                lstrip_blocks=True,
+            )
+        return self._template_engine
+
+    @property
+    def code_server_template(self):
+        if self._template_code_server == None:
+            self._template_code_server = self.template_engine.get_template("template.py")
+        return self._template_code_server
+
+    @property
+    def code_model_template(self):
+        if self._code_model_template == None:
+            self._code_model_template = self.template_engine.get_template("ModelBase.py")
+        return self._code_model_template        
+
+    @property
+    def _path(self):
+        return j.sal.fs.getDirName(os.path.abspath(__file__))
+
+
     def test(self, dobenchmarks=True):
         """
         js9 'j.servers.gedis.test(dobenchmarks=False)'
@@ -74,13 +117,14 @@ class GedisFactory(JSConfigBase):
         classpath = j.sal.fs.getDirName(os.path.abspath(__file__)) +"GedisServerExample.py"
 
         server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, \
-            interactive=False, background=True, start=True)
+            interactive=False, background=True, start=False)
 
         server.cmds_add("example",path=classpath)
         #OR:
         # server.cmds_add("example",class_=GedisServerExample)
 
         self._test(server, dobenchmarks=dobenchmarks)
+        
 
     def _test(self, server, dobenchmarks=True):
 

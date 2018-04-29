@@ -60,6 +60,8 @@ class Schema(JSBASE):
     def _schema_from_text(self, schema):
         self.logger.debug("load schema:\n%s" % schema)
 
+        self.text = schema
+
         self.hash = j.data.hash.blake2_string(schema)
 
         systemprops = {}
@@ -172,6 +174,8 @@ class Schema(JSBASE):
 
     @property
     def capnp_id(self):
+        if self.hash=="":
+            raise RuntimeError("hash cannot be empty")
         return "f"+self.hash[1:16]  #first bit needs to be 1
 
     @property
@@ -213,9 +217,9 @@ class Schema(JSBASE):
     def objclass(self):
         if self._obj_class is None:
             url = self.url.replace(".","_")
-            path = j.data.schema.code_generation_dir + "dbobj_%s.py" % url
+            path = j.data.schema.code_generation_dir + "%s.py" % url
             j.sal.fs.writeFile(path,self.code)
-            exec("from dbobj_%s import ModelOBJ"% (url))
+            exec("from %s import ModelOBJ"% (url))
             self._obj_class = eval("ModelOBJ")
         return self._obj_class
 

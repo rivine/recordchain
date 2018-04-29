@@ -31,7 +31,7 @@ class GedisServerExample(JSBASE):
         some a
 
         ```in
-        a = (N)
+        a = "10 EUR" (N)
         b = (N)
         ```
 

@@ -18,7 +18,32 @@ class BCDB(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, interactive=interactive, template=TEMPLATE)      
 
-        self.db = j.clients.zdb.get(instance=instance)
+        self.tables = {}
 
-    def table_get(self,name,schema):
-        return BCDBTable(self,name,schema)
+    def table_get(self, schema, name=""):
+        t = BCDBTable(self,schema=schema,name=name)
+        self.tables[t.name]=t
+        return t
+
+
+    def tables_get(self,schema_path=""):
+        """
+        @PARAM schema_path if empty will look in current dir for all files starting with 'schema'
+           if a directory will also walk over files in the directory
+        """
+        
+        if schema_path=="":
+            j.data.schema.reset() #start from empty situation
+            schema_path=j.sal.fs.getcwd()
+        
+        if j.sal.fs.isDir(schema_path):
+            for path in j.sal.fs.listFilesInDir(schema_path, recursive=False, filter="schema*"):
+                self.tables_get(schema_path=path)
+        else:
+            C=j.sal.fs.fileGetContents(schema_path)
+            schemas = j.data.schema.schema_add(C)
+            for schema in schemas:
+                if schema.name!="":    
+                    t = self.table_get(schema=schema,name=schema.name)
+            
+        return self.tables

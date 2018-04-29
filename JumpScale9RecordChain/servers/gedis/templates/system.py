@@ -4,7 +4,7 @@ from js9 import j
 
 JSBASE = j.application.jsbase_get_class()
 
-class GedisServerBase(JSBASE):
+class system(JSBASE):
     
     def __init__(self):
         JSBASE.__init__(self)
@@ -20,7 +20,11 @@ class GedisServerBase(JSBASE):
         res = [] (LS)
         ```
 
-        """  
+        """
+        for key,item in j.data.schema.schemas.items():
+            print("core_schemas_get")
+            from IPython import embed;embed(colors='Linux')
+            k
         return a+b             
 
     def api_meta(self):
@@ -32,4 +36,10 @@ class GedisServerBase(JSBASE):
         ```
 
         """  
+        s=j.servers.gedis.latest
+        for key,item in s.items():
+            print("api_meta")
+            from IPython import embed;embed(colors='Linux')
+            k        
+        pass
         return a+b          

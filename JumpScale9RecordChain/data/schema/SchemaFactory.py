@@ -22,6 +22,9 @@ class SchemaFactory(JSBASE):
         self.db = j.clients.redis.core_get()
         self.schemas = {}
 
+    def reset(self):
+        self.schemas = {}
+
     def schema_from_text(self, txt):
         s = Schema(text=txt)
         if s.url is not "":
@@ -35,6 +38,7 @@ class SchemaFactory(JSBASE):
         """
         block = ""
         state = "start"
+        res=[]
         for line in txt.split("\n"):
 
             l=line.lower().strip()
@@ -45,13 +49,15 @@ class SchemaFactory(JSBASE):
 
             if l.startswith("@url"):
                 if block is not "":
-                    self.schema_from_text(block)
+                    res.append(self.schema_from_text(block))
                 block = ""
 
             block += "%s\n" % line
 
         if block != "":
-            self.schema_from_text(block)
+            res.append(self.schema_from_text(block))
+
+        return res
 
     def schema_from_url(self, url):
         """

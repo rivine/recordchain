@@ -4,13 +4,17 @@ import inspect
 # import imp
 import sys
 import os
+from .GedisCmd import GedisCmd
 
 JSBASE = j.application.jsbase_get_class()
 
 
 class GedisCmds(JSBASE):
+    """
+    all commands captured in a capnp object, which can be stored in redis or any other keyvaluestor
+    """
     
-    def __init__(self,server,namespace, class_):
+    def __init__(self,namespace="", class_=None,capnpbin=None):
         JSBASE.__init__(self)
 
         self.server = server
@@ -20,7 +24,7 @@ class GedisCmds(JSBASE):
         @name = GedisCmd
         name = ""
         comment = ""
-        code = ""
+        code = "" 
         schema_in = ""
         schema_out = ""
 
@@ -33,42 +37,35 @@ class GedisCmds(JSBASE):
         # s1 = self.schema_from_url("jumpscale.gedis.cmd")
         self.schema = j.data.schema.schema_from_url("jumpscale.gedis.api")
 
-        self.data = self.schema.new()
-        self.name = namespace
-        self.data.namespace = namespace
+        self._cmd = {}
 
-        for name,item in inspect.getmembers(class_):
-            if name.startswith("_"):
-                continue
-            if name.startswith("logger"):
-                continue
-            if name in ["cache"]:
-                continue
-            if inspect.isfunction(item):
-                cmd = self.data.cmds.new()
-                cmd.name = name
-                code = inspect.getsource(item)
-                cmd.code,cmd.comment,cmd.schema_in, cmd.schema_out= self.source_process(code)    
+        if capnpbin:
+            self.data = self.schema.get(capnpbin=capnpbin)
+            self.name = self.data.namespace
+        else:
+            self.data = self.schema.new()
+            self.name = namespace
+            self.data.namespace = self.name
 
-        self.process()
-
-        code = self.code
-
-        from IPython import embed;embed(colors='Linux')
-        l
-
-    def process(self):
-        for cmd in self.data.cmds:
-            schema_in=j.data.schema.schema_from_text(cmd.schema_in)
-            schema_out=j.data.schema.schema_from_text(cmd.schema_out)
-            from IPython import embed;embed(colors='Linux')
-            k
-            
+            for name,item in inspect.getmembers(class_):
+                if name.startswith("_"):
+                    continue
+                if name.startswith("logger"):
+                    continue
+                if name in ["cache"]:
+                    continue
+                if inspect.isfunction(item):
+                    cmd = self.data.cmds.new()
+                    cmd.name = name
+                    code = inspect.getsource(item)
+                    cmd.code,cmd.comment,cmd.schema_in, cmd.schema_out= self.source_process(code)   
 
     @property
-    def code(self):
-        code = self.server.code_server_template.render(obj=self)
-        return code
+    def process(self):
+        if self._cmd == {}:
+            for cmd in self.data.cmds:
+                self._cmd[cmd.name] = GedisCmd(cmd)
+        return self._cmd
 
     def source_process(self,txt):
         """
@@ -119,7 +116,6 @@ class GedisCmds(JSBASE):
                 code+="%s\n"%line
                 continue
             raise RuntimeError()
-
         return j.data.text.strip(code),j.data.text.strip(comment),j.data.text.strip(schema_in),j.data.text.strip(schema_out)
             
             

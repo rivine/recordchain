@@ -10,13 +10,13 @@ import inspect
 import imp
 import sys
 from .GedisCmds import GedisCmds
-from .GedisServerBase import GedisServerBase
 
 TEMPLATE = """
 addr = "localhost"
 port = "9900"
 ssl = false
 adminsecret_ = ""
+path = ""
 """
 JSConfigBase = j.tools.configmanager.base_class_config
 
@@ -48,41 +48,11 @@ class GedisServer(StreamServer, JSConfigBase):
 
         self._sig_handler = []
 
-        #PREPARE FOR CODE GENERATION
-        self._template_engine = None    
-        self.code_generation_dir = j.dirs.VARDIR+"/codegen/gedis/"
-        j.sal.fs.createDir(self.code_generation_dir)
-        if self.code_generation_dir not in sys.path:
-            sys.path.append(self.code_generation_dir)
-        j.sal.fs.touch(self.code_generation_dir+"/__init__.py")
-        self.logger.debug("codegendir:%s" % self.code_generation_dir)
+        self.cmds = {}
             
-        self.cmds_add(namespace="system", class_=GedisServerBase)
+        # self.cmds_add(namespace="system", class_=GedisServerBase)
 
-    @property
-    def template_engine(self):
-        if self._template_engine is None:
-            from jinja2 import Environment, PackageLoader
-
-            self._template_engine = Environment(
-                loader=PackageLoader(
-                    'JumpScale9RecordChain.servers.gedis', 'templates'),
-                trim_blocks=True,
-                lstrip_blocks=True,
-            )
-        return self._template_engine
-
-    @property
-    def code_server_template(self):
-        if self._template == None:
-            self._template = j.data.schema.template_engine.get_template("template_server.py")
-        return self._template
-
-    @property
-    def code_client_template(self):
-        if self._template == None:
-            self._template = j.data.schema.template_engine.get_template("template_client.py")
-        return self._template        
+        j.servers.gedis.latest = self
 
     def sslkeys_generate(self):
 
@@ -126,7 +96,6 @@ class GedisServer(StreamServer, JSConfigBase):
         self.logger.info('connection from {}'.format(address))
         parser = CommandParser(socket)
         response = ResponseWriter(socket)
-        self._cmds = imp.load_source(name="cmds.py", pathname=self._cmds_path)
 
         try:
             while True:
@@ -137,12 +106,13 @@ class GedisServer(StreamServer, JSConfigBase):
                     continue
 
                 # execute command callback
+                print("execute command callback")
+                from IPython import embed;embed(colors='Linux')
+                jhg
                 result = ""
                 try:
-                    result = getattr(self._cmds, cmd.decode(
-                        "utf-8")+"_cmd")(request)
-                    self.logger.debug(
-                        "Callback done and result {} , type {}".format(result, type(result)))
+                    result = getattr(self._cmds, cmd.decode("utf-8")+"_cmd")(request)
+                    self.logger.debug("Callback done and result {} , type {}".format(result, type(result)))
                 except Exception as e:
                     print("exception in redis server")
                     eco = j.errorhandler.parsePythonExceptionObject(e)
@@ -162,21 +132,6 @@ class GedisServer(StreamServer, JSConfigBase):
         self.logger.info("init server")
         j.logger.enabled = False
         self._logger = None
-
-        self.cmds = {}
-
-        from IPython import embed
-        embed(colors='Linux')
-        sssss
-
-        for item in self.__dir__():
-            # self.logger.debug("method:%s"%item)
-            if item.endswith("_cmd"):
-                # import ipdb;ipdb.set_trace()
-                item2 = item[:-4]
-                # found a method which is a command
-                cmd = eval("self.%s" % item)
-                self.register_command(item2, cmd)
 
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
 
@@ -201,15 +156,43 @@ class GedisServer(StreamServer, JSConfigBase):
         self.logger.info('stopping server')
         self.server.stop()
 
-    def cmds_add(self, namespace, path=None, class_=None):
+    # def _cmds_add(self, namespace, path=None, class_=None):
 
-        if path is not None:
-            classname = j.sal.fs.getBaseName(path).split(".", 1)[0]
-            dname = j.sal.fs.getDirName(path)
-            if dname not in sys.path:
-                sys.path.append(dname)
+    #     if path is not None:
+    #         classname = j.sal.fs.getBaseName(path).split(".", 1)[0]
+    #         dname = j.sal.fs.getDirName(path)
+    #         if dname not in sys.path:
+    #             sys.path.append(dname)
 
-            exec("from .%s import %s" % (classname, classname))
-            class_ = eval(classname)
+    #         exec("from .%s import %s" % (classname, classname))
+    #         class_ = eval(classname)
 
-        self.cmds[name] = GedisCmds(self, namespace=namespace, class_=class_)
+    #     self.cmds[namespace] = GedisCmds(self, namespace=namespace, class_=class_)
+
+    def generate(self,db=None,reset=True):
+        
+        if db==None:
+            db=self.db
+
+        path_server = self.config.data["path"]+"/server/"
+        
+        if path_server not in sys.path:
+            sys.path.append(path_server)
+
+        j.sal.fs.touch(path_server+"__init__.py")
+
+        #copy the templates in the local server dir
+        for item in ["system"]:
+            dest = path_server+"%s.py"%item
+            if reset or not j.sal.fs.exists(dest):
+                src = j.servers.gedis._path+"/templates/%s.py"%item
+                j.sal.fs.copyFile(src,dest)
+
+        for namespace,table in db.tables.items():
+            url = table.schema.url.replace(".","_")
+            dest = path_server+"model_%s.py"%url
+            if reset or not j.sal.fs.exists(dest):
+                code = j.servers.gedis.code_model_template.render(obj= table.schema)
+                j.sal.fs.writeFile(dest,code)
+
+        # j.sal.fs.listFilesInDir()

@@ -4,12 +4,14 @@ from JumpScale9 import j
 {% for cmd in obj.data.cmds %}
 
 
-def {{cmd.name}}(request, **kwargs):
+def {{cmd.name}}(request, namespace, dbclient):
     {% if cmd.comment != "" %}
     '''
     {{cmd.comment}}
     '''
     {% endif %}
-    {{cmd.code}}
+    {% for line in cmd.code.splitlines() %}
+    {{line}}
+    {% endfor %}
 
 {% endfor %}

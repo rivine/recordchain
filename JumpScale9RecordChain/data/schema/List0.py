@@ -40,8 +40,9 @@ class List0(collections.MutableSequence):
         else:
             if not "_JSOBJ" in value.__dict__:
                 raise RuntimeError("need to insert JSOBJ, use .new() on list before inserting.")
-        self._inner_list.insert(index, value)
-        self._parentobj.changed_list = True
+        if not self.__checkitem__(value):
+            self._inner_list.insert(index, value)
+            self._parentobj.changed_list = True
 
     def __setitem__(self, index, value):
         self._copyFromParent()
@@ -60,7 +61,13 @@ class List0(collections.MutableSequence):
         if self._copied:
             return self._inner_list.__getitem__(index)
         else:            
-            return self._parent[index]   
+            return self._parent[index]
+
+    def __checkitem__(self, value):
+        for item in self._inner_list:
+            if item.name == value.name and item.code == value.code:
+                return True
+        return False
 
     @property
     def pylist(self):

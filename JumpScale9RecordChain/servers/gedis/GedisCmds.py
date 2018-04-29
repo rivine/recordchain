@@ -50,8 +50,6 @@ class GedisCmds(JSBASE):
                 cmd.code,cmd.comment,cmd.schema_in, cmd.schema_out= self.source_process(code)
                 self.data.cmds.append(cmd)
 
-        code = self.code
-
 
     @property
     def code(self):

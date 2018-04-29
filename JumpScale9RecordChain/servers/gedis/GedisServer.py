@@ -17,6 +17,7 @@ addr = "localhost"
 port = "9900"
 ssl = false
 adminsecret_ = ""
+dbclient_instance = ""
 """
 JSConfigBase = j.tools.configmanager.base_class_config
 
@@ -29,12 +30,16 @@ class GedisServer(StreamServer, JSConfigBase):
         self._code_server_template = None
         self._code_client_template = None
         self._template_engine = None
+        self.dbclient = None
         if not template:
             template = TEMPLATE
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=template, interactive=interactive)
         host = self.config.data["addr"]
         port = int(self.config.data["port"])
+
+        if self.config.data['dbclient_instance']:
+            self.dbclient = j.clients.gedis_backend.get(self.config.data['dbclient_instance'])
 
         self.address = '{}:{}'.format(host, port)
 
@@ -148,8 +153,8 @@ class GedisServer(StreamServer, JSConfigBase):
                 # execute command callback
                 result = ""
                 try:
-                    cmds = imp.load_source(ns, self._cmds_path+ns + '.py')
-                    result = getattr(cmds, cmd.lower())(request)
+                    cmds = imp.load_source(ns, self._cmds_path + ns + '.py')
+                    result = getattr(cmds, cmd.lower())(request, ns, self.dbclient)
                     self.logger.debug(
                         "Callback done and result {} , type {}".format(result, type(result)))
                 except Exception as e:
@@ -196,7 +201,6 @@ class GedisServer(StreamServer, JSConfigBase):
         self.server.stop()
 
     def cmds_add(self, namespace, path=None, class_=None):
-
         if path is not None:
             classname = j.sal.fs.getBaseName(path).split(".", 1)[0]
             dname = j.sal.fs.getDirName(path)
@@ -208,7 +212,6 @@ class GedisServer(StreamServer, JSConfigBase):
 
         cmds = GedisCmds(self, namespace=namespace, class_=class_)
         self.cmds[namespace] = cmds
-        
+
         j.sal.fs.writeFile(self._cmds_path + namespace + '.py', contents=cmds.code)
         self.logger.info("add cmd namespace %s" % namespace)
- 

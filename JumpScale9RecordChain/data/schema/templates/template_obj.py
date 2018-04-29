@@ -66,7 +66,7 @@ class ModelOBJ():
         self.changed_items["{{prop.name_camel}}"] = val
         {% else %} 
         #will make sure that the input args are put in right format
-        val = {{prop.js9_typelocation}}.clean(val)
+        # val = {{prop.js9_typelocation}}.clean(val)
         # self._cobj.{{prop.name_camel}} = val        
         if self.{{prop.alias}} != val:
             self.changed_prop = True

@@ -12,7 +12,7 @@ import sys
 class GedisFactory(JSConfigBase):
 
     def __init__(self):
-        self.__jslocation__ = "j.servers.gedis"
+        self.__jslocation__ = "j.servers.gedis2"
         JSConfigBase.__init__(self, GedisServer)
 
         #PREPARE FOR CODE GENERATION

@@ -48,7 +48,6 @@ class GedisCmds(JSBASE):
                 cmd.name = name
                 code = inspect.getsource(item)
                 cmd.code,cmd.comment,cmd.schema_in, cmd.schema_out= self.source_process(code)
-                self.data.cmds.append(cmd)
 
 
     @property

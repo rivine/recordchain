@@ -103,4 +103,5 @@ class GunClient(JSConfigBase):
                     if k == "_":
                         continue
                     self.backend.put(soul, k, v, diff[soul]['_']['>'][k])
-            return self.backend.get(soul, key)
+            res  = self.backend.get(soul, key) or 'nil'
+            return res

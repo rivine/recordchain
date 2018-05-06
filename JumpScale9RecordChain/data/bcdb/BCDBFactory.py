@@ -103,12 +103,10 @@ class BCDBFactory(JSConfigBase):
         assert res[0].name == "name2"
 
         o = res[0]
+        
         o.name = "name2"
         assert o.changed_prop == False  # because data did not change, was already that data
         o.name = "name3"
         assert o.changed_prop == True  # now it really changed
 
         assert o.ddict["name"] == "name3"
-
-        from IPython import embed
-        embed(colors='Linux')

@@ -2,7 +2,7 @@
 from js9 import j
 from pprint import pprint as print
 
-from .BCDB_Namespace import *
+from .IndexDBNamespace import *
 JSBASE = j.application.jsbase_get_class()
 
 
@@ -13,7 +13,7 @@ class IndexDB(JSBASE):
         JSBASE.__init__(self)
 
     def get(self, namespace):
-        return BCDB_Namespace(namespace)
+        return IndexDBNamespace(namespace)
 
     def test(self):
         """
@@ -24,7 +24,7 @@ class IndexDB(JSBASE):
         db = self.get("myns")
 
         import nltk
-        # nltk.download('brown')
+        nltk.download('brown')
         from nltk.corpus import brown
 
         nr = 1000
@@ -63,5 +63,3 @@ class IndexDB(JSBASE):
         res = db.find([w1])
         res1 = db.find([w2, w3])
 
-        from IPython import embed
-        embed(colors='Linux')

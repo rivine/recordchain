@@ -5,22 +5,23 @@ from js9 import j
 JSBASE = j.application.jsbase_get_class()
 
 SCHEMA="""
-@url = test.gedis.cmd1
-@name = cmd12
-cmd = (O) !test.gedis.cmd
-cmd2 = (O) !test.gedis.cmd
+@url = test.gedis2.cmd1
+@name = cmd
+cmd = (O) !test.gedis2.cmd
+cmd2 = (O) !test.gedis2.cmd
 
 
 
 """
 
-class cmd12(JSBASE):
+class model_cmd(JSBASE):
     
     def __init__(self):
         JSBASE.__init__(self)        
-        self.namespace = "cmd12"
-        self.db = j.servers.gedis.latest.db
-        self.table = self.db.tables["cmd12"]
+        self.namespace = "cmd"
+        self.url = "test.gedis2.cmd1"
+        self.db = j.servers.gedis2.latest.db
+        self.table = self.db.tables["cmd"]
         self.schema = self.table.schema
 
     def set(self,data,id=0):

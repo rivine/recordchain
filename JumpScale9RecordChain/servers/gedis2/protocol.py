@@ -1,5 +1,5 @@
 from logging import getLogger
-
+from js9 import j
 from redis.connection import (ConnectionError, Encoder, PythonParser,
                               SocketBuffer)
 
@@ -34,11 +34,11 @@ class ResponseWriter(object):
         # self._write(data)
         # data = self.encoder.encode(value)
         # self._write(data)
-        if isinstance(value, (list, tuple)):
-            self._write('*%d\r\n' % len(value))
-            for v in value:
-                self._bulk(v)
-        elif isinstance(value, int):
+        # if isinstance(value, (list, tuple)):
+        #     self._write('*%d\r\n' % len(value))
+        #     for v in value:
+        #         self._bulk(v)
+        if isinstance(value, int):
             self._write(':%d\r\n' % value)
         elif isinstance(value, bool):
             self._write(':%d\r\n' % (1 if value else 0))
@@ -46,6 +46,10 @@ class ResponseWriter(object):
             self._bulk(value)
         elif isinstance(value, bytes):
             self._bulkbytes(value)
+        else:
+            value = j.data.serializer.json.dumps(value)
+            self._bulk(value)
+
 
     def status(self, msg="OK"):
         """Send a status."""

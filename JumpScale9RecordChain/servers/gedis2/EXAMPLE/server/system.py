@@ -12,34 +12,59 @@ class system(JSBASE):
     def ping(self):
         return "PONG"
 
+    def ping_bool(self):
+        return True
+
     def core_schemas_get(self):
         """
         return all core schemas as understood by the server, is as text, can be processed by j.data.schema
 
-        ```out
-        res = [] (LS)
-        ```
-
         """
+        res = {}        
         for key,item in j.data.schema.schemas.items():
-            print("core_schemas_get")
-            from IPython import embed;embed(colors='Linux')
-            k
-        return a+b             
+            res[key] = item.text
+        return j.data.serializer.msgpack.dumps(res)
 
     def api_meta(self):
         """
         return the api meta information
 
+        """  
+        s=j.servers.gedis2.latest.cmds_meta
+        res={}
+        for key,item in s.items():
+            res[key] = item.data.data
+        return j.data.serializer.msgpack.dumps(res)
+
+    def test(self,name,nr,schema_out):      
+        """
+        some test method, which returns something easy
+
+        ```in
+        name = ""
+        nr = 0 (I)
+        ```
+
         ```out
-        res = (O) !jumpscale.gedis.api
+        name = ""
+        nr = 0 (I)
+        list_int = (LI)        
         ```
 
         """  
-        s=j.servers.gedis.latest
-        for key,item in s.items():
-            print("api_meta")
-            from IPython import embed;embed(colors='Linux')
-            k        
-        pass
-        return a+b          
+        o=schema_out.new()
+        o.name = name
+        o.nr = nr
+        # o.list_int = [1,2,3]
+
+        return o
+
+    def test_nontyped(self,name,nr):      
+        """
+        some test method, which returns something easy
+
+        """ 
+        name=name.decode()
+        nr = int(nr.decode())
+        return [name,nr]
+

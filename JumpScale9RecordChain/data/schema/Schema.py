@@ -5,11 +5,11 @@ JSBASE = j.application.jsbase_get_class()
 import os
 
 from .SchemaProperty import SchemaProperty
-
+import imp
 
 
 class Schema(JSBASE):
-    def __init__(self, text=None):
+    def __init__(self, text=None, url=""):
         JSBASE.__init__(self)
         self.properties = []
         self.lists = []
@@ -20,7 +20,11 @@ class Schema(JSBASE):
         self.hash = ""
         self._index_list = None
         self._SCHEMA = True
-        self.url = ""
+        if url:
+            self.url = url
+        else:
+            self.url = ""
+            
         self.name = ""
         if text:
             self._schema_from_text(text)
@@ -219,8 +223,8 @@ class Schema(JSBASE):
             url = self.url.replace(".","_")
             path = j.data.schema.code_generation_dir + "%s.py" % url
             j.sal.fs.writeFile(path,self.code)
-            exec("from %s import ModelOBJ"% (url))
-            self._obj_class = eval("ModelOBJ")
+            m=imp.load_source(name="url", pathname=path)
+            self._obj_class = m.ModelOBJ
         return self._obj_class
 
     def get(self,data={},capnpbin=None):

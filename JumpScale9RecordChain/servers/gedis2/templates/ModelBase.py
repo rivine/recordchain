@@ -8,12 +8,13 @@ SCHEMA="""
 {{obj.text}}
 """
 
-class {{obj.name}}(JSBASE):
+class model_{{obj.name}}(JSBASE):
     
     def __init__(self):
         JSBASE.__init__(self)        
         self.namespace = "{{obj.name}}"
-        self.db = j.servers.gedis.latest.db
+        self.url = "{{obj.url}}"
+        self.db = j.servers.gedis2.latest.db
         self.table = self.db.tables["{{obj.name}}"]
         self.schema = self.table.schema
 

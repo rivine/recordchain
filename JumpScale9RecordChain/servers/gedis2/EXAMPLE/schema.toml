@@ -1,14 +1,14 @@
-@url = test.gedis.cmd
+@url = test.gedis2.cmd
 name = ""
 comment = ""
 schemacode = ""
 
-@url = test.gedis.serverschema
-@name = schematest1
-cmds = (LO) !test.gedis.cmd
+@url = test.gedis2.serverschema
+@name = cmds
+cmds = (LO) !test.gedis2.cmd
 
-@url = test.gedis.cmd1
-@name = cmd12
-cmd = (O) !test.gedis.cmd
-cmd2 = (O) !test.gedis.cmd
+@url = test.gedis2.cmd1
+@name = cmd
+cmd = (O) !test.gedis2.cmd
+cmd2 = (O) !test.gedis2.cmd
 

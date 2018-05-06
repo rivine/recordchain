@@ -2,8 +2,9 @@
 # from pprint import pprint as print
 
 from js9 import j
-
+import time
 from .GedisServer import GedisServer
+from .GedisCmds import GedisCmds
 import os
 JSConfigBase = j.tools.configmanager.base_class_configs
 import sys
@@ -50,15 +51,15 @@ class GedisFactory(JSConfigBase):
             server = self.get(instance, create=False)
             server.start()
 
-    def configure(self, instance="main", port=8889, addr="localhost", secret="", ssl=False, path="", interactive=False, start=False, background=True):
+    def configure(self, instance="main", port=8889, addr="localhost", secret="", namespace="",ssl=False, path="", interactive=False, start=False, background=True):
         """
         e.g.
-        js9 'j.servers.gedis.start()'  
+        js9 'j.servers.gedis2.start()'  
         will be different name depending the implementation
         """
         if path=="":
             path = j.sal.fs.getcwd()
-        data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl, "path":path}
+        data = {"port": port, "addr": addr, "adminsecret_": secret, "ssl": ssl, "path":path, "namespace":namespace}
         server = self._child_class(instance=instance, data=data, parent=self, interactive=interactive)
 
         if start:
@@ -84,7 +85,7 @@ class GedisFactory(JSConfigBase):
             from jinja2 import Environment, PackageLoader
 
             self._template_engine = Environment(
-                loader=PackageLoader('JumpScale9RecordChain.servers.gedis', 'templates'),
+                loader=PackageLoader('JumpScale9RecordChain.servers.gedis2', 'templates'),
                 trim_blocks=True,
                 lstrip_blocks=True,
             )
@@ -109,33 +110,66 @@ class GedisFactory(JSConfigBase):
 
     def test(self, dobenchmarks=True):
         """
-        js9 'j.servers.gedis.test(dobenchmarks=False)'
+        js9 'j.servers.gedis2.test(dobenchmarks=False)'
 
         will start in tmux the server & then connect to it using redisclient
 
-        """        
-        classpath = j.sal.fs.getDirName(os.path.abspath(__file__)) +"GedisServerExample.py"
+        """      
 
-        server = self.configure(instance="test", port=5000, addr="127.0.0.1", secret="1234", ssl=False, \
-            interactive=False, background=True, start=False)
+        #FOR CURRENT TEST TO MAKE SURE WE START FROM NOTHING
 
-        server.cmds_add("example",path=classpath)
-        #OR:
-        # server.cmds_add("example",class_=GedisServerExample)
+        j.sal.fs.remove("/Users/kristofdespiegeleer1/opt/var/codegen")
 
-        self._test(server, dobenchmarks=dobenchmarks)
+        classpath = j.sal.fs.getDirName(os.path.abspath(__file__)) +"EXAMPLE"
+
+            # if j.core.platformtype.myplatform.isMac:
+            #     cmd = "sudo js9 'j.servers.dns.start(background=False)'"
+            # else:
+        cmd = "cd %s;python3 start.py"%classpath
+        j.tools.tmux.execute(cmd, session='main', window='gedis_test',pane='main', session_reset=False, window_reset=True)
+        self.logger.info("waiting for server to start on port 53")
+        res = j.sal.nettools.waitConnectionTest("localhost",5000)
         
 
-    def _test(self, server, dobenchmarks=True):
-
-        db = j.servers.zdb.configure(instance="test", adminsecret="1234", reset=True, mode="direct", id_enable=True)
-        db.start()
 
         r = self.client_get('test')
-        # assert True == r.ping()
-        # is it binary or can it also return string
-        ping1value = r.redis.execute_command("ping")
+        ping1value = r.redis.execute_command("system.ping")
+        assert ping1value == b'PONG'
+        ping1value = r.redis.execute_command("system.ping_bool")
+        assert ping1value == True
+
+        res = r.redis.execute_command("system.test_nontyped","name",10)
+        assert res == b'[\n"name",\n10\n]'
+
+        # time.sleep(1)
+
+        #LOW LEVEL AT THIS TIME BUT TO SHOW SOMETHING
+        cmds_meta =r.redis.execute_command("system.api_meta")
+
+        cmds_meta = j.data.serializer.msgpack.loads(cmds_meta)
+        for namespace,capnpbin in cmds_meta.items():
+            cmds_meta[namespace] = GedisCmds(namespace=namespace,capnpbin=capnpbin)
+
+        #this will make sure we have all the local schemas
+        schemas_meta =r.redis.execute_command("system.core_schemas_get")
+        schemas_meta = j.data.serializer.msgpack.loads(schemas_meta)
+        for key,txt in schemas_meta.items():
+            if key not in j.data.schema.schemas:
+                j.data.schema.schema_from_text(txt,url=key)
+
+
+        s=j.data.schema.schema_from_url('jumpscale.gedis2.example.system.test.in')
+        o=s.new()
+        o.name = "aname"
+        o.nr = 1
+
+        res = r.redis.execute_command("system.test",o.data)
+
+        s=j.data.schema.schema_from_url('jumpscale.gedis2.example.system.test.out')
+        o2=s.get(capnpbin=res)
+
+        assert o.name == o2.name
         
-        print("TEST")
+
         from IPython import embed;embed(colors='Linux')        
     

@@ -1,6 +1,6 @@
 from JumpScale9 import j
 
-def {{obj.name}}({{obj.args}}):
+def action({{obj.args}}):
     {% if obj.cmdobj.comment != "" %}
     '''
 {{obj.comment_indent}}

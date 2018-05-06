@@ -11,6 +11,7 @@ import imp
 import sys
 from .GedisCmds import GedisCmds
 from .GedisServerBase import GedisServerBase
+from redis.connection import ConnectionError
 
 TEMPLATE = """
 addr = "localhost"
@@ -35,24 +36,13 @@ class GedisServer(StreamServer, JSConfigBase):
             template = TEMPLATE
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=template, interactive=interactive)
-        host = self.config.data["addr"]
-        port = int(self.config.data["port"])
+        self.host = self.config.data["addr"]
+        self.port = int(self.config.data["port"])
 
         if self.config.data['dbclient_instance']:
             self.dbclient = j.clients.gedis_backend.get(self.config.data['dbclient_instance'])
 
-        self.address = '{}:{}'.format(host, port)
-
-        if self.config.data['ssl']:
-            self.logger.info("ssl enabled, keys in %s" %
-                             self.ssl_priv_key_path)
-            self.sslkeys_generate()
-
-            self.server = StreamServer(
-                (host, port), spawn=Pool(), handle=self.__handle_connection, keyfile=self.ssl_priv_key_path, certfile=self.ssl_cert_path)
-        else:
-            self.server = StreamServer(
-                (host, port), spawn=Pool(), handle=self.__handle_connection)
+        self.address = '{}:{}'.format(self.host, self.port)
 
         self._sig_handler = []
         self.cmds = {}
@@ -172,10 +162,25 @@ class GedisServer(StreamServer, JSConfigBase):
             parser.on_disconnect()
             self.logger.info('close connection from {}'.format(address))
 
+    def _init_server(self):
+        if self.config.data['ssl']:
+            self.logger.info("ssl enabled, keys in %s" %
+                             self.ssl_priv_key_path)
+            self.sslkeys_generate()
+
+            self.server = StreamServer(
+                (self.host, self.port), spawn=Pool(), handle=self.__handle_connection, keyfile=self.ssl_priv_key_path, certfile=self.ssl_cert_path)
+        else:
+            self.server = StreamServer(
+                (self.host, self.port), spawn=Pool(), handle=self.__handle_connection)
+
+
     def start(self):
         self.logger.info("init server")
         j.logger.enabled = False
         self._logger = None
+
+        self._init_server()
 
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
 

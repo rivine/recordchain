@@ -53,8 +53,9 @@ class BCDBTable(JSBASE):
         self.index_delete()
         self.logger.debug("build index for: %s"%self.name)
         def iload(id,data,result):
-            meta, index,bdata = msgpack.unpackb(data)
-            self._index(index,id)
+            if data:
+                meta, index,bdata = msgpack.unpackb(data)
+                self._index(index,id)
 
         self.db.iterate(iload)
         self.logger.debug("build index done")
@@ -84,7 +85,7 @@ class BCDBTable(JSBASE):
             data = j.data.serializer.json.loads(data)
             obj = self.schema.get(data)
         elif j.data.types.bytes.check(data):
-            obj = self.schema.get(data)
+            obj = self.schema.get(capnpbin=data)
         elif "_JSOBJ" in data.__dict__:
             obj = data
             if id is 0 and obj.id is not 0:

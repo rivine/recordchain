@@ -32,9 +32,19 @@ class system(JSBASE):
         """  
         s=j.servers.gedis2.latest.cmds_meta
         res={}
+        res["namespace"]=j.servers.gedis2.latest.namespace
+        res["cmds"]={}
         for key,item in s.items():
-            res[key] = item.data.data
+            res["cmds"][key] = item.data.data
         return j.data.serializer.msgpack.dumps(res)
+
+    def schema_urls(self):
+        """
+        return the api meta information
+
+        """  
+        s=j.servers.gedis2.latest.schema_urls
+        return j.data.serializer.msgpack.dumps(s)
 
     def test(self,name,nr,schema_out):      
         """

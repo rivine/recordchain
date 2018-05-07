@@ -52,8 +52,11 @@ class GedisServer(StreamServer, JSConfigBase):
         self.cmds_meta = {}
         self.classes = {}
         self.cmds = {}
+        self.schema_urls = []
 
-        j.servers.gedis2.latest = self
+        j.servers.gedis2.latest = self        
+
+        self.serializer = None
 
     def sslkeys_generate(self):
 
@@ -107,14 +110,17 @@ class GedisServer(StreamServer, JSConfigBase):
                     if cmd.schema_out:
                         params["schema_out"] = cmd.schema_out
                 else:
-                    if len(request) > 2:
+                    if len(request) > 1:
                         params = request[1:]
                     else:
                         #no arguments just execute
                         params = None
 
+                # if cmd.name=="get":
+                #     from IPython import embed;embed(colors='Linux')
+
                 # execute command callback
-                print("execute command callback")
+                self.logger.debug("execute command callback:%s:%s"%(cmd,params))
                 result = None
                 try:
                     if params is None:
@@ -126,6 +132,7 @@ class GedisServer(StreamServer, JSConfigBase):
                     self.logger.debug("Callback done and result {} , type {}".format(result, type(result)))
                 except Exception as e:
                     print("exception in redis server")
+                    # from IPython import embed;embed(colors='Linux')                    
                     eco = j.errorhandler.parsePythonExceptionObject(e)
                     msg = str(eco)
                     msg += "\nCODE:%s:%s\n"%(cmd.namespace,cmd.name)
@@ -165,7 +172,6 @@ class GedisServer(StreamServer, JSConfigBase):
             namespace = namespace_base+j.sal.fs.getBaseName(item)[:-3].lower()
             self.cmds_add(namespace, path=item)
 
-
         self.server.serve_forever()
 
     def stop(self):
@@ -181,18 +187,19 @@ class GedisServer(StreamServer, JSConfigBase):
         self.server.stop()
 
     def cmds_add(self, namespace, path=None, class_=None):
-
+        self.logger.debug("cmds_add:%s:%s"%(namespace,path))
         if path is not None:
             classname = j.sal.fs.getBaseName(path).split(".", 1)[0]
             dname = j.sal.fs.getDirName(path)
             if dname not in sys.path:
                 sys.path.append(dname)
 
+            #TODO:*1 use imp... instead
             exec("from %s import %s" % (classname, classname))
             class_ = eval(classname)
 
         self.cmds_meta[namespace] = GedisCmds(self, namespace=namespace, class_=class_)
-        # self.classes[namespace] =class_()
+        self.classes[namespace] =class_()
 
     def generate(self,db=None,reset=False):
         
@@ -216,10 +223,10 @@ class GedisServer(StreamServer, JSConfigBase):
         for namespace,table in db.tables.items():
             # url = table.schema.url.replace(".","_")
             dest = path_server+"model_%s.py"%namespace
-            # table.schema.url_ = url
             if reset or not j.sal.fs.exists(dest):
                 code = j.servers.gedis2.code_model_template.render(obj= table.schema)
                 j.sal.fs.writeFile(dest,code)
+            self.schema_urls.append(table.schema.url)
 
     @property
     def namespace(self):
@@ -237,17 +244,14 @@ class GedisServer(StreamServer, JSConfigBase):
         namespace=self.namespace+"."+pre
         
 
-        # if namespace not in self.classes:
-        #     return (None,"Cannot find class with name:%s in namespace:%s"%(pre,namespace))
-        # cl=self.classes[pre]
+        if namespace not in self.classes:
+            return (None,"Cannot find namespace:%s"%(namespace))
+        cl=self.classes[namespace]
 
         if namespace not in self.cmds_meta:
             return (None,"Cannot find namespace:%s"%(namespace))
 
         meta = self.cmds_meta[namespace]
-
-        # meta.cmds
-        # print(meta.cmds)
 
         if not post in meta.cmds:
             return (None,"Cannot find method with name:%s in namespace:%s"%(post,namespace))
@@ -255,12 +259,13 @@ class GedisServer(StreamServer, JSConfigBase):
         cmd_obj = meta.cmds[post]
 
         try:
-            # m = eval("cl.%s"%(post))
-            m = cmd_obj.method
+            m = eval("cl.%s"%(post))
+            # m = cmd_obj.method
         except Exception as e:
             return (None,"Could not execute code of method '%s' in namespace '%s'\n%s"%(pre,namespace,e))
 
-        #we need to do this, to make sure that the code could be interpreted, now we now method is ok
+        cmd_obj.method = m
+
         self.cmds[cmd] = cmd_obj
 
         return (self.cmds[cmd],"")

@@ -31,9 +31,7 @@ class GedisCmd(JSBASE):
 
         self._method = None 
 
-        print(self.code_runtime)
-
-        self.method
+        # print(self.code_runtime)
 
 
 
@@ -71,7 +69,7 @@ class GedisCmd(JSBASE):
         return code
 
     @property
-    def method(self):
+    def method_generated(self):
         if self._method is None:
             path = j.servers.gedis2.code_generation_dir + "%s_%s.py" % (self.namespace,self.name)
             j.sal.fs.writeFile(path,self.code_runtime)

@@ -66,6 +66,8 @@ class GedisFactory(JSConfigBase):
             self.start(instance=instance, background=background)
         return server
 
+    def cmds_get(self,namespace,capnpbin):
+        return GedisCmds(namespace=namespace,capnpbin=capnpbin)
 
     def client_get(self, instance):
         """
@@ -118,7 +120,7 @@ class GedisFactory(JSConfigBase):
 
         #FOR CURRENT TEST TO MAKE SURE WE START FROM NOTHING
 
-        j.sal.fs.remove("/Users/kristofdespiegeleer1/opt/var/codegen")
+        j.sal.fs.remove("%s/codegen/"%j.dirs.VARDIR)
 
         classpath = j.sal.fs.getDirName(os.path.abspath(__file__)) +"EXAMPLE"
 
@@ -139,23 +141,18 @@ class GedisFactory(JSConfigBase):
         assert ping1value == True
 
         res = r.redis.execute_command("system.test_nontyped","name",10)
-        assert res == b'[\n"name",\n10\n]'
 
-        # time.sleep(1)
+        assert j.data.serializer.json.loads(res) == ['name', 10]
 
         #LOW LEVEL AT THIS TIME BUT TO SHOW SOMETHING
         cmds_meta =r.redis.execute_command("system.api_meta")
 
         cmds_meta = j.data.serializer.msgpack.loads(cmds_meta)
-        for namespace,capnpbin in cmds_meta.items():
+        for namespace,capnpbin in cmds_meta["cmds"].items():
             cmds_meta[namespace] = GedisCmds(namespace=namespace,capnpbin=capnpbin)
 
-        #this will make sure we have all the local schemas
-        schemas_meta =r.redis.execute_command("system.core_schemas_get")
-        schemas_meta = j.data.serializer.msgpack.loads(schemas_meta)
-        for key,txt in schemas_meta.items():
-            if key not in j.data.schema.schemas:
-                j.data.schema.schema_from_text(txt,url=key)
+        
+        j.clients.gedis2.test()
 
 
         s=j.data.schema.schema_from_url('jumpscale.gedis2.example.system.test.in')
@@ -169,7 +166,4 @@ class GedisFactory(JSConfigBase):
         o2=s.get(capnpbin=res)
 
         assert o.name == o2.name
-        
 
-        from IPython import embed;embed(colors='Linux')        
-    

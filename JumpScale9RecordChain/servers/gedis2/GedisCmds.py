@@ -35,7 +35,6 @@ class GedisCmds(JSBASE):
         cmds = (LO) !jumpscale.gedis2.cmd        
         """
         j.data.schema.schema_add(SCHEMA)
-        # import pudb; pudb.set_trace()
         self.schema = j.data.schema.schema_from_url("jumpscale.gedis2.api")
 
         self._cmds = {}

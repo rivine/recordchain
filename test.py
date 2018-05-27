@@ -10,6 +10,10 @@ j.data.schema.test()
 j.data.bcdb.test()
 j.data.indexdb.test()
 
+j.data.types.date.test()
+j.data.types.numeric.test()
+
+
 if p.platformtype.isLinux:
 
     j.servers.dns.test()

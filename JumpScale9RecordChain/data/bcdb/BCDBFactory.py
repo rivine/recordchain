@@ -62,7 +62,7 @@ class BCDBFactory(JSConfigBase):
         def load():
             self.db_start("test", adminsecret="g007g", reset=True)
             db = self.get("test")
-            t = db.table_get(name="t1", schema=schema)
+            t = db.table_get(name="t1", schema=schema)   #why does name have to be t1
             t2 = db.table_get(name="t1", schema=schema2)
 
             for i in range(10):

@@ -101,7 +101,6 @@ class GedisClientFactory(JSConfigBase):
 
         cl = self.get("test")
 
-
         o=cl.models.test_gedis2_cmd1.new()
         o.cmd.name="aname"
         o.cmd2.name="aname2"

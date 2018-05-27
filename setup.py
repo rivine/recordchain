@@ -65,6 +65,7 @@ setup(
         'requests>=2.13.0',
         'toml>=0.9.2',
         'pynacl>=1.1.2',
+        'websockets>=4.0.1',
     ],
     dependency_links=[
         "git+https://github.com/pyca/pynacl"

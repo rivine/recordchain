@@ -49,9 +49,10 @@ For example adding a system namespace using [GedisServerBase](GedisServerBase.py
 
 ```python
 server = j.servers.gedis.get()
-gedis.cmds_add('system', '/opt/code/github/rivine/recordchain/JumpScale9RecordChain/servers/gedis/GedisServerBase.py')
+server.cmds_add('system', '/opt/code/github/rivine/recordchain/JumpScale9RecordChain/servers/gedis/GedisServerBase.py')
 ```
 
+Note that the file needs to be under this location `/opt/code/github/rivine/recordchain/JumpScale9RecordChain/servers/gedis`.
 The generated code used will be stored in the gedis server directory in your config repo. You can check your config repo location using `j.tools.configmanager.path`, eg: `{configpath}/j.servers.gedis/{server instance}/{namespace}.py`. Example using the example above:
 
 ```python

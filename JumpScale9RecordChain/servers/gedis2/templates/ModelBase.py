@@ -26,10 +26,11 @@ class model_{{obj.name}}(JSBASE):
             data = obj.data
         else:
             id,data = j.data.serializer.msgpack.loads(data_in)
+
         res=self.table.set(data=data, id=id, hook=self.hook_set)
-        if id is not 0:
-            #not sure why it is needed but otherwise issue
-            res.id=id
+        if res.id == None:
+            raise RuntimeError("cannot be None")
+
         if j.servers.gedis2.latest.serializer:
             return j.servers.gedis2.latest.return_serializer.dumps(res.ddict)
         else:
@@ -37,7 +38,7 @@ class model_{{obj.name}}(JSBASE):
 
     def get(self, id):
         id=int(id.decode())
-        meta,index,obj = self.table.get(id=id, hook=self.hook_get)
+        obj = self.table.get(id=id, hook=self.hook_get)
         print("get")
         if j.servers.gedis2.latest.serializer:
             return j.servers.gedis2.latest.return_serializer.dumps(obj.ddict)

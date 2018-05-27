@@ -110,7 +110,7 @@ class GedisFactory(JSConfigBase):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
 
 
-    def test(self, dobenchmarks=True):
+    def test(self, dobenchmarks=True,reset=True):
         """
         js9 'j.servers.gedis2.test(dobenchmarks=False)'
 
@@ -118,21 +118,19 @@ class GedisFactory(JSConfigBase):
 
         """      
 
-        #FOR CURRENT TEST TO MAKE SURE WE START FROM NOTHING
-
-        j.sal.fs.remove("%s/codegen/"%j.dirs.VARDIR)
+        if reset:
+            #FOR CURRENT TEST TO MAKE SURE WE START FROM NOTHING
+            j.sal.fs.remove("%s/codegen/"%j.dirs.VARDIR)
+            bcdb=j.data.bcdb.get("test")  #has been set on start.py, will delete it here
+            bcdb.destroy()
+            j.tools.tmux.killall()
 
         classpath = j.sal.fs.getDirName(os.path.abspath(__file__)) +"EXAMPLE"
 
-            # if j.core.platformtype.myplatform.isMac:
-            #     cmd = "sudo js9 'j.servers.dns.start(background=False)'"
-            # else:
         cmd = "cd %s;python3 start.py"%classpath
         j.tools.tmux.execute(cmd, session='main', window='gedis_test',pane='main', session_reset=False, window_reset=True)
         self.logger.info("waiting for server to start on port 53")
         res = j.sal.nettools.waitConnectionTest("localhost",5000)
-        
-
 
         r = self.client_get('test')
         ping1value = r.redis.execute_command("system.ping")
@@ -153,7 +151,6 @@ class GedisFactory(JSConfigBase):
 
         
         j.clients.gedis2.test()
-
 
         s=j.data.schema.schema_from_url('jumpscale.gedis2.example.system.test.in')
         o=s.new()

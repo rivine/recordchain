@@ -105,45 +105,16 @@ class GedisClientFactory(JSConfigBase):
         o.cmd.name="aname"
         o.cmd2.name="aname2"
         o2=cl.models.test_gedis2_cmd1.set(o)
-        o3=cl.models.test_gedis2_cmd1.set(o2) #make sure id stays same
+        o3=cl.models.test_gedis2_cmd1.set(o2) #make sure id stays same, id should be 1 & stay 1
 
         assert o2.id==o3.id
 
         o4=cl.models.test_gedis2_cmd1.get(o3.id)
 
-        o3.ddict==o4.ddict
-
-        from IPython import embed;embed(colors='Linux')
+        assert o3.ddict==o4.ddict
 
 
-        #LOW LEVEL AT THIS TIME BUT TO SHOW SOMETHING
-        cmds_meta =r.redis.execute_command("system.api_meta")
-
-        cmds_meta = j.data.serializer.msgpack.loads(cmds_meta)
-        for namespace,capnpbin in cmds_meta.items():
-            cmds_meta[namespace] = GedisCmds(namespace=namespace,capnpbin=capnpbin)
-
-        #this will make sure we have all the local schemas
-        schemas_meta =r.redis.execute_command("system.core_schemas_get")
-        schemas_meta = j.data.serializer.msgpack.loads(schemas_meta)
-        for key,txt in schemas_meta.items():
-            if key not in j.data.schema.schemas:
-                j.data.schema.schema_from_text(txt,url=key)
 
 
-        s=j.data.schema.schema_from_url('jumpscale.gedis2.example.system.test.in')
-        o=s.new()
-        o.name = "aname"
-        o.nr = 1
-
-        res = r.redis.execute_command("system.test",o.data)
-
-        s=j.data.schema.schema_from_url('jumpscale.gedis2.example.system.test.out')
-        o2=s.get(capnpbin=res)
-
-        assert o.name == o2.name
-        
-
-        from IPython import embed;embed(colors='Linux')        
     
         

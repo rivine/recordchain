@@ -60,18 +60,11 @@ class BCDBTable(JSBASE):
         self.db.iterate(iload)
         self.logger.debug("build index done")
 
-    def stop(self):
-        # j.tools.prefab.local.zero_os.zos_db.stop(self.instance)
-        pass 
 
     def destroy(self):
-        self.stop()
-        # j.sal.fs.removeDirTree(self.root_path)
-        # ipath = j.dirs.VARDIR + "/zdb/index/%s.db" % self.instance
-        # j.sal.fs.remove(ipath)
-        # self._initdir()
+        raise RuntimeError("not implemented yet, need to go to db and remove namespace")
 
-    def set(self,data,id=0,hook=None):
+    def set(self,data,id=None,hook=None):
         """
         if string -> will consider to be json
         if binary -> will consider data for capnp
@@ -88,7 +81,7 @@ class BCDBTable(JSBASE):
             obj = self.schema.get(capnpbin=data)
         elif "_JSOBJ" in data.__dict__:
             obj = data
-            if id is 0 and obj.id is not 0:
+            if id is None and obj.id is not None:
                 id=obj.id
         elif j.data.types.dict.check(data):
             obj = self.schema.get(data)
@@ -96,6 +89,7 @@ class BCDBTable(JSBASE):
             raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
         bdata = obj.data
 
+        #we store data in list
         l=[]
         index={}
         for item in self.schema.index_list:
@@ -103,18 +97,26 @@ class BCDBTable(JSBASE):
             if r:
                 index[item]=r
 
-        l=[0,index,bdata]
+        #later:
+        acl = b""
+        crc = b""
+        signature = b""
+
+        l=[index,bdata]
         data = msgpack.packb(l)
 
         if hook:
             obj = hook(obj,index)
 
-        if id==0:
+        
+        if id==None:
             #means a new one
             id = self.db.set(data)
-            obj.id = id
-        else:            
-            self.db.set(data,id=id)
+        else:
+            id2 = self.db.set(data,id=id)
+
+        obj.id = id
+        obj.index = index
 
         self._index(index,id)
             
@@ -149,27 +151,34 @@ class BCDBTable(JSBASE):
 
     def get(self,id,capnp=False,hook=None):
         """
-        @PARAM capnp if true will return data as capnp binary object
-        @RETURN meta,index,obj 
+        @PARAM capnp if true will return data as capnp binary object, no hook will be done !
+        @RETURN obj    (.index is in obj)
         """
+
+        if id==None:
+            raise RuntimeError("id cannot be None")
 
         data = self.db.get(id)
 
         if data==None:
             return None
         
-        meta, index, bdata = msgpack.unpackb(data)
+        res  = msgpack.unpackb(data)
+
+        if len(res)==2:
+            index, bdata = res
+        else:
+            raise RuntimeError("not supported format in table yet")
 
         if capnp:
-            if hook:
-                obj = hook(obj,index)
-            return meta, index, bdata
+            return bdata
         else:
             obj = self.schema.get(capnpbin=bdata)
             obj.id = id
+            obj.index = index
             if hook:
                 obj = hook(obj)
-            return meta, index, obj
+            return obj
 
     def find(self,hook=None,**args):
         res=[]
@@ -194,7 +203,7 @@ class BCDBTable(JSBASE):
         res3 = reduce(set.intersection, res)
         res4=[]
         for item in res3:
-            obj=self.get(item)[2]
+            obj=self.get(item)
             if hook:
                 obj = hook(obj)
             res4.append(obj)     

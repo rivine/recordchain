@@ -47,3 +47,7 @@ class BCDB(JSConfigBase):
                     t = self.table_get(schema=schema,name=schema.name)
             
         return self.tables
+
+    def destroy(self):
+        self.server.destroy()
+        

@@ -8,6 +8,9 @@ import sys
 JSConfigBase = j.tools.configmanager.base_class_configs
 from .GedisClient import GedisClient
 
+class GedisClientCmds():
+    def __init__(self):
+        pass
 
 class GedisClientFactory(JSConfigBase):
     """
@@ -26,7 +29,15 @@ class GedisClientFactory(JSConfigBase):
         if self.code_generation_dir not in sys.path:
             sys.path.append(self.code_generation_dir)
         j.sal.fs.touch(self.code_generation_dir+"/__init__.py")
-        self.logger.debug("codegendir:%s" % self.code_generation_dir)        
+        self.logger.debug("codegendir:%s" % self.code_generation_dir)    
+        
+    def client_get(self,instance="main"):
+        client = self.get(instance=instance)
+        cl=GedisClientCmds()
+        cl._clients = client
+        cl.models = client.models
+        cl.__dict__.update(client.cmds.__dict__)
+        return cl
         
 
     def configure(self, instance="core",ipaddr="localhost", \
@@ -99,7 +110,7 @@ class GedisClientFactory(JSConfigBase):
             port=5000, password="", unixsocket="", 
             ssl=False, ssl_keyfile=None, ssl_certfile=None)
 
-        cl = self.get("test")
+        cl = j.clients.gedis2.client_get("test")
 
         o=cl.models.test_gedis2_cmd1.new()
         o.cmd.name="aname"
@@ -113,8 +124,9 @@ class GedisClientFactory(JSConfigBase):
 
         assert o3.ddict==o4.ddict
 
-
-
-
-    
+        o=cl.system.test()
+        assert o.ddict ==  {'list_int': [], 'name': '', 'nr': 0}
+        assert cl.system.ping() == b'PONG'
+        assert cl.system.ping_bool() == 1
+        
         

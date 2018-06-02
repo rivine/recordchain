@@ -23,6 +23,8 @@ class SchemaProperty(JSBASE):
 
     @property
     def default_as_python_code(self):
+        if self.default == "''" or self.default == "\"\"":
+            self.default = ""
         return self.js9type.python_code_get(self.default)
 
     @property

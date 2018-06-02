@@ -68,13 +68,3 @@ class system(JSBASE):
         # o.list_int = [1,2,3]
 
         return o
-
-    def test_nontyped(self,name,nr):      
-        """
-        some test method, which returns something easy
-
-        """ 
-        name=name.decode()
-        nr = int(nr.decode())
-        return [name,nr]
-

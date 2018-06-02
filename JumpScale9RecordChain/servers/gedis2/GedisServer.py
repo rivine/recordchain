@@ -88,6 +88,14 @@ class GedisServer(StreamServer, JSConfigBase):
                 cmd = request[0]
                 redis_cmd = cmd.decode("utf-8").lower()
 
+                # print("REDISCMD:%s"%redis_cmd)
+
+                # if redis_cmd == "servercmd":
+                #     redis_cmd = request[1].decode("utf-8").lower()
+                #     _,request
+                #     from IPython import embed;embed(colors='Linux')
+                #     k
+
                 cmd , err = self.method_get(redis_cmd)
                 if err is not "":
                     response.error(err)
@@ -106,7 +114,8 @@ class GedisServer(StreamServer, JSConfigBase):
                         continue 
                     o=cmd.schema_in.get(capnpbin=request[1])
                     params=o.ddict
-                    params.pop("id")
+                    if "id" in params:
+                        params.pop("id")
                     if cmd.schema_out:
                         params["schema_out"] = cmd.schema_out
                 else:

@@ -18,6 +18,11 @@ class Models():
     def __init__(self):
         pass
 
+class CmdsBase():
+    def __init__(self):
+        pass
+
+
 class GedisClient(JSConfigBase):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):
@@ -26,16 +31,17 @@ class GedisClient(JSConfigBase):
         self._redis = None
 
         self.models = Models()
+        self.cmds = CmdsBase()
 
         #LOW LEVEL AT THIS TIME BUT TO SHOW SOMETHING
         cmds_meta =self.redis.execute_command("system.api_meta")
-
-        self.cmds_meta = j.data.serializer.msgpack.loads(cmds_meta)
-        self.namespace = self.cmds_meta["namespace"]
-        for namespace_full,capnpbin in self.cmds_meta["cmds"].items():
+        cmds_meta = j.data.serializer.msgpack.loads(cmds_meta)
+        self.cmds_meta = {}
+        self.namespace = cmds_meta["namespace"]
+        for namespace_full,capnpbin in cmds_meta["cmds"].items():
             shortname = namespace_full.split(".")[-1]
             if not shortname.startswith("model"):
-                self.cmds_meta[namespace_full] = j.servers.gedis2.cmds_get(namespace_full,capnpbin)
+                self.cmds_meta[namespace_full] = j.servers.gedis2.cmds_get(namespace_full,capnpbin).cmds
 
         #this will make sure we have all the local schemas
         schemas_meta =self.redis.execute_command("system.core_schemas_get")
@@ -61,26 +67,23 @@ class GedisClient(JSConfigBase):
             m=imp.load_source(name=fname, pathname=dest)
             self.logger.debug("schema:%s"%fname)
             self.models.__dict__[schema_url.replace(".","_")] = m.model(client=self)
-                
 
-
-        # for key,cmd in self.cmds_meta.items():
-        #     j.clients.gedis2.code_client_template
-        #     name = key.split(".")[-1]
-        #     if name.startswith("model"):
-        #         from IPython import embed;embed(colors='Linux')
-        #         s
-            # print(45678)
-            # from IPython import embed;embed(colors='Linux')
-            # s
-
-            # dest = j.clients.gedsi2.code_generation_dir+"/"
-            # if reset or not j.sal.fs.exists(dest):
-            #     code = j.servers.gedis2.code_model_template.render(obj= table.schema)
-            #     j.sal.fs.writeFile(dest,code)
-            
-            
-
+        for nsfull, cmds_ in self.cmds_meta.items():
+            cmds = CmdsBase()
+            cmds.cmds = cmds_
+            cmds.name = nsfull.replace(".","_")
+            # for name,cmd in cmds.items():
+            location = nsfull.replace(".","_")
+            cmds_name_lower = nsfull.split(".")[-1].strip().lower()
+            cmds.cmds_name_lower = cmds_name_lower
+            fname="cmds_%s"%location
+            dest = j.clients.gedis2.code_generation_dir+"/%s.py"%fname
+            # schema = j.data.schema.schema_from_url(schema_url)
+            code = j.clients.gedis2.code_client_template.render(obj= cmds)
+            j.sal.fs.writeFile(dest,code)
+            m=imp.load_source(name=fname, pathname=dest)
+            self.logger.debug("cmds:%s"%fname)
+            self.cmds.__dict__[cmds_name_lower] =m.CMDS(client=self,cmds=cmds.cmds)
 
     @property
     def ssl_certfile_path(self):

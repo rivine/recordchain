@@ -76,5 +76,6 @@ class model_orderbuy(JSBASE):
         it will pass through this function, 
         this allows addional manipulation of object or security checks
         """
+        #TODO:*1 remove owner_email_addr
         return obj
 

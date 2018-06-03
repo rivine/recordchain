@@ -132,7 +132,7 @@ class Schema(JSBASE):
             if line.startswith("@"):
                 systemprop_name = line.split("=")[0].strip()[1:]
                 systemprop_val = line.split("=")[1].strip()
-                systemprops[systemprop_name] = systemprop_val
+                systemprops[systemprop_name] = systemprop_val.strip("\"").strip("'")
                 continue
             if line.startswith("#"):
                 continue

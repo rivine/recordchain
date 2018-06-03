@@ -54,7 +54,7 @@ class BCDBTable(JSBASE):
         self.logger.debug("build index for: %s"%self.name)
         def iload(id,data,result):
             if data:
-                meta, index,bdata = msgpack.unpackb(data)
+                index,bdata = msgpack.unpackb(data)
                 self._index(index,id)
 
         self.db.iterate(iload)

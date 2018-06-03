@@ -80,7 +80,7 @@ class BCDBFactory(JSConfigBase):
                 o2 = t.set(o)
                 assert o2.id == i
 
-            _, index, o3 = t.get(o2.id)
+            o3 = t.get(o2.id)
             assert o3.id == o2.id
 
             assert o3.ddict == o2.ddict

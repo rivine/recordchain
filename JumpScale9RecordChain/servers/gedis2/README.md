@@ -28,15 +28,6 @@ if __name__ == "__main__":
     server.start()
 ```
 
-In order to add new command, you need to do 2 things:
-
-1. define a method that represent the logic of your command
-2. register the command and the callback using `register_command`
-3. can also create additional methods on server class, will be auto registered
-
-The method needs to accepts 1 argument = `request`
-
-- `request` is a list that contains the command name as first item and the optional extra arguments of the command in the rest of the list.
 
 To test with redis client you can use jumpscale redis client as follows
 ```

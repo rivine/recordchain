@@ -34,9 +34,9 @@ class GedisClientFactory(JSConfigBase):
     def client_get(self,instance="main"):
         client = self.get(instance=instance)
         cl=GedisClientCmds()
-        cl._clients = client
+        cl._client = client
         cl.models = client.models
-        cl.__dict__.update(client.cmds.__dict__)
+        cl.__dict__.update(cl._client.cmds.__dict__)
         return cl
         
 
@@ -64,7 +64,7 @@ class GedisClientFactory(JSConfigBase):
             #check if its a path, if yes safe the key paths into config
             r.ssl_keys_save(ssl_certfile)
 
-        return r
+        return self.client_get(instance=instance)
 
     @property
     def _path(self):

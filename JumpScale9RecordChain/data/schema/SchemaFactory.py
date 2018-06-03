@@ -27,10 +27,11 @@ class SchemaFactory(JSBASE):
 
     def schema_from_text(self, txt,url=None):
         s = Schema(text=txt, url=url)
+
             
         if s.url:
             self.schemas[s.url] = s
-            
+
         return s
 
     def schema_add(self, txt):

@@ -33,7 +33,7 @@ class BCDB(JSConfigBase):
         """
         
         if schema_path=="":
-            j.data.schema.reset() #start from empty situation
+            # j.data.schema.reset() #start from empty situation
             schema_path=j.sal.fs.getcwd()
         
         if j.sal.fs.isDir(schema_path):
@@ -45,6 +45,10 @@ class BCDB(JSConfigBase):
             for schema in schemas:
                 if schema.name!="":    
                     t = self.table_get(schema=schema,name=schema.name)
+                # elif schema.url!="":
+                #     t = self.table_get(schema=schema,name=schema.url.replace(".","_"))
+                else:
+                    raise RuntimeError("schema name should not be empty")
             
         return self.tables
 

@@ -18,13 +18,21 @@ class GedisCmd(JSBASE):
         self.name = cmd.name
 
         if not cmd.schema_in.strip()=="":
-            self.schema_in=j.data.schema.schema_from_text(cmd.schema_in,url=self.namespace+".%s.in"%cmd.name)
+            if cmd.schema_in.startswith("!"):
+                url=cmd.schema_in.strip("!").strip()
+                self.schema_in = j.data.schema.schema_from_url(url)
+            else:        
+                self.schema_in=j.data.schema.schema_from_text(cmd.schema_in,url=self.namespace+".%s.in"%cmd.name)
             self.schema_in.objclass
         else:
             self.schema_in = None
 
-        if cmd.schema_out:
-            self.schema_out = j.data.schema.schema_from_text(cmd.schema_out,url=self.namespace+".%s.out"%cmd.name)
+        if cmd.schema_out:            
+            if cmd.schema_out.startswith("!"):
+                url=cmd.schema_out.strip("!").strip()
+                self.schema_out = j.data.schema.schema_from_url(url)
+            else:
+                self.schema_out = j.data.schema.schema_from_text(cmd.schema_out,url=self.namespace+".%s.out"%cmd.name)
             self.schema_out.objclass     
         else:
             self.schema_out = None

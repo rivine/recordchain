@@ -15,7 +15,7 @@ class GedisClientFactory(JSConfigBase):
     """
 
     def __init__(self):
-        self.__jslocation__ = "j.clients.gedis"
+        self.__jslocation__ = "j.clients.gedis_DONTUSE"
         JSConfigBase.__init__(self, GedisClient)
 
     def configure(self, instance="core",ipaddr="localhost", \

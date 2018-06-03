@@ -12,7 +12,7 @@ from .GedisServerExample import GedisServerExample
 class GedisFactory(JSConfigBase):
 
     def __init__(self):
-        self.__jslocation__ = "j.servers.gedis"
+        self.__jslocation__ = "j.servers.gedis_DONTUSE"
         JSConfigBase.__init__(self, GedisServer)
 
     def baseclass_get(self):

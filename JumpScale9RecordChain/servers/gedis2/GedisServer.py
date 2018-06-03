@@ -58,6 +58,8 @@ class GedisServer(StreamServer, JSConfigBase):
 
         self.serializer = None
 
+        self._inited = False
+
     def sslkeys_generate(self):
 
         res = j.sal.ssl.ca_cert_generate(j.sal.fs.getDirName(self.config.path))
@@ -161,7 +163,7 @@ class GedisServer(StreamServer, JSConfigBase):
             parser.on_disconnect()
             self.logger.info('close connection from {}'.format(address))
 
-    def start(self):
+    def init(self):
         self.logger.info("init server")
         j.logger.enabled = False
         self._logger = None
@@ -180,7 +182,12 @@ class GedisServer(StreamServer, JSConfigBase):
                 namespace_base+="."                
             namespace = namespace_base+j.sal.fs.getBaseName(item)[:-3].lower()
             self.cmds_add(namespace, path=item)
+        
+        self._inited = True
 
+    def start(self):
+        if self._inited is False:
+            self.init()
         self.server.serve_forever()
 
     def stop(self):

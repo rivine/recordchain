@@ -71,14 +71,15 @@ class GedisFactory(JSConfigBase):
 
     def client_get(self, instance):
         """
+        e.g. j.servers.gedis2.client_get("test)
         will user server arguments to figure out how to get client, is easy for testing
         """
         server = self.get(instance=instance,interactive=False)
         ssl = server.config.data['ssl']
         if not ssl:
-            client = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']), ssl= False)
+            client = j.clients.gedis2.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']), ssl= False)
         else:
-            client = j.clients.gedis.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']),ssl=ssl, ssl_keyfile=None, ssl_certfile=server.ssl_cert_path)
+            client = j.clients.gedis2.configure(instance, ipaddr=server.config.data['addr'], port=int(server.config.data['port']),ssl=ssl, ssl_keyfile=None, ssl_certfile=server.ssl_cert_path)
         return client
 
     @property
@@ -139,8 +140,7 @@ class GedisFactory(JSConfigBase):
         assert ping1value == True
 
         res = r.redis.execute_command("system.test_nontyped","name",10)
-
-        assert j.data.serializer.json.loads(res) == ['name', 10]
+        assert j.data.serializer.json.loads(res) == ['name', '10']
 
         #LOW LEVEL AT THIS TIME BUT TO SHOW SOMETHING
         cmds_meta =r.redis.execute_command("system.api_meta")

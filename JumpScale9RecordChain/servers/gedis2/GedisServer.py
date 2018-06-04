@@ -1,4 +1,5 @@
-
+import sys
+import os
 from js9 import j
 import signal
 import gevent
@@ -6,31 +7,52 @@ import gevent.signal
 from gevent.pool import Pool
 from gevent.server import StreamServer
 from .protocol import CommandParser, ResponseWriter
-import inspect
-import imp
-import sys
+
 from .GedisCmds import GedisCmds
 
-TEMPLATE = """
-addr = "localhost"
-port = "9900"
-ssl = false
-adminsecret_ = ""
-path = ""
-namespace = ""
-"""
+
 JSConfigBase = j.tools.configmanager.base_class_config
 
 
 class GedisServer(StreamServer, JSConfigBase):
+    TEMPLATE = """
+    addr = "localhost"
+    port = "9900"
+    ssl = false
+    adminsecret_ = ""
+    path = ""
+    namespace = ""
+    """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False, template=None):
-        """
-        """
-        if not template:
-            template = TEMPLATE
-        JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, template=template, interactive=interactive)
+    def __init__(
+        self,
+        instance,
+        data={},
+        parent=None,
+        interactive=False,
+        template=None
+    ):
+
+        JSConfigBase.__init__(
+            self,
+            instance=instance,
+            data=data,
+            parent=parent,
+            template=template or self.TEMPLATE, # default config if template is None
+            interactive=interactive
+        )
+
+
+
+        self.db = None
+        self._sig_handler = []
+        self.cmds_meta = {}
+        self.classes = {}
+        self.cmds = {}
+        self.schema_urls = []
+        self.serializer = None
+        self._inited = False
+
         host = self.config.data["addr"]
         port = int(self.config.data["port"])
 
@@ -47,18 +69,7 @@ class GedisServer(StreamServer, JSConfigBase):
             self.server = StreamServer(
                 (host, port), spawn=Pool(), handle=self.__handle_connection)
 
-        self._sig_handler = []
-
-        self.cmds_meta = {}
-        self.classes = {}
-        self.cmds = {}
-        self.schema_urls = []
-
         j.servers.gedis2.latest = self        
-
-        self.serializer = None
-
-        self._inited = False
 
     def sslkeys_generate(self):
 
@@ -79,7 +90,11 @@ class GedisServer(StreamServer, JSConfigBase):
         if self.config.data["ssl"]:
             return p
 
-    def __handle_connection(self, socket, address):
+    def __handle_connection(
+        self,
+        socket,
+        address
+    ):
         self.logger.info('connection from {}'.format(address))
         parser = CommandParser(socket)
         response = ResponseWriter(socket)
@@ -87,52 +102,46 @@ class GedisServer(StreamServer, JSConfigBase):
         try:
             while True:
                 request = parser.read_request()
+
+                if not request: # empty string request
+                    response.error('Empty request body .. probably this is a (TCP port) checking query')
+                    continue
+
+                # Get CMD
                 cmd = request[0]
                 redis_cmd = cmd.decode("utf-8").lower()
+                cmd , err = self.get_command(redis_cmd)
+                params = None # CMD params
 
-                # print("REDISCMD:%s"%redis_cmd)
-
-                # if redis_cmd == "servercmd":
-                #     redis_cmd = request[1].decode("utf-8").lower()
-                #     _,request
-                #     from IPython import embed;embed(colors='Linux')
-                #     k
-
-                cmd , err = self.method_get(redis_cmd)
-                if err is not "":
+                if err:
                     response.error(err)
                     continue
 
                 if cmd.schema_in:
-                    if len(request)<2:
+
+                    if len(request) < 2:
                         response.error("need to have arguments, none given")
                         continue
+
                     if len(request) > 2:
-                        cmd.schema_in.properties
-                        print("more than 1 input")
-                        from IPython import embed;embed(colors='Linux')
-                        s
                         response.error("more than 1 argument given, needs to be binary capnp message or json")
                         continue 
-                    o=cmd.schema_in.get(capnpbin=request[1])
+                    o = cmd.schema_in.get(capnpbin=request[1])
                     params=o.ddict
+
                     if "id" in params:
                         params.pop("id")
+
                     if cmd.schema_out:
                         params["schema_out"] = cmd.schema_out
                 else:
                     if len(request) > 1:
                         params = request[1:]
-                    else:
-                        #no arguments just execute
-                        params = None
-
-                # if cmd.name=="get":
-                #     from IPython import embed;embed(colors='Linux')
 
                 # execute command callback
-                self.logger.debug("execute command callback:%s:%s"%(cmd,params))
+                self.logger.debug("execute command callback:%s:%s" % (cmd, params))
                 result = None
+
                 try:
                     if params is None:
                         result = cmd.method()
@@ -140,40 +149,39 @@ class GedisServer(StreamServer, JSConfigBase):
                         result = cmd.method(*params)
                     else:
                         result = cmd.method(**params)
-                    self.logger.debug("Callback done and result {} , type {}".format(result, type(result)))
                 except Exception as e:
-                    print("exception in redis server")
-                    # from IPython import embed;embed(colors='Linux')                    
+
                     eco = j.errorhandler.parsePythonExceptionObject(e)
                     msg = str(eco)
                     msg += "\nCODE:%s:%s\n"%(cmd.namespace,cmd.name)
-                    print (msg)
+                    self.logger.error(msg)
                     response.error(msg)
                     continue
+
+                self.logger.debug("Callback done and result {} , type {}".format(result, type(result)))
+
                 self.logger.debug(
                     "response:{}:{}:{}".format(address, cmd, result))
 
                 if cmd.schema_out:
-                    result=result.data
+                    result = result.data
+
                 response.encode(result)
 
         except ConnectionError as err:
-            self.logger.info('connection error: {}'.format(str(err)))
+            self.logger.error('connection error: {}'.format(str(err)))
         finally:
             parser.on_disconnect()
             self.logger.info('close connection from {}'.format(address))
 
     def init(self):
         self.logger.info("init server")
-        j.logger.enabled = False
-        self._logger = None
-
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
-
         self.logger.info("start server")
 
-        # add the cmds to the server
-        path_server = self.config.data["path"]+"/server/"
+        # add the cmds to the server (from generated modules)
+        path_server = self.server_path
+
         for item in j.sal.fs.listFilesInDir(path_server,filter="*.py",exclude=["__*"]):
             namespace_base = self.config.data["namespace"]
             if not namespace_base:
@@ -182,12 +190,26 @@ class GedisServer(StreamServer, JSConfigBase):
                 namespace_base+="."                
             namespace = namespace_base+j.sal.fs.getBaseName(item)[:-3].lower()
             self.cmds_add(namespace, path=item)
-        
         self._inited = True
 
-    def start(self):
+    def start(self, schema_path, reset=False):
+
+        j.data.bcdb.db_start(
+            self.instance,
+            adminsecret=self.config.data["adminsecret_"],
+            reset=reset
+        )
+
+        db = j.data.bcdb.get(self.instance)
+        db.tables_get(schema_path)  # will get it from current path
+        self.db = db
+        # tables are now in db.tables as dict
+
+        self.generate(reset=reset)
+
         if self._inited is False:
             self.init()
+
         self.server.serve_forever()
 
     def stop(self):
@@ -203,7 +225,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self.server.stop()
 
     def cmds_add(self, namespace, path=None, class_=None):
-        self.logger.debug("cmds_add:%s:%s"%(namespace,path))
+        self.logger.debug("cmds_add:%s:%s"%(namespace , path))
         if path is not None:
             classname = j.sal.fs.getBaseName(path).split(".", 1)[0]
             dname = j.sal.fs.getDirName(path)
@@ -217,28 +239,40 @@ class GedisServer(StreamServer, JSConfigBase):
         self.cmds_meta[namespace] = GedisCmds(self, namespace=namespace, class_=class_)
         self.classes[namespace] =class_()
 
-    def generate(self,db=None,reset=False):
+    @property
+    def server_path(self):
+        j.data.schema.instance = self.instance
+        path = os.path.join(j.dirs.VARDIR, 'codegen', 'gedis', self.instance, 'server')
+        if not j.sal.fs.exists(path):
+            j.sal.fs.createDir(path)
+        if not path in sys.path:
+            sys.path.append(path)
+        return path
+
+    def generate(self,db=None, reset=False):
         
-        if db==None:
-            db=self.db
+        db = db or self.db
 
-        path_server = self.config.data["path"]+"/server/"
-        
-        if path_server not in sys.path:
-            sys.path.append(path_server)
+        path = self.server_path
+        self.logger.debug("codegendir: %s" % path)
 
-        j.sal.fs.touch(path_server+"__init__.py")
+        if path not in sys.path:
+            sys.path.append(path)
 
-        #copy the templates in the local server dir
+        j.sal.fs.touch(os.path.join(path, '__init__.py'))
+
+        # copy the templates in the local server dir
         for item in ["system"]:
-            dest = path_server+"%s.py"%item
-            if reset or not j.sal.fs.exists(dest):
-                src = j.servers.gedis2._path+"/templates/%s.py"%item
-                j.sal.fs.copyFile(src,dest)
 
+            dest = os.path.join(path, "%s.py" % item)
+            if reset or not j.sal.fs.exists(dest):
+                src = os.path.join(j.servers.gedis2._path, "templates", '%s.py' % item)
+                j.sal.fs.copyFile(src, dest)
+
+        # Generate & models (name spaces) from schema
         for namespace,table in db.tables.items():
             # url = table.schema.url.replace(".","_")
-            dest = path_server+"model_%s.py"%namespace
+            dest = os.path.join(path, "model_%s.py" % namespace)
             if reset or not j.sal.fs.exists(dest):
                 code = j.servers.gedis2.code_model_template.render(obj= table.schema)
                 j.sal.fs.writeFile(dest,code)
@@ -248,40 +282,41 @@ class GedisServer(StreamServer, JSConfigBase):
     def namespace(self):
         return self.config.data["namespace"]
 
-    def method_get(self,cmd):
+    def get_command(self, cmd):
 
         if cmd in self.cmds:
-            return (self.cmds[cmd],"")
+            return self.cmds[cmd], ''
 
-        print("* method miss:%s"%cmd)
-        
-        pre,post=cmd.split(".",1)
+        self.logger.debug('(%s) command cache miss')
 
-        namespace=self.namespace+"."+pre
-        
+        if not '.' in cmd:
+            return None, 'Invalid command (%s) : model is missing. proper format is {model}.{cmd}'
+
+        pre, post = cmd.split(".", 1)
+
+        namespace = self.namespace + "." + pre
 
         if namespace not in self.classes:
-            return (None,"Cannot find namespace:%s"%(namespace))
-        cl=self.classes[namespace]
+            return None,"Cannot find namespace:%s "% (namespace)
 
         if namespace not in self.cmds_meta:
-            return (None,"Cannot find namespace:%s"%(namespace))
+            return None,"Cannot find namespace:%s"%(namespace)
 
         meta = self.cmds_meta[namespace]
 
         if not post in meta.cmds:
-            return (None,"Cannot find method with name:%s in namespace:%s"%(post,namespace))
+            return None,"Cannot find method with name:%s in namespace:%s"%(post,namespace)
         
         cmd_obj = meta.cmds[post]
 
         try:
+            cl = self.classes[namespace]
             m = eval("cl.%s"%(post))
-            # m = cmd_obj.method
         except Exception as e:
-            return (None,"Could not execute code of method '%s' in namespace '%s'\n%s"%(pre,namespace,e))
+            return None,"Could not execute code of method '%s' in namespace '%s'\n%s"%(pre,namespace,e)
 
         cmd_obj.method = m
 
         self.cmds[cmd] = cmd_obj
 
-        return (self.cmds[cmd],"")
+        return self.cmds[cmd], ""

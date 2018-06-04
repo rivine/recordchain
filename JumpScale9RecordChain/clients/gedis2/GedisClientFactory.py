@@ -1,16 +1,16 @@
-
-from pprint import pprint as print
+import os
+import sys
 
 from js9 import j
-
-import sys
 
 JSConfigBase = j.tools.configmanager.base_class_configs
 from .GedisClient import GedisClient
 
+
 class GedisClientCmds():
     def __init__(self):
         pass
+
 
 class GedisClientFactory(JSConfigBase):
     """
@@ -20,15 +20,19 @@ class GedisClientFactory(JSConfigBase):
     def __init__(self):
         self.__jslocation__ = "j.clients.gedis2"
         JSConfigBase.__init__(self, GedisClient)
-        #PREPARE FOR CODE GENERATION
-        self._template_engine = None    
+        self._template_engine = None
         self._template_code_client = None
         self._code_model_template = None
-        self.code_generation_dir = j.dirs.VARDIR+"/codegen/gedis_client/"
-        j.sal.fs.createDir(self.code_generation_dir)
-        if self.code_generation_dir not in sys.path:
+
+        self.code_generation_dir = os.path.join(j.dirs.VARDIR, 'codegen', 'gedis')
+
+        if not j.sal.fs.exists(self.code_generation_dir):
+            j.sal.fs.createDir(self.code_generation_dir)
+
+        if not self.code_generation_dir in sys.path:
             sys.path.append(self.code_generation_dir)
-        j.sal.fs.touch(self.code_generation_dir+"/__init__.py")
+
+        j.sal.fs.touch(os.path.join(self.code_generation_dir, '/__init__.py'))
         self.logger.debug("codegendir:%s" % self.code_generation_dir)    
         
     def client_get(self,instance="main"):
@@ -39,7 +43,6 @@ class GedisClientFactory(JSConfigBase):
         cl.__dict__.update(cl._client.cmds.__dict__)
         return cl
         
-
     def configure(self, instance="core",ipaddr="localhost", \
             port=5000, password="", unixsocket="", 
             ssl=False, ssl_keyfile=None, ssl_certfile=None):
@@ -57,13 +60,13 @@ class GedisClientFactory(JSConfigBase):
             #check if its a path, if yes load
             data["ssl"] = True 
             data["sslkey"] = True #means path will be used for sslkey at redis client
-            
+
+
         r = self.get(instance=instance, data=data)
 
         if ssl_certfile:
             #check if its a path, if yes safe the key paths into config
             r.ssl_keys_save(ssl_certfile)
-
         return self.client_get(instance=instance)
 
     @property
@@ -100,17 +103,19 @@ class GedisClientFactory(JSConfigBase):
         """
         js9 'j.clients.gedis2.test()'
 
-        """      
+        """
+        schema_path = j.sal.fs.getDirName(
+            j.sal.fs.getDirName(
+                j.sal.fs.getDirName(
+                    os.path.abspath(__file__)
+                )
+            )) + "servers/gedis2/EXAMPLE"
+        j.servers.gedis2.start(instance="test",schema_path=schema_path, background=True)
 
-        #FOR CURRENT TEST TO MAKE SURE WE START FROM NOTHING
-        j.sal.fs.remove(self.code_generation_dir)
-        j.sal.fs.createDir(self.code_generation_dir)
 
-        self.configure(instance="test",ipaddr="localhost", \
-            port=5000, password="", unixsocket="", 
+        cl = self.configure(instance="test",ipaddr="localhost", \
+            port=5000, password="", unixsocket="",
             ssl=False, ssl_keyfile=None, ssl_certfile=None)
-
-        cl = j.clients.gedis2.client_get("test")
 
         o=cl.models.test_gedis2_cmd1.new()
         o.cmd.name="aname"
@@ -124,8 +129,21 @@ class GedisClientFactory(JSConfigBase):
 
         assert o3.ddict==o4.ddict
 
-        o=cl.system.test()
-        assert o.ddict ==  {'list_int': [], 'name': '', 'nr': 0}
+        res = cl.system.test_nontyped("name", 10)
+        assert j.data.serializer.json.loads(res) == ['name', 10]
+
+        s = j.data.schema.schema_from_url('jumpscale.gedis2.example.system.test.in')
+        o = s.new()
+        o.name = "aname"
+        o.nr = 1
+
+        res = cl.system.test("aname", 1)
+
+        s = j.data.schema.schema_from_url('jumpscale.gedis2.example.system.test.out')
+
+        o2 = s.get(capnpbin=res.data)
+
+        assert o.name == o2.name
         assert cl.system.ping() == b'PONG'
         assert cl.system.ping_bool() == 1
         

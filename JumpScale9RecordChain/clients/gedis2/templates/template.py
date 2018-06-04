@@ -42,9 +42,12 @@ class CMDS():
         {% if cmd.schema_out != None %}
         schema_out = self._cmds["{{name}}"].schema_out
         obj = schema_out.get(capnpbin=res)
-        {% endif %}        
-
         return obj
+        {% else %}
+        return res
+        {% endif %}
+
+
 
 
     {% endfor %}

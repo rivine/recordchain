@@ -4,15 +4,10 @@ from setuptools.command.develop import develop as _develop
 import os
 
 
-# zlib1g-dev/zesty
-# libjpeg-dev/zesty
-
 def _post_install(libname, libpath):
     from js9 import j
-    # add this plugin to the config
     c = j.core.state.configGet('plugins', defval={})
     c[libname] = "%s/github/rivine/recordchain/JumpScale9RecordChain" % j.dirs.CODEDIR
-    # c[libname] = libpath
     j.core.state.configSet('plugins', c)
     j.tools.jsloader.generate()
 
@@ -21,10 +16,17 @@ class install(_install):
     def run(self):
         _install.run(self)
         libname = self.config_vars['dist_name']
+
         libpath = os.path.join(os.path.dirname(
-            os.path.abspath(__file__)), libname)
-        self.execute(_post_install, (libname, libpath),
-                     msg="Running post install task")
+            os.path.abspath(__file__)),
+            libname
+        )
+
+        self.execute(
+            _post_install,
+            (libname, libpath),
+            msg="Running post install task"
+        )
 
 
 class develop(_develop):
@@ -32,10 +34,17 @@ class develop(_develop):
     def run(self):
         _develop.run(self)
         libname = self.config_vars['dist_name']
-        libpath = os.path.join(os.path.dirname(
-            os.path.abspath(__file__)), libname)
-        self.execute(_post_install, (libname, libpath),
-                     msg="Running post install task")
+
+        libpath = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            libname
+        )
+
+        self.execute(
+            _post_install,
+            (libname, libpath),
+            msg="Running post install task"
+        )
 
 
 long_description = ""
@@ -66,6 +75,10 @@ setup(
         'toml>=0.9.2',
         'pynacl>=1.1.2',
         'websockets>=4.0.1',
+        'Jinja2==2.10',
+        'pyblake2==1.1.2',
+        'pycapnp==0.6.3',
+        'pyOpenSSL==18.0.0'
     ],
     dependency_links=[
         "git+https://github.com/pyca/pynacl"

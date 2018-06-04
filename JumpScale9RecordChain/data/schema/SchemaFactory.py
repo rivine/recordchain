@@ -13,14 +13,19 @@ class SchemaFactory(JSBASE):
         self.__jslocation__ = "j.data.schema"
         JSBASE.__init__(self)
         self._template_engine = None
-        self.code_generation_dir = j.dirs.VARDIR+"/codegen/schema/"
-        j.sal.fs.createDir(self.code_generation_dir)
-        if self.code_generation_dir not in sys.path:
-            sys.path.append(self.code_generation_dir)
-        j.sal.fs.touch(self.code_generation_dir+"/__init__.py")
-        self.logger.debug("codegendir:%s" % self.code_generation_dir)
         self.db = j.clients.redis.core_get()
         self.schemas = {}
+        self.instance = None
+
+    @property
+    def code_generation_dir(self):
+        path =j.dirs.VARDIR + "/" + "/codegen" + "/" + "gedis" + "/" + (self.instance or '') + '/' + 'schema' + '/'
+        j.sal.fs.createDir(path)
+        if path not in sys.path:
+            sys.path.append(path)
+        j.sal.fs.touch(path + "/__init__.py")
+        self.logger.debug("codegendir:%s" % path)
+        return path
 
     def reset(self):
         self.schemas = {}

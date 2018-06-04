@@ -1,3 +1,5 @@
+import os
+import sys
 from js9 import j
 import imp
 
@@ -12,11 +14,11 @@ sslkey = false
 
 JSConfigBase = j.tools.configmanager.base_class_config
 
-#WILL HAVE METHODS IN FUTURE TO GENERATE CLIENT METHODS AUTOMATICALLY
 
 class Models():
     def __init__(self):
         pass
+
 
 class CmdsBase():
     def __init__(self):
@@ -25,42 +27,65 @@ class CmdsBase():
 
 class GedisClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, template=TEMPLATE, interactive=interactive)
+    def __init__(
+        self,
+        instance,
+        data={},
+        parent=None,
+        interactive=False
+    ):
+        JSConfigBase.__init__(
+            self,
+            instance=instance,
+            data=data,
+            parent=parent,
+            template=TEMPLATE,
+            interactive=interactive
+        )
+
         self._redis = None
 
         self.models = Models()
         self.cmds = CmdsBase()
+        self.cmds_meta = {}
 
-        #LOW LEVEL AT THIS TIME BUT TO SHOW SOMETHING
+        # LOW LEVEL AT THIS TIME BUT TO SHOW SOMETHING
         cmds_meta =self.redis.execute_command("system.api_meta")
         cmds_meta = j.data.serializer.msgpack.loads(cmds_meta)
-        self.cmds_meta = {}
+
         self.namespace = cmds_meta["namespace"]
-        for namespace_full,capnpbin in cmds_meta["cmds"].items():
+        for namespace_full, capnpbin in cmds_meta["cmds"].items():
             shortname = namespace_full.split(".")[-1]
             if not shortname.startswith("model"):
                 self.cmds_meta[namespace_full] = j.servers.gedis2.cmds_get(namespace_full,capnpbin).cmds
 
-        #this will make sure we have all the local schemas
+        # this will make sure we have all the local schemas
         schemas_meta =self.redis.execute_command("system.core_schemas_get")
         schemas_meta = j.data.serializer.msgpack.loads(schemas_meta)
         for key,txt in schemas_meta.items():
             if key not in j.data.schema.schemas:
                 j.data.schema.schema_from_text(txt,url=key)
 
-
-        schema_urls =self.redis.execute_command("system.schema_urls")
+        schema_urls = self.redis.execute_command("system.schema_urls")
         self.schema_urls = j.data.serializer.msgpack.loads(schema_urls)
                 
         self.generate()
 
     def generate(self,reset=True):
 
+        path = os.path.join(j.clients.gedis2.code_generation_dir, self.instance, 'client')
+        if not j.sal.fs.exists(path):
+            j.sal.fs.createDir(path)
+
+        if not path in sys.path:
+            sys.path.append(path)
+
+        j.sal.fs.touch(os.path.join(path, '/__init__.py'))
+
         for schema_url in self.schema_urls:
-            fname="model_%s"%schema_url.replace(".","_")
-            dest = j.clients.gedis2.code_generation_dir+"/%s.py"%fname
+
+            fname = "model_%s" % schema_url.replace(".","_")
+            dest = os.path.join(path, "%s.py"%fname)
             schema = j.data.schema.schema_from_url(schema_url)
             code = j.clients.gedis2.code_model_template.render(obj= schema)
             j.sal.fs.writeFile(dest,code)
@@ -77,7 +102,7 @@ class GedisClient(JSConfigBase):
             cmds_name_lower = nsfull.split(".")[-1].strip().lower()
             cmds.cmds_name_lower = cmds_name_lower
             fname="cmds_%s"%location
-            dest = j.clients.gedis2.code_generation_dir+"/%s.py"%fname
+            dest = os.path.join(path, "%s.py"%fname)
             # schema = j.data.schema.schema_from_url(schema_url)
             code = j.clients.gedis2.code_client_template.render(obj= cmds)
             j.sal.fs.writeFile(dest,code)

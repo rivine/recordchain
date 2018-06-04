@@ -21,7 +21,14 @@ class orderbook(JSBASE):
 
 
 
-    def wallet_register(self,addr,jwt,ipaddr):
+    def wallet_register(self,addr,jwt,ipaddr,schema_out):
+        """
+        ```in
+        addr = "" (S)
+        jwt = "" (S)  
+        ipaddr = "" (S)
+        ```
+        """        
         self.wallet = Wallet()
         self.wallet.addr = addr
         self.wallet.jwt = jwt

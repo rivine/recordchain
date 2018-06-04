@@ -68,6 +68,7 @@ class model_orderbuy(JSBASE):
         before an object is set in the DB it will pass through this function, 
         this allows addional manipulation of object or security checks
         """
+        #TODO:*1 remove owner_email_addr & secret
         return obj
 
     def hook_get(self,obj):
@@ -76,6 +77,6 @@ class model_orderbuy(JSBASE):
         it will pass through this function, 
         this allows addional manipulation of object or security checks
         """
-        #TODO:*1 remove owner_email_addr
+        #TODO:*1 remove owner_email_addr & secret
         return obj
 

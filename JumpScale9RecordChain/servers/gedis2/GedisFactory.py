@@ -36,12 +36,12 @@ class GedisFactory(JSConfigBase):
     def _self_class_get(self):
         return GedisFactory
 
-    def start(self, instance="main", schema_path="", background=False):
+    def start(self, instance="main", schema_path="", background=False, reset=False):
         server = self.get(instance,interactive=False)
         ssl = server.config.data['ssl']
         if background:
-            cmd = "js9 '%s.start(instance=\"%s\", schema_path=\"%s\")'" % (
-                self.__jslocation__, instance, schema_path)
+            cmd = "js9 '%s.start(instance=\"%s\", schema_path=\"%s\", reset=\"%s\")'" % (
+                self.__jslocation__, instance, schema_path, reset)
             j.tools.tmux.execute(cmd, session='main', window='gedis_%s'%instance,pane='main', session_reset=False, window_reset=True)
             res=j.sal.nettools.waitConnectionTest("localhost",int(server.config.data["port"]),timeoutTotal=1000)
             if res==False:
@@ -51,7 +51,7 @@ class GedisFactory(JSConfigBase):
             self.logger.info("gedis server '%s' started"%instance)
         else:
             server = self.get(instance, create=False)
-            server.start(schema_path=schema_path)
+            server.start(schema_path=schema_path, reset=reset)
 
     def configure(self, instance="main", port=8889, addr="localhost", secret="", namespace="",ssl=False, path="", interactive=False, start=False, background=True):
         """

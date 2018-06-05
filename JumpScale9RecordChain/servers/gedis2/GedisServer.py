@@ -192,7 +192,7 @@ class GedisServer(StreamServer, JSConfigBase):
             self.cmds_add(namespace, path=item)
         self._inited = True
 
-    def start(self, schema_path, reset=False):
+    def start(self, schema_path="", reset=False):
 
         j.data.bcdb.db_start(
             self.instance,

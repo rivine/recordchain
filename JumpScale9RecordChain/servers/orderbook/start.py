@@ -17,4 +17,4 @@ server.generate(reset=True)
 
 server.init()
 
-server.start()
+server.start(schema_path="")

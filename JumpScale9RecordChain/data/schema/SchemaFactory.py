@@ -13,25 +13,29 @@ class SchemaFactory(JSBASE):
         self.__jslocation__ = "j.data.schema"
         JSBASE.__init__(self)
         self._template_engine = None
-        self.code_generation_dir = j.dirs.VARDIR+"/codegen/schema/"
-        j.sal.fs.createDir(self.code_generation_dir)
-        if self.code_generation_dir not in sys.path:
-            sys.path.append(self.code_generation_dir)
-        j.sal.fs.touch(self.code_generation_dir+"/__init__.py")
-        self.logger.debug("codegendir:%s" % self.code_generation_dir)
+        self._code_generation_dir = None
         self.db = j.clients.redis.core_get()
         self.schemas = {}
+
+    @property
+    def code_generation_dir(self):
+        if not self._code_generation_dir:
+            path = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "schema")
+            j.sal.fs.createDir(path)
+            if path not in sys.path:
+                sys.path.append(path)
+            j.sal.fs.touch(j.sal.fs.joinPaths(path, "/__init__.py"))
+            self.logger.debug("codegendir:%s" % path)
+            self._code_generation_dir = path
+        return self._code_generation_dir
 
     def reset(self):
         self.schemas = {}
 
     def schema_from_text(self, txt,url=None):
         s = Schema(text=txt, url=url)
-
-            
         if s.url:
             self.schemas[s.url] = s
-
         return s
 
     def schema_add(self, txt):
@@ -69,12 +73,8 @@ class SchemaFactory(JSBASE):
         url = url.lower().strip()
         if url in self.schemas:
             return self.schemas[url]
-        # schema_txt = self.db.get("schemas:%s"%url)
-        # if schema_txt == None:
         else:
             raise RuntimeError("could not find schema with url:%s" % url)
-        # s = self.schema_from_text(schema_txt)
-        # return s
 
     @property
     def template_engine(self):
@@ -259,17 +259,3 @@ class SchemaFactory(JSBASE):
         assert o3.data == o4.data
 
         print("TEST 3 OK")
-
-
-    # def test_list(self):
-    #     """
-    #     js9 'j.data.schema.test_list()'
-    #     """
-
-    #     lc = self.list_base_class_get()
-    #     l = lc()
-    #     for i in range(100):
-    #         l.append(i)
-
-    #     from IPython import embed
-    #     embed(colors='Linux')

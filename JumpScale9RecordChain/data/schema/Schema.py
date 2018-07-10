@@ -1,11 +1,9 @@
+import imp
 
 from JumpScale9 import j
+from .SchemaProperty import SchemaProperty
 
 JSBASE = j.application.jsbase_get_class()
-import os
-
-from .SchemaProperty import SchemaProperty
-import imp
 
 
 class Schema(JSBASE):
@@ -72,9 +70,6 @@ class Schema(JSBASE):
         self.properties = []
 
         errors = []
-
-        def proptype(prop):
-            j.data.types
 
         def process(line):
             propname, line = line.split("=", 1)
@@ -202,7 +197,6 @@ class Schema(JSBASE):
         for prop in self.lists:
             prop.default_as_python_code
         code = self.code_template.render(obj=self)
-        # print(code)
         return code
 
     @property
@@ -221,7 +215,7 @@ class Schema(JSBASE):
     def objclass(self):
         if self._obj_class is None:
             url = self.url.replace(".","_")
-            path = j.data.schema.code_generation_dir + "%s.py" % url
+            path = j.sal.fs.joinPaths(j.data.schema.code_generation_dir, "%s.py" % url)
             j.sal.fs.writeFile(path,self.code)
             m=imp.load_source(name="url", pathname=path)
             self._obj_class = m.ModelOBJ
@@ -242,7 +236,6 @@ class Schema(JSBASE):
                     self._index_list.append(prop.alias)
         return self._index_list                    
             
-
     def __str__(self):
         out=""
         for item in self.properties:

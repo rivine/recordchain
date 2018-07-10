@@ -1,7 +1,5 @@
 
 from js9 import j
-from pprint import pprint as print
-import time
 import msgpack
 from functools import reduce
 import struct
@@ -186,7 +184,7 @@ class BCDBTable(JSBASE):
             indexkey=self._index_key+":%s"%key
             res2=[]
             if "*" in val:
-                for item in self.index.hkeys(indexkey,val):
+                for item in self.index.hkeys(indexkey):
                     id=self.index.hget(indexkey,item)
                     id=struct.unpack("<I",id)[0]            
                     if id not in res2:

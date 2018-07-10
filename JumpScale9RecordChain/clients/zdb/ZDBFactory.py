@@ -20,7 +20,7 @@ class ZDBFactory(JSConfigBase):
 
         data = {}
         data["addr"] = addr
-        data["port"] = int(port)
+        data["port"] = str(port)
         data["mode"] = str(mode)
         data["namespace"] = str(namespace)
         data["id_enable"] = bool(id_enable)

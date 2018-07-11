@@ -183,7 +183,8 @@ class BCDBTable(JSBASE):
         for key,val in args.items():
             indexkey=self._index_key+":%s"%key
             res2=[]
-            if "*" in val:
+
+            if val == '*' or val == b'*':
                 for item in self.index.hkeys(indexkey):
                     id=self.index.hget(indexkey,item)
                     id=struct.unpack("<I",id)[0]            
@@ -198,6 +199,10 @@ class BCDBTable(JSBASE):
             res.append(res2)
 
         res = [set(item) for item in res]
+
+        if not res:
+            return []
+
         res3 = reduce(set.intersection, res)
         res4=[]
         for item in res3:

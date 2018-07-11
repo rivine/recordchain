@@ -33,9 +33,17 @@ class model(JSBASE):
         obj.id = id
         return obj
 
-    def find(self,**args):
-        res = self.redis.execute_command("model_%s.find"%self.name)
-        return self.table.find(hook=self.hook_get,**args)
-        
+    def find(self,id):
+        items = self.redis.execute_command("model_%s.find"%self.name, id)
+        items = j.data.serializer.json.loads(items)
+        result = []
+
+        for item in items:
+            obj = self.new()
+            for k, v in item.items():
+                setattr(obj, k, v)
+            result.append(obj)
+        return result
+
     def new(self):
         return self.schema.new()

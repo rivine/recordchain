@@ -53,30 +53,34 @@ class GedisCmd(JSBASE):
             return self.cmdobj.args
         else:
             out= ""
-            for prop in  self.schema_in.properties:
+            for prop in self.schema_in.properties + self.schema_in.lists:
                 d=prop.default_as_python_code
-                # if d=="":
-                #     d = None
-                out += "%s=%s, "%(prop.name,d)            
+                out += "%s=%s, "%(prop.name,d)
             out = out.rstrip().rstrip(",").rstrip()
             out += ",schema_out=None"
             return out
 
     @property
     def args_client(self):
-        if self.schema_in==None:
+        arguments = [a.strip() for a in self.cmdobj.args.split(',')]
+
+        if 'schema_out' in arguments:
+            arguments.remove('schema_out')
+
+        if self.schema_in is None:
             if self.cmdobj.args.strip() == "":
                 return ""
-            return ","+self.cmdobj.args
+            return ","+ ','.join(arguments)
         else:
-            if len(self.schema_in.properties)==0:
+            if len(self.schema_in.properties + self.schema_in.lists)==0:
                 return ""
             else:
-                out = ","
-            for prop in  self.schema_in.properties:
+                if len(arguments) == 1 and len(self.schema_in.properties + self.schema_in.lists) > 1:
+                    out = ",id=0,"
+                else:
+                    out = ","
+            for prop in  self.schema_in.properties + self.schema_in.lists:
                 d=prop.default_as_python_code
-                # if d=="":
-                #     d = None
                 out += "%s=%s, "%(prop.name,d)            
             out = out.rstrip().rstrip(",").rstrip().rstrip(",")
             return out            

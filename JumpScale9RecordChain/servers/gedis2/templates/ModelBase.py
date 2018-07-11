@@ -45,8 +45,8 @@ class model_{{obj.name}}(JSBASE):
         else:
             return j.data.serializer.msgpack.dumps([obj.id,obj.data])
 
-    def find(self,**args):
-        return self.table.find(hook=self.hook_get,**args)
+    def find(self,id):
+        return self.table.find(hook=self.hook_get,id=id)
         
     def new(self):
         return self.table.new()

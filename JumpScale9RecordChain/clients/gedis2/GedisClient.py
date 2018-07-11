@@ -1,22 +1,25 @@
+import os
+import sys
 from js9 import j
 import imp
+from redis.connection import ConnectionError
+
 
 TEMPLATE = """
-addr = "127.0.0.1"
-port = 6379
-password_ = ""
-unixsocket = ""
+host = "127.0.0.1"
+port = "9900"
+adminsecret_ = ""
 ssl = false
-sslkey = false
+sslkey = ""
 """
 
 JSConfigBase = j.tools.configmanager.base_class_config
 
-#WILL HAVE METHODS IN FUTURE TO GENERATE CLIENT METHODS AUTOMATICALLY
 
 class Models():
     def __init__(self):
         pass
+
 
 class CmdsBase():
     def __init__(self):
@@ -25,45 +28,69 @@ class CmdsBase():
 
 class GedisClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, template=TEMPLATE, interactive=interactive)
+    def __init__(self, instance, data={}, parent=None, interactive=False, reset=False):
+        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE , interactive=interactive)
+
+        j.clients.gedis2.latest = self
+
+        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis2", instance, "client")
+        j.sal.fs.createDir(self.code_generated_dir)
+        j.sal.fs.touch(j.sal.fs.joinPaths(self.code_generated_dir, '__init__.py'))
+
+        if self.code_generated_dir not in sys.path:
+            sys.path.append(self.code_generated_dir)
+
         self._redis = None
 
         self.models = Models()
         self.cmds = CmdsBase()
-
-        #LOW LEVEL AT THIS TIME BUT TO SHOW SOMETHING
-        cmds_meta =self.redis.execute_command("system.api_meta")
-        cmds_meta = j.data.serializer.msgpack.loads(cmds_meta)
         self.cmds_meta = {}
-        self.namespace = cmds_meta["namespace"]
-        for namespace_full,capnpbin in cmds_meta["cmds"].items():
-            shortname = namespace_full.split(".")[-1]
-            if not shortname.startswith("model"):
-                self.cmds_meta[namespace_full] = j.servers.gedis2.cmds_get(namespace_full,capnpbin).cmds
+        self._connected = True
 
-        #this will make sure we have all the local schemas
-        schemas_meta =self.redis.execute_command("system.core_schemas_get")
+        test = self.redis.execute_command("system.ping")
+
+        if test != b'PONG':
+            raise RuntimeError('Can not ping server')
+        # this will make sure we have all the local schemas
+        schemas_meta = self.redis.execute_command("system.core_schemas_get")
         schemas_meta = j.data.serializer.msgpack.loads(schemas_meta)
         for key,txt in schemas_meta.items():
             if key not in j.data.schema.schemas:
                 j.data.schema.schema_from_text(txt,url=key)
 
-
-        schema_urls =self.redis.execute_command("system.schema_urls")
+        schema_urls = self.redis.execute_command("system.schema_urls")
         self.schema_urls = j.data.serializer.msgpack.loads(schema_urls)
-                
-        self.generate()
 
-    def generate(self,reset=True):
+        try:
+            # LOW LEVEL AT THIS TIME BUT TO SHOW SOMETHING
+            cmds_meta =self.redis.execute_command("system.api_meta")
+            cmds_meta = j.data.serializer.msgpack.loads(cmds_meta)
+            self.namespace = cmds_meta["namespace"]
+            for namespace_full, capnpbin in cmds_meta["cmds"].items():
+                shortname = namespace_full.split(".")[-1]
+                if not shortname.startswith("model"):
+                    self.cmds_meta[namespace_full] = j.servers.gedis2.cmds_get(
+                        namespace_full,
+                        capnpbin
+                    ).cmds
+        except ConnectionError:
+            self.logger.error('Connection error')
+            self._connected  = False
+            return
 
+        self.generate(reset=reset)
+
+    def generate(self, reset=False):
         for schema_url in self.schema_urls:
-            fname="model_%s"%schema_url.replace(".","_")
-            dest = j.clients.gedis2.code_generation_dir+"/%s.py"%fname
-            schema = j.data.schema.schema_from_url(schema_url)
-            code = j.clients.gedis2.code_model_template.render(obj= schema)
-            j.sal.fs.writeFile(dest,code)
+
+            fname = "model_%s" % schema_url.replace(".","_")
+            dest = os.path.join(self.code_generated_dir, "%s.py"%fname)
+
+            if reset or not j.sal.fs.exists(dest):
+                schema = j.data.schema.schema_from_url(schema_url)
+                code = j.clients.gedis2.code_model_template.render(obj= schema)
+                j.sal.fs.writeFile(dest,code)
+
             m=imp.load_source(name=fname, pathname=dest)
             self.logger.debug("schema:%s"%fname)
             self.models.__dict__[schema_url.replace(".","_")] = m.model(client=self)
@@ -77,19 +104,15 @@ class GedisClient(JSConfigBase):
             cmds_name_lower = nsfull.split(".")[-1].strip().lower()
             cmds.cmds_name_lower = cmds_name_lower
             fname="cmds_%s"%location
-            dest = j.clients.gedis2.code_generation_dir+"/%s.py"%fname
-            # schema = j.data.schema.schema_from_url(schema_url)
-            code = j.clients.gedis2.code_client_template.render(obj= cmds)
-            j.sal.fs.writeFile(dest,code)
+            dest = os.path.join(self.code_generated_dir, "%s.py"%fname)
+
+            if reset or not j.sal.fs.exists(dest):
+                code = j.clients.gedis2.code_client_template.render(obj= cmds)
+                j.sal.fs.writeFile(dest,code)
+
             m=imp.load_source(name=fname, pathname=dest)
             self.logger.debug("cmds:%s"%fname)
             self.cmds.__dict__[cmds_name_lower] =m.CMDS(client=self,cmds=cmds.cmds)
-
-    @property
-    def ssl_certfile_path(self):
-        p = j.sal.fs.getDirName(self.config.path) + "cert.pem"
-        if self.config.data["sslkey"]:
-            return p
 
     @property
     def redis(self):
@@ -102,34 +125,23 @@ class GedisClient(JSConfigBase):
         """
         if self._redis is None:
             d = self.config.data
-            addr = d["addr"]
+            addr = d["host"]
             port = d["port"]
-            password = d["password_"]
-            unixsocket = d["unixsocket"]
-            set_patch=True
-            ardb_patch=False
+            secret = d["adminsecret_"]
+            ssl_certfile = d['sslkey']
 
-            self.logger.info("redisclient: %s:%s (ssl:%s)"%(addr,port,d["ssl"]))
+            if d['ssl']:
+                if not self.config.data['sslkey']:
+                    ssl_certfile = j.sal.fs.joinPaths(os.path.dirname(self.code_generated_dir), 'ca.crt')
+                self.logger.info("redisclient: %s:%s (ssl:True  cert:%s)"%(addr, port, ssl_certfile))
+            else:
+                self.logger.info("redisclient: %s:%s " % (addr, port))
 
-            # NO PATHS IN CONFIG !!!!!!!, needs to come from properties above (convention over configuration)
-
-            ssl_certfile = self.ssl_certfile_path if d['ssl'] else None
-
-            if unixsocket == "":
-                unixsocket = None
-
-            # import ipdb; ipdb.set_trace()
             self._redis = j.clients.redis.get(
-                ipaddr=addr, port=port, password=password, ssl=d["ssl"], ssl_ca_certs=ssl_certfile)
-
+                ipaddr=addr,
+                port=port,
+                password=secret,
+                ssl=d["ssl"],
+                ssl_ca_certs=ssl_certfile
+            )
         return self._redis
-
-    def ssl_keys_save(self,  ssl_certfile):
-        if j.sal.fs.exists(ssl_certfile):
-            ssl_certfile = j.sal.fs.readFile(ssl_certfile)
-        j.sal.fs.writeFile(self.ssl_certfile_path, ssl_certfile)
-
-    def __str__(self):
-        return "gedisclient:%-14s %-25s:%-4s (ssl:%s)" % (self.instance, self.config.data["addr"],  self.config.data["port"], self.config.data["ssl"])
-
-    __repr__ = __str__

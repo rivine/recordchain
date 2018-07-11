@@ -1,4 +1,5 @@
 @url = test.gedis2.cmd
+@name = any
 name = ""
 comment = ""
 schemacode = ""

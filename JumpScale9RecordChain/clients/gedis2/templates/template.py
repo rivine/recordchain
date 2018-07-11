@@ -29,22 +29,41 @@ class CMDS():
         #schema in exists
         schema_in = self._cmds["{{name}}"].schema_in
         args = schema_in.new()
+
+
         {% for prop in cmd.schema_in.properties %}
+        {% if prop.js9type.NAME == 'numeric' %}
+        args.{{prop.name}} = j.data.types.numeric.clean({{prop.name}})
+        {% else %}
         args.{{prop.name}} = {{prop.name}}
+        {% endif %}
         {% endfor %}
 
-        res = self._redis.execute_command("{{obj.cmds_name_lower}}.{{name}}",args.data)
 
-        {% else %}  
-        return self._redis.execute_command("{{obj.cmds_name_lower}}.{{name}}")
-        {% endif %}        
-        
+        {% for prop in cmd.schema_in.lists %}
+        for item in {{prop.name}}:
+            args.{{prop.name}}.append(item)
+        {% endfor %}
+
+        res = self._redis.execute_command("{{obj.cmds_name_lower}}.{{name}}",j.data.serializer.msgpack.dumps([id if not callable(id) else None, args.data]))
+
+        {% else %}
+        {% set args = cmd.cmdobj.args.split(',') if cmd.cmdobj.args else [] %}
+
+        {% if args|length == 0 %}
+        res =  self._redis.execute_command("{{obj.cmds_name_lower}}.{{name}}")
+        {% else %}
+        # send multi args with no prior knowledge of schema
+        res = self._redis.execute_command("{{obj.cmds_name_lower}}.{{name}}", {{ cmd.args_client.lstrip(',')}})
+        {% endif %}
+        {% endif %}
         {% if cmd.schema_out != None %}
         schema_out = self._cmds["{{name}}"].schema_out
-        obj = schema_out.get(capnpbin=res)
-        {% endif %}        
+        res = schema_out.get(capnpbin=res)
+        {% else %}
+        {% endif %}
 
-        return obj
+        return res
 
 
     {% endfor %}

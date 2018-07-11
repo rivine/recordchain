@@ -32,7 +32,7 @@ class system(JSBASE):
         """  
         s=j.servers.gedis2.latest.cmds_meta
         res={}
-        res["namespace"]=j.servers.gedis2.latest.namespace
+        res["namespace"]=j.servers.gedis2.latest.instance
         res["cmds"]={}
         for key,item in s.items():
             res["cmds"][key] = item.data.data
@@ -69,5 +69,5 @@ class system(JSBASE):
 
         return o
 
-    def test_nontyped(self,name,nr):    
+    def test_nontyped(self,name,nr):
         return [name,nr]

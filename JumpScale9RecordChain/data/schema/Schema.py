@@ -202,7 +202,6 @@ class Schema(JSBASE):
     @property
     def capnp_schema(self):
         code = self.capnp_template.render(obj=self)
-        print(code)
         return code
 
     @property

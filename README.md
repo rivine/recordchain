@@ -1,16 +1,9 @@
-## recordchain for python
+## Recordchain
 
-- gevent redis server
-- blockchain logic
-- zerodb client
-- ....
-
-## to install
-
-```bash
-js9_code get --url="git@github.com:rivine/recordchain.git"
-cd $HOMEDIR/code/github/rivine/recordchain
-sh install.sh
-```
-
-
+- [Schemas](JumpScale9RecordChain/data/schema/README.md)
+- [BCDB database](JumpScale9RecordChain/data/bcdb/README.md)
+- [GEDIS2](JumpScale9RecordChain/servers/gedis2/README.md)
+- **Orderbook**
+    - [SPECS](JumpScale9RecordChain/apps/orderbook/specs.md)
+    - [DOCS](JumpScale9RecordChain/apps/orderbook/README.md)
+ 

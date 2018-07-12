@@ -127,7 +127,13 @@ class GedisServer(StreamServer, JSConfigBase):
                         continue
 
                     id, data = j.data.serializer.msgpack.loads(request[1])
-                    o=cmd.schema_in.get(capnpbin=data)
+                    try:
+                        # Try capnp
+                        o=cmd.schema_in.get(capnpbin=data)
+                    except:
+                        # Try Json
+                        o = cmd.schema_in.get(data=j.data.serializer.json.loads(data))
+
                     if id:
                         o.id = id
                     args = [a.strip() for a in cmd.cmdobj.args.split(',')]

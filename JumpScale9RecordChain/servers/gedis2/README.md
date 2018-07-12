@@ -1,38 +1,163 @@
-This module allow you to create a custom gevent server talking RESP (redis protocol)
+# Gedis
 
-To generate certificate and key 
-```
-openssl genrsa -out key.pem 2048
-openssl req -new -x509 -key key.pem -out cert.pem -days 1095
-```
-## Example
-```python
-"""
-Example server that only implements PING command
-"""
+A framework that allows for creating applications that are `redis protocol` compatible
+and have their own set of `custom redis commands`
+Gedis exposes these commands automatically.
 
-from js9 import j
+You create an `app/instance server` and you can get a `client` that can connect tpo your app
+and execute the commands easily
 
-ServerClass = j.servers.gedis2.baseclass_get()
+Since `gedis` is a `TCP` level framework, it's very fast and efficient
 
-def ping(request):
-    return "PONG"
-
-def witherror(request):
-    raise RuntimeError("some error") #only the error message will be forwarded to the client
+A `Gedis` server uses [BCDB DB](/JumpScale9RecordChain/data/bcdb/README.md)
+that saysm, you can add `schema` toml files to your generated server directory and 
+DB tables will be created for each schema you have.
+This is the `Model layer`
 
 
-if __name__ == "__main__":
-    server = ServerClass(host='localhost', port=6379, keyfile="/tmp/key.pem", certfile="/tmp/cert.pem"))
-    server.register_command('PING', ping)
+### installation
+
+- Install libssl-dev `apt install libssl-dev`
+- `pip3 install python-jose cryptocompare`
+- Get recordchain `js9_code get --url="git@github.com:rivine/recordchain.git"`
+- Install recordchain `cd $HOMEDIR/code/github/rivine/recordchain && sh install.sh`
+- Get 0-db `js9_code get --url="git@github.com:rivine/0-db.git"`
+- Install 0-db `cd $HOMEDIR/code/github/rivine/0-db && make && cp bin/zdb /opt/bin/`
+
+### Tests
+- `python3 apps/example/test.py`
+- `j.clients.gedis2.test()`
+- `j.servers.gedis2.test()`
+
+### Running
+
+**Hello world example**
+Get the `example` app in [HERE](/JumpScale9RecordChain/apps/)
+
+- Configure & Run server `j.servers.gedis2.get('example').start(background=False, reset=True)`
+- Configure & Get client `client = j.clients.gedis2.get('example', reset=True)`
+- execute system command `ping`
+    ```
+    client.system.ping()
+    b'PONG'
+    ```
+- Instance name here refers to application name. In this case our app is called `example`
+- During configuration phase for this helloworld example, leve `apps_dir` empty for both server & client
+This ensures that apps dir will be set to `/JumpScale9RecordChain/apps/` and that the `helloworld` app called `example` will be loaded from there
+you can change this if you want to create/load apps elsewhere
+
+### General Picture for how Server & client work and comunicate
+
+**Server**
+
+- Generates code at `/opt/var/codegen/{instance}/server`
+- Copies `system.py` to `/opt/var/codegen/{instance}/server` which contains system redis commands like `ping`
+- Load and register commands/functions from `system.py` as well as other modules in `{apps_dir}/{instance}`
+- collect schemas in toml file(s) that starts with `schema_` in `apps_dir/{instance}`
+- For each schema collected 
+    - create a schema file for that schema in `/opt/var/codegen/schema`
+    - load schema in memory
+    - create db table with the same name as schema name
+    - create model file names `model_{schema_name}.py` under `/opt/var/codegen/{instance}/server` and add it to dictionary
+    `j.servers.gedis2.latest.db.tables`.
+    - models allow for `CRUD` operations on a table
+
+**Client**
+- Creates `/opt/var/codegen/{instance}/client` directory in the 1st time
+- Fetch server for all schemas loaded inside it
+- Create `/opt/var/codegen/{instance}/server`
+- For each schema in loaded schemas
+    - create a schema file for that schema in `/opt/var/codegen/schema`
+    - load schema in memory
+    - create model file names `model_{schema_name}.py` under `apps_dir/{instance}/client` and add it to client instance
+    in `models` property so it can be accessed through `client.models.{model_name}`
+- Fetch server for each registered command
+- For each namespace registered in server
+    - create `/opt/var/codegen/{instance}/client/cmds_{instance}_{namespace}.py` file containign all commands in that name space
+    - for each command, make sure if `schema_in` for a command is provided to expand its properties in the client command function arguments
+
+
+### Make your own app
+
+- **Make your own app**
+    ```
+    app = j.servers.gedis2.get(instance='my_app')
+    app.start(background=True, reset=True)
+    ```
+
+    OR configure it directly like
+
+    ```
+    server = j.servers.gedis2.configure(
+            instance="example",
+            port=5000,
+            host="127.0.0.1",
+            secret="",
+            apps_dir=''
+        )
+
     server.start()
-```
+    ```
 
+- **Gedis-client**
 
-To test with redis client you can use jumpscale redis client as follows
-```
-In [1]: r = j.clients.redis.get('192.168.20.185', 5000, ssl=True, ssl_certfile='/tmp/cert.pem', ssl_keyfile='/tmp/key.pem')
+- You can use any redis library to connect to your app and execute commands
+- or you use the client from jumpscale `j.clients.gedis2.get({instance}, reset=True/False)`
 
-In [2]: r.execute_command('PING')
-Out[2]: True
-```
+- **Adding models to your server** 
+    - In your `{apps_dir}/{instance_name}` you can add some `toml` files MUST start with `schema`.
+    - These schema files represent the `Model` layer in an `MVC` framework these are your models
+    - example [HERE](https://github.com/rivine/recordchain/blob/master/JumpScale9RecordChain/apps/orderbook/schema.toml) 
+
+- **Add custom redis commands / API**
+    - In your `{apps_dir}/{instance_name}` add a python file
+    - Example:
+        - file `system.py`
+            ```python
+            from js9 import j
+        
+            JSBASE = j.application.jsbase_get_class()
+            
+            class system(JSBASE):
+                
+                def __init__(self):
+                    JSBASE.__init__(self)
+            
+                def ping(self):
+                    return "PONG"
+            
+                def ping_bool(self):
+                    return True
+            ```
+         
+        - each function is registered in client as a redis command under `client.system.{function name}`
+        i.e `client.system.ping()` or  `client.system.ping_bool()`
+
+    - How to define a custom redis command:
+        - If you have simple function with no input and returning simple data type ay like boolean, list, string, .. in this case no need to do anything, just return directly as in `ping`
+            ```python
+              def ping(self):
+                    return "PONG"
+            
+                def ping_bool(self):
+                    return True
+            ```
+        - If you have inputs, you must define `in` schema in your docstring and if you have output schema, you must
+        define `out` schema in docstring as well as a `schema_out` argument to the function
+        ```python
+           def test(self,name,nr,schema_out):      
+            """
+            some test method, which returns something easy
+            ```in
+            name = "" (S)
+            nr = 0 (I)
+            ```
+            ```out
+            name = "" (S)
+            nr = 0 (I)
+            ```
+            """
+            o=schema_out.new()
+            o.name = name
+            o.nr = nr
+            return o

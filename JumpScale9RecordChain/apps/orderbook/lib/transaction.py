@@ -28,7 +28,7 @@ class Transaction:
         """
         # pop state if empty
         # to later match against all states
-        if 'state' in kwargs:
+        if kwargs.get('state'):
             if kwargs['state'] == '':
                 kwargs.pop('state')
 
@@ -40,14 +40,14 @@ class Transaction:
 
             # get a copy of that object because we don't return references to
             # actual objects to prevent changing them
-            v = self.schema.new().copy(obj=transaction)
+            v = self.schema.get(data=transaction)
 
             # Filter only transactions belonging to certain wallet if provided
             if wallet is not None and wallet.addr not in [v.buyer_wallet_addr, v.seller_wallet_addr]:
                 continue
 
             for field, value in kwargs.items():
-                if v.get(field, None) != value:
+                if  getattr(v, field, None) != value:
                     break
             else:
                 transactions.append(transaction)
@@ -85,11 +85,10 @@ class Transaction:
         transaction.buyer_email_addr = buyer_email_addr
         transaction.state = state
 
-        idgen = j.servers.gedis2.latest.context['transactions_ids_generator']
+        
         db_table = j.servers.gedis2.latest.db.tables['transaction']
-        t_id = idgen.get()
-        transaction.id = t_id
+        
 
-        db_table.set(id=t_id, data=transaction.data)
+        db_table.set(id=None, data=transaction.data)
 
         return transaction

@@ -9,6 +9,8 @@ jwt = iyoclient.jwt
 cl = j.clients.gedis2.get('orderbook');                   
 cl.order_book.login(jwt=jwt, addr='addr', ipaddr='8.8.8.8')
 
+from IPython import embed;embed(colors='Linux')
+
 print("[-] adding buy order1")
 b1 = cl.order_book.add_buy_order(price_max='10 ETH', currency_to_buy='BTC', currency_mine=['USD'], amount=100, expiration=j.data.time.epoch + 1000, approved=True)
 print("[-] adding buy order2")

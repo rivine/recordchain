@@ -24,7 +24,7 @@ class SchemaFactory(JSBASE):
             j.sal.fs.createDir(path)
             if path not in sys.path:
                 sys.path.append(path)
-            j.sal.fs.touch(j.sal.fs.joinPaths(path, "/__init__.py"))
+            j.sal.fs.touch(j.sal.fs.joinPaths(path, "__init__.py"))
             self.logger.debug("codegendir:%s" % path)
             self._code_generation_dir = path
         return self._code_generation_dir

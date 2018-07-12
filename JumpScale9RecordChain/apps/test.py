@@ -1,4 +1,9 @@
 from js9 import j
+print("[-] starting server")
+server  = x=j.servers.gedis2.get(instance="orderbook");
+server.start()
+print("[-] server started")
+
 iyoclient = j.clients.itsyouonline.get()                 
 jwt = iyoclient.jwt                             
 cl = j.clients.gedis2.get('orderbook');                   
@@ -19,6 +24,7 @@ s3 = cl.order_book.add_sell_order(price_min='10 XRP', currency_to_sell='BTC' ,cu
 
 transactions = j.data.serializer.json.loads(cl.order_book.list_all_transactions())
 
+print("[-] validating transactions")
 assert transactions[-3]['buy_order_id'] == b1
 assert transactions[-3]['sell_order_id'] == s1
 

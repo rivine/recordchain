@@ -62,7 +62,9 @@ class CMDS():
         res = schema_out.get(capnpbin=res)
         {% else %}
         {% endif %}
-
+        
+        if isinstance(res, bytes):
+            return j.data.serializer.json.loads(res.decode())
         return res
 
 

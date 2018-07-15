@@ -39,6 +39,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self.port = int(self.config.data["port"])
         self.address = '{}:{}'.format(self.host, self.port)
         self.ssl = self.config.data["ssl"]
+        self.web_client_code = None
 
         j.servers.gedis2.latest = self
 
@@ -247,6 +248,8 @@ class GedisServer(StreamServer, JSConfigBase):
         code = j.servers.gedis2.js_client_template.render(commands=commands)
         dest = os.path.join(self.code_generated_dir, 'client.js')
         j.sal.fs.writeFile(dest, code)
+
+        self.web_client_code = code
         self._inited = True
 
     def _start(self, db=None,reset=False):

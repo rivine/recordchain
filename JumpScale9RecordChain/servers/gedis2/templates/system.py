@@ -71,3 +71,7 @@ class system(JSBASE):
 
     def test_nontyped(self,name,nr):
         return [name,nr]
+
+    def get_web_client(self):
+        return j.servers.gedis2.latest.web_client_code
+

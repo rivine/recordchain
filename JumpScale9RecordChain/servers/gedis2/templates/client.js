@@ -1,10 +1,5 @@
-<script type="text/javascript" src="https://cdn.rawgit.com/arahmanhamdy/redisjs/master/build/redisjs.min.js"></script>
-
-<script type="text/javascript">
-
-
-const SERVER_DOMAIN = '172.17.0.2:8200';
-const redisConnection = new RedisConnection(SERVER_DOMAIN);
+// SERVER_DOMAIN & SERVER_PORT will come from the client.js from caddy
+const redisConnection = new RedisConnection(SERVER_DOMAIN+":"+SERVER_PORT+"/redis");
 
 const successCallback = (redis) => {
 Commands = {}
@@ -38,4 +33,3 @@ Commands.{{command.namespace.split('.')[1]}} = {
 
 redisConnection.connect(successCallback, function(err){console.log(err)});
 
-</script>

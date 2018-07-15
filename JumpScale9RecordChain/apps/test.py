@@ -9,8 +9,6 @@ jwt = iyoclient.jwt
 cl = j.clients.gedis2.get('orderbook');                   
 cl.order_book.login(jwt=jwt, addr='addr', ipaddr='8.8.8.8')
 
-from IPython import embed;embed(colors='Linux')
-
 print("[-] adding buy order1")
 b1 = cl.order_book.add_buy_order(price_max='10 ETH', currency_to_buy='BTC', currency_mine=['USD'], amount=100, expiration=j.data.time.epoch + 1000, approved=True)
 print("[-] adding buy order2")
@@ -21,10 +19,10 @@ print("[-] adding sell order1")
 s1 = cl.order_book.add_sell_order(price_min='10 XRP', currency_to_sell='BTC' ,currency_accept=['USD'], amount=100, expiration=j.data.time.epoch + 1000, approved=True)
 print("[-] adding sell order2")
 s2 = cl.order_book.add_sell_order(price_min='10 XRP', currency_to_sell='BTC' ,currency_accept=['USD'], amount=100, expiration=j.data.time.epoch + 1000, approved=True)
-print("[-] adding sell order2")
+print("[-] adding sell order3")
 s3 = cl.order_book.add_sell_order(price_min='10 XRP', currency_to_sell='BTC' ,currency_accept=['USD'], amount=100, expiration=j.data.time.epoch + 1000, approved=True)
 
-transactions = j.data.serializer.json.loads(cl.order_book.list_all_transactions())
+transactions = cl.order_book.list_all_transactions()
 
 print("[-] validating transactions")
 assert transactions[-3]['buy_order_id'] == b1

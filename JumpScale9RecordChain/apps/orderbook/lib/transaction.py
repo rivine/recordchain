@@ -89,6 +89,6 @@ class Transaction:
         db_table = j.servers.gedis2.latest.db.tables['transaction']
         
 
-        db_table.set(id=None, data=transaction.data)
+        transaction = db_table.set(id=None, data=transaction.data)
 
         return transaction

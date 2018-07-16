@@ -62,8 +62,7 @@ class List0(collections.MutableSequence):
         else:            
             return self._parent[index]
 
-    @property
-    def pylist(self):
+    def pylist(self, ddict=True):
         """
         python clean list
         """
@@ -74,7 +73,7 @@ class List0(collections.MutableSequence):
             if self.schema_property.pointer_type is None:
                 return self._inner_list
             else:
-                return [item.ddict for item in self._inner_list]                
+                return [item.ddict if ddict else item.ddict_hr for item in self._inner_list]
         else:
             res= [item for item in self._parent]
             return res

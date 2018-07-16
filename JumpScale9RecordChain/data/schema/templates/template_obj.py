@@ -180,7 +180,7 @@ class ModelOBJ():
 
         {% for prop in obj.lists %}
         #check if the list has the right type
-        d["{{prop.name}}"] = self.{{prop.alias}}.pylist
+        d["{{prop.name}}"] = self.{{prop.alias}}.pylist()
         {% endfor %}
         if self.id is not None:
             d["id"]=self.id
@@ -194,14 +194,14 @@ class ModelOBJ():
         d={}
         {% for prop in obj.properties %}
         {% if prop.js9type.NAME == "jsobject" %}
-        d["{{prop.name}}"] = self.{{prop.alias}}.ddict
+        d["{{prop.name}}"] = self.{{prop.alias}}.ddict_hr
         {% else %}
         d["{{prop.name}}"] = {{prop.js9_typelocation}}.toHR(self.{{prop.alias}})
         {% endif %}
         {% endfor %}
         {% for prop in obj.lists %}
         #check if the list has the right type
-        d["{{prop.name}}"] = self.{{prop.alias}}.pylist
+        d["{{prop.name}}"] = self.{{prop.alias}}.pylist(ddict=False)
         {% endfor %}
         if self.id is not None:
             d["id"]=self.id

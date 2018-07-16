@@ -8,7 +8,7 @@ class Transaction:
         self.transactions = j.servers.gedis2.latest.context['transactions']
         self.db_table = j.servers.gedis2.latest.db.tables['transaction']
 
-    def list(self, wallet=None, **kwargs):
+    def list(self, wallet=None, total_items_in_page=20, page_number=1, **kwargs):
         """
         List / Filter transactions
 
@@ -21,7 +21,11 @@ class Transaction:
 
         :param wallet: Cuurent wallet
         :type wallet: !threefoldtoken.wallet
-        :kwargs: kwargs
+        :param total_items_in_page: Total items in a page
+        :type total_items_in_page: int
+        :param page_number: Pge number
+        :type page_number: int
+        :param kwargs: kwargs
         :type kwargs: dict
         :return list og transactions
         :rtype: list
@@ -36,7 +40,16 @@ class Transaction:
                 return []
 
         transactions = []
-        for transaction in self.transactions:
+
+        start = (page_number - 1) * total_items_in_page
+        end = total_items_in_page + start - 1
+
+        for i, transaction in enumerate(self.transactions):
+            if i < start:
+                continue
+
+            if i > end:
+                break
 
             # get a copy of that object because we don't return references to
             # actual objects to prevent changing them
@@ -85,9 +98,7 @@ class Transaction:
         transaction.buyer_email_addr = buyer_email_addr
         transaction.state = state
 
-        
         db_table = j.servers.gedis2.latest.db.tables['transaction']
-        
 
         transaction = db_table.set(id=None, data=transaction.data)
 

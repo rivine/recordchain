@@ -110,7 +110,7 @@ class Order(object):
         self.orders.pop(order_id)
         return order_id
 
-    def list(self, wallet=None, sortby='id', desc=False, ddict_hr=False, **kwargs):
+    def list(self, wallet=None, sortby='id', desc=False, total_items_in_page=20, page_number=1, ddict_hr=False, **kwargs):
         """
         List / Filter Sell order in current user wallet
         If wallet is provided, get user orders only
@@ -122,6 +122,10 @@ class Order(object):
         :type sortby: str
         :param desc: Descending order
         :type desc: bool
+        :param total_items_in_page: Total items in a page
+        :type total_items_in_page: int
+        :param page_number: Pge number
+        :type page_number: int
         :param ddict_hr: return data as list of dicts
         :type ddict_hr: bool
         :param exclude_wallet_data: exclude wallet info
@@ -134,9 +138,21 @@ class Order(object):
         # we prepare a copy of orders
         # we don't return actual orders in memory to prevent
         # accident manipulation
+        start = (page_number - 1) * total_items_in_page
+        end = total_items_in_page + start -1
+
         orders = []
 
+        current = -1
         for k, v in self.orders.items():
+            current += 1
+
+            if current < start:
+                continue
+
+            if current > end:
+                break
+
             # get a copy of that object
             new = self.schema.get(capnpbin=v.data)
             new.id = v.id

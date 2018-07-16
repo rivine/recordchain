@@ -169,66 +169,106 @@ class order_book(JSBASE):
         """
         return self.orderbook.buy.get(self.orderbook.wallet.current, order_id)
 
-    def list_my_sell_orders(self, sortby, desc):
+    def list_my_sell_orders(self, sortby, desc, total_items_in_page, page_number, schema_out):
         """
         ```in
             sortby = id (S) # Field name to sort with
             desc = (B) # Descending order
+            total_items_in_page = 20 (I)
+            page_number = 1 (I)
+        ```
+        ```out
+            orders = (LO) !threefoldtoken.order.sell
         ```
 
         List Selling orders for current client only
         :return: list of selling orders
         :rtype: list
         """
-        return [order.id for order in self.orderbook.sell.list(self.orderbook.wallet.current, sortby=sortby, desc=desc)]
+        out = schema_out.new()
 
-    def list_my_buy_orders(self, sortby, desc):
+        for order in self.orderbook.sell.list(self.orderbook.wallet.current, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number):
+            out.orders.append(order)
+        return out
+
+    def list_my_buy_orders(self, sortby, desc, total_items_in_page, page_number, schema_out):
         """
         ```in
             sortby = id (S) # Field name to sort with
             desc = (B) # Descending order
+            total_items_in_page = 20 (I)
+            page_number = 1 (I)
+        ```
+        ```out
+            orders = (LO) !threefoldtoken.order.buy
         ```
 
         List Buy orders for current client only
         :return: list of buying orders
         :rtype: list
         """
-        return [order.id for order in self.orderbook.buy.list(self.orderbook.wallet.current, sortby=sortby, desc=desc)]
+        out = schema_out.new()
+        for order in self.orderbook.buy.list(self.orderbook.wallet.current, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number):
+            out.orders.append(order)
+        return out
 
-    def list_all_sell_orders(self, sortby, desc):
+    def list_all_sell_orders(self, sortby, desc, total_items_in_page, page_number, schema_out):
         """
         ```in
             sortby = id (S) # Field name to sort with
             desc = (B) # Descending order
+            total_items_in_page = 20 (I)
+            page_number = 1 (I)
+        ```
+        ```out
+            orders = (LO) !threefoldtoken.order.sell
         ```
 
         List Selling orders
         :return: list of selling orders
         :rtype: list
         """
-        res = []
+        out = schema_out.new()
 
-        return [order.id for order in self.orderbook.sell.list(None, sortby=sortby, desc=desc)]
+        for order in self.orderbook.sell.list(None, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number):
+            order.owner_email_addr = ''
+            order.wallet_addr = ''
+            out.orders.append(order)
+        return out
 
-    def list_all_buy_orders(self, sortby, desc):
+    def list_all_buy_orders(self, sortby, desc, total_items_in_page, page_number, schema_out):
         """
         ```in
             sortby = id (S) # Field name to sort with
             desc = (B) # Descending order
+            total_items_in_page = 20 (I)
+            page_number = 1 (I)
+        ```
+        ```out
+            orders = (LO) !threefoldtoken.order.buy
         ```
 
         List Buy orders
         :return: list of buying orders
         :rtype: list
         """
-        res = []
+        out = schema_out.new()
 
-        return [order.id for order in self.orderbook.buy.list(None, sortby=sortby, desc=desc)]
+        for order in self.orderbook.buy.list(None, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number):
+            order.owner_email_addr = ''
+            order.wallet_addr = ''
+            out.orders.append(order)
+        return out
 
-    def list_all_transactions(self, state):
+    def list_all_transactions(self, state, total_items_in_page, page_number, schema_out):
         """
         ```in
-        state = (S)
+            state = (S)
+            total_items_in_page = 20 (I)
+            page_number = 1 (I)
+        ```
+        ```out
+            transactions = (LO) !threefoldtoken.transaction
         ```
 
         list/filter all transactions
@@ -236,12 +276,23 @@ class order_book(JSBASE):
         :param state: transaction state i.e : new, pending, success, failure
         :rtype: string
         """
-        return [transaction.id for transaction in self.orderbook.transactions.list(wallet=None, state=state)]
+        out = schema_out.new()
 
-    def list_my_transactions(self, state):
+        for transaction in self.orderbook.transactions.list(wallet=None, state=state, total_items_in_page=total_items_in_page, page_number=page_number):
+            transaction.buyer_email_addr = ''
+            transaction.seller_email_addr = ''
+            out.transactions.append(transaction)
+        return out
+
+    def list_my_transactions(self, state, total_items_in_page, page_number, schema_out):
         """
         ```in
-        state = (S)
+            state = (S)
+            total_items_in_page = 20 (I)
+            page_number = 1 (I)
+        ```
+        ```out
+            transactions = (LO) !threefoldtoken.transaction
         ```
 
         list/filter all transactions for current client only
@@ -249,6 +300,8 @@ class order_book(JSBASE):
         :param state: transaction state i.e : new, pending, success, failure
         :rtype: string
         """
-        res = []
+        out = schema_out.new()
 
-        return [transaction.id for transaction in self.orderbook.transactions.list(wallet=self.orderbook.wallet.current, state=state)]
+        for transaction in self.orderbook.transactions.list(wallet=self.orderbook.wallet.current, state=state, total_items_in_page=total_items_in_page, page_number=page_number):
+            out.transactions.append(transaction)
+        return out

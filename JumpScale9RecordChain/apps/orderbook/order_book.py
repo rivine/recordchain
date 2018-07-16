@@ -180,7 +180,7 @@ class order_book(JSBASE):
         :return: list of selling orders
         :rtype: list
         """
-        return [order.ddict_hr for order in self.orderbook.sell.list(self.orderbook.wallet.current, sortby=sortby, desc=desc)]
+        return [order.id for order in self.orderbook.sell.list(self.orderbook.wallet.current, sortby=sortby, desc=desc)]
 
     def list_my_buy_orders(self, sortby, desc):
         """
@@ -193,7 +193,7 @@ class order_book(JSBASE):
         :return: list of buying orders
         :rtype: list
         """
-        return [order.ddict_hr for order in self.orderbook.buy.list(self.orderbook.wallet.current, sortby=sortby, desc=desc)]
+        return [order.id for order in self.orderbook.buy.list(self.orderbook.wallet.current, sortby=sortby, desc=desc)]
 
     def list_all_sell_orders(self, sortby, desc):
         """
@@ -208,12 +208,7 @@ class order_book(JSBASE):
         """
         res = []
 
-        for order in self.orderbook.sell.list(None, sortby=sortby, desc=desc):
-            item = order.ddict_hr
-            item['owner_email_addr'] = ''
-            item['wallet_addr'] = ''
-            res.append(item)
-        return res
+        return [order.id for order in self.orderbook.sell.list(None, sortby=sortby, desc=desc)]
 
     def list_all_buy_orders(self, sortby, desc):
         """
@@ -228,12 +223,7 @@ class order_book(JSBASE):
         """
         res = []
 
-        for order in self.orderbook.buy.list(None, sortby=sortby, desc=desc):
-            item = order.ddict_hr
-            item['owner_email_addr'] = ''
-            item['wallet_addr'] = ''
-            res.append(item)
-        return res
+        return [order.id for order in self.orderbook.buy.list(None, sortby=sortby, desc=desc)]
 
     def list_all_transactions(self, state):
         """
@@ -246,7 +236,7 @@ class order_book(JSBASE):
         :param state: transaction state i.e : new, pending, success, failure
         :rtype: string
         """
-        return self.orderbook.transactions.list(wallet=None, state=state)
+        return [transaction.id for transaction in self.orderbook.transactions.list(wallet=None, state=state)]
 
     def list_my_transactions(self, state):
         """
@@ -261,10 +251,4 @@ class order_book(JSBASE):
         """
         res = []
 
-        for transaction in  self.orderbook.transactions.list(wallet=self.orderbook.wallet.current, state=state):
-            transaction['buyer_wallet_addr'] = ""
-            transaction['seller_wallet_addr'] = ""
-            transaction['buyer_email_addr'] = ""
-            transaction['seller_email_addr'] = ""
-            res.append(transaction)
-        return res
+        return [transaction.id for transaction in self.orderbook.transactions.list(wallet=self.orderbook.wallet.current, state=state)]

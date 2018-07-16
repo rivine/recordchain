@@ -82,28 +82,36 @@ these topics before you can work with orderbook
                 - *params*
                     - order id
         
-            - **`list_all_buy_orders(sortby='id', desc=False)`**
+            - **`list_all_buy_orders(sortby='id', desc=False, total_items_in_page=20, page_number=1)`**
                 - *params*
                     - sortby: field to sort returned data with. could be any field of [threefoldtoken.order.buy](https://github.com/rivine/recordchain/blob/master/JumpScale9RecordChain/apps/orderbook/schema.toml#L17)
                     - desc: Descending order by default is False, which means data comes in Ascending order
-            
-            - **`list_all_sell_orders(sortby='id', desc=False)`**
+                    - total_items_in_page: Total items in a page, 20 by default
+                    - page_number: Page number for pagination
+                    
+            - **`list_all_sell_orders(sortby='id', desc=False, total_items_in_page, page_number)`**
                 - *params*
                     - sortby: field to sort returned data with. could be any field of [threefoldtoken.order.sell](https://github.com/rivine/recordchain/blob/master/JumpScale9RecordChain/apps/orderbook/schema.toml#L1) by default, it's `id`
                     - desc: Descending order by default is False, which means data comes in Ascending order
-            
-            - **`list_my_buy_orders(sortby='id', desc=False)`**
+                    - total_items_in_page: Total items in a page, 20 by default
+                    - page_number: Page number for pagination
+                    
+            - **`list_my_buy_orders(sortby='id', desc=False, total_items_in_page, page_number)`**
                 - List/filters only buy orders for the current client only
                 - *params*
                     - sortby: field to sort returned data with. could be any field of [threefoldtoken.order.buy](https://github.com/rivine/recordchain/blob/master/JumpScale9RecordChain/apps/orderbook/schema.toml#L17) by default, it's `id`
                     - desc: Descending order by default is False, which means data comes in Ascending order
-            
-            - **`list_my_sell_orders(sortby='id', desc=False)`**
+                    - total_items_in_page: Total items in a page, 20 by default
+                    - page_number: Page number for pagination
+                   
+            - **`list_my_sell_orders(sortby='id', desc=False, total_items_in_page, page_number)`**
                 - List/filters only sell orders for the current client only
                 - *params*
                     - sortby: field to sort returned data with. could be any field of [threefoldtoken.order.sell](https://github.com/rivine/recordchain/blob/master/JumpScale9RecordChain/apps/orderbook/schema.toml#L1) by default, it's `id`
                     - desc: Descending order by default is False, which means data comes in Ascending order
-            
+                    - total_items_in_page: Total items in a page, 20 by default
+                    - page_number: Page number for pagination
+
             - **`remove_buy_order(order_id=0)`**
                 - *params*
                     - order id

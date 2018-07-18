@@ -18,7 +18,7 @@ This is the `Model layer`
 ### installation
 
 - Install libssl-dev `apt install libssl-dev`
-- `pip3 install python-jose cryptocompare`
+- `pip3 install python-jose cryptocompare gevent-websocket`
 - Get recordchain `js9_code get --url="git@github.com:rivine/recordchain.git"`
 - Install recordchain `cd $HOMEDIR/code/github/rivine/recordchain && sh install.sh`
 - Get 0-db `js9_code get --url="git@github.com:rivine/0-db.git"`

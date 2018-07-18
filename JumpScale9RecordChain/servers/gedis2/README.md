@@ -163,7 +163,26 @@ you can change this if you want to create/load apps elsewhere
                 return o
             ```
 
+### Websockets support
 
+```javascript
+<script type="text/javascript">
+
+  socket = new WebSocket("ws://172.17.0.2:9901/");
+  result = null
+
+  socket.onopen = function() {
+	console.log('connected')
+	socket.send('system.ping')
+        
+}; 
+  socket.onmessage = function(e) {
+	console.log(e.data)
+}
+
+</script>
+
+```
 ### Configuring Gedis Server for web
 
 **general idea**

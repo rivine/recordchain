@@ -6,14 +6,32 @@ from redis.exceptions import ConnectionError
 logger = getLogger(__name__)
 
 
-class CommandParser(PythonParser):
+class WebsocketsCommandParser(object):
+    def __init__(self, socket):
+        self.socket = socket
+
+    def read_request(self):
+        try:
+            command = self.socket.read_message()
+            if command:
+                return [c.encode('utf-8') for c in command.split(' ') if c]
+        except:
+            pass
+        return []
+
+
+    def on_disconnect(self):
+        pass
+
+
+class RedisCommandParser(PythonParser):
     """
     Parse the command send from the client
     """
 
     def __init__(self, socket, socket_read_size=8192
     ):
-        super(CommandParser, self).__init__(
+        super(RedisCommandParser, self).__init__(
             socket_read_size=socket_read_size
         )
 
@@ -38,7 +56,7 @@ class CommandParser(PythonParser):
             logger.error('Connection err %s' % e.args)
 
 
-class ResponseWriter(object):
+class RedisResponseWriter(object):
     """Writes data back to client as dictated by the Redis Protocol."""
 
     def __init__(self, socket):
@@ -88,4 +106,16 @@ class ResponseWriter(object):
         if isinstance(data, str):
             data = data.encode()
         # print("SENDING {} {} on wire".format(data, type(data)))
+
         self.socket.sendall(data)
+
+
+class WebsocketResponseWriter():
+    def __init__(self, socket):
+        self.socket = socket
+
+    def encode(self, data):
+        self.socket.send(j.data.serializer.json.dumps(data, encoding='utf-8'))
+
+    def error(self, msg):
+        self.socket.send(msg)

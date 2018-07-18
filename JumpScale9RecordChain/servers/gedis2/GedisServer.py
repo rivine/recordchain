@@ -6,7 +6,11 @@ import gevent
 import gevent.signal
 from gevent.pool import Pool
 from gevent.server import StreamServer
-from .protocol import CommandParser, ResponseWriter
+from .handlers import WebsocketRequestHandler, RedisRequestHandler
+from geventwebsocket.handler import WebSocketHandler
+from gevent import pywsgi
+
+from .protocol import RedisCommandParser, RedisResponseWriter, WebsocketsCommandParser, WebsocketResponseWriter
 from .GedisCmds import GedisCmds
 
 JSConfigBase = j.tools.configmanager.base_class_config
@@ -15,6 +19,7 @@ JSConfigBase = j.tools.configmanager.base_class_config
 TEMPLATE = """
     host = "localhost"
     port = "9900"
+    websockets_port = "9901"
     ssl = false
     adminsecret_ = ""
     apps_dir = ""
@@ -37,6 +42,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self.ssl_cert_path = None
         self.host = self.config.data["host"]
         self.port = int(self.config.data["port"])
+        self.websockets_port = int(self.config.data["websockets_port"])
         self.address = '{}:{}'.format(self.host, self.port)
         self.ssl = self.config.data["ssl"]
         self.web_client_code = None
@@ -72,18 +78,21 @@ class GedisServer(StreamServer, JSConfigBase):
 
             # Server always supports SSL
             # client can use to talk to it in SSL or not
-            self.server = StreamServer(
+            self.redis_server = StreamServer(
                 (self.host, self.port),
                 spawn=Pool(),
-                handle=self.__handle_connection,
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
                 keyfile=self.ssl_priv_key_path,
                 certfile=self.ssl_cert_path
             )
+            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
         else:
-            self.server = StreamServer(
+            self.redis_server = StreamServer(
                 (self.host, self.port),
                 spawn=Pool(),
-                handle=self.__handle_connection)
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
+            )
+            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
 
     def sslkeys_generate(self):
         if self.ssl:
@@ -97,137 +106,12 @@ class GedisServer(StreamServer, JSConfigBase):
             cert = j.sal.fs.joinPaths(path, 'ca.crt')
             return key, cert
 
-    def __handle_connection(self, socket, address):
-        self.logger.info('connection from {}'.format(address))
-        parser = CommandParser(socket)
-        response = ResponseWriter(socket)
-
-        try:
-            while True:
-                request = parser.read_request()
-
-                if not request:  # empty string request
-                    response.error('Empty request body .. probably this is a (TCP port) checking query')
-                    continue
-
-                cmd = request[0]
-                redis_cmd = cmd.decode("utf-8").lower()
-
-                cmd , err = self.get_command(redis_cmd)
-                if err is not "":
-                    response.error(err)
-                    continue
-                if cmd.schema_in:
-                    if len(request)<2:
-                        response.error("need to have arguments, none given")
-                        continue
-                    if len(request) > 2:
-                        cmd.schema_in.properties
-                        print("more than 1 input")
-                        response.error("more than 1 argument given, needs to be binary capnp message or json")
-                        continue
-
-                    id, data = j.data.serializer.msgpack.loads(request[1])
-                    try:
-                        # Try capnp
-                        o=cmd.schema_in.get(capnpbin=data)
-                    except:
-                        # Try Json
-                        o = cmd.schema_in.get(data=j.data.serializer.json.loads(data))
-
-                    if id:
-                        o.id = id
-                    args = [a.strip() for a in cmd.cmdobj.args.split(',')]
-                    if 'schema_out' in args:
-                        args.remove('schema_out')
-                    params = {}
-                    schema_dict = o.ddict
-                    if len(args) == 1:
-                        if args[0] in schema_dict:
-                            params.update(schema_dict)
-                        else:
-                            params[args[0]] = o
-                    else:
-                        params.update(schema_dict)
-
-                    if cmd.schema_out:
-                        params["schema_out"] = cmd.schema_out
-                else:
-                    if len(request) > 1:
-                        params = request[1:]
-                        if cmd.schema_out:
-                            params.append(cmd.schema_out)
-                    else:
-                        params = None
-
-                self.logger.debug("execute command callback:%s:%s"%(cmd,params))
-                result = None
-                try:
-                    if params is None:
-                        result = cmd.method()
-                    elif j.data.types.list.check(params):
-                        result = cmd.method(*params)
-                    else:
-                        result = cmd.method(**params)
-                    self.logger.debug("Callback done and result {} , type {}".format(result, type(result)))
-                except Exception as e:
-                    print("exception in redis server")
-                    eco = j.errorhandler.parsePythonExceptionObject(e)
-                    msg = str(eco)
-                    msg += "\nCODE:%s:%s\n"%(cmd.namespace,cmd.name)
-                    print (msg)
-                    response.error(e.args[:100])
-                    continue
-                self.logger.debug(
-                    "response:{}:{}:{}".format(address, cmd, result))
-
-                if cmd.schema_out:
-                    result=result.data
-                response.encode(result)
-
-        except ConnectionError as err:
-            self.logger.info('connection error: {}'.format(str(err)))
-        finally:
-            parser.on_disconnect()
-            self.logger.info('close connection from {}'.format(address))
-
-    def get_command(self, cmd):
-        if cmd in self.cmds:
-            return self.cmds[cmd], ''
-
-        self.logger.debug('(%s) command cache miss')
-
-        if not '.' in cmd:
-            return None, 'Invalid command (%s) : model is missing. proper format is {model}.{cmd}'
-
-        pre, post = cmd.split(".", 1)
-
-        namespace = self.instance + "." + pre
-
-        if namespace not in self.classes:
-            return None, "Cannot find namespace:%s " % (namespace)
-
-        if namespace not in self.cmds_meta:
-            return None, "Cannot find namespace:%s" % (namespace)
-
-        meta = self.cmds_meta[namespace]
-
-        if not post in meta.cmds:
-            return None, "Cannot find method with name:%s in namespace:%s" % (post, namespace)
-
-        cmd_obj = meta.cmds[post]
-
-        try:
-            cl = self.classes[namespace]
-            m = eval("cl.%s" % (post))
-        except Exception as e:
-            return None, "Could not execute code of method '%s' in namespace '%s'\n%s" % (pre, namespace, e)
-
-        cmd_obj.method = m
-
-        self.cmds[cmd] = cmd_obj
-
-        return self.cmds[cmd], ""
+    def websocketapp(self, environ, start_response):
+        websocket = environ['wsgi.websocket']
+        addr = '{0}:{1}'.format(environ['REMOTE_ADDR'],environ['REMOTE_PORT'])
+        handler = WebsocketRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta)
+        handler.handle(websocket, addr)
+        return []
 
     def init(self):
         # add the cmds to the server (from generated dir + app_dir)
@@ -281,8 +165,16 @@ class GedisServer(StreamServer, JSConfigBase):
             self.init()
 
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
-        self.logger.info("start server")
-        self.server.serve_forever()
+
+        from gevent import monkey
+        monkey.patch_thread()
+        import threading
+
+        t = threading.Thread(target=self.websocket_server.serve_forever)
+        t.setDaemon(True)
+        t.start()
+        self.logger.info("start Server on {0} - PORT: {1} - WEBSOCKETS PORT: {2}".format(self.host, self.port, self.websockets_port))
+        self.redis_server.serve_forever()
 
     def start(self, db=None,reset=False, background=True):
         if not background:
@@ -313,7 +205,7 @@ class GedisServer(StreamServer, JSConfigBase):
             h.cancel()
 
         self.logger.info('stopping server')
-        self.server.stop()
+        self.redis_server.stop()
 
     def cmds_add(self, namespace, path=None, class_=None):
         self.logger.debug("cmds_add:%s:%s"%(namespace,path))

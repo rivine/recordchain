@@ -53,17 +53,17 @@ class Transaction:
 
             # get a copy of that object because we don't return references to
             # actual objects to prevent changing them
-            v = self.schema.get(data=transaction)
+            t = self.schema.get(data=transaction)
 
             # Filter only transactions belonging to certain wallet if provided
-            if wallet is not None and wallet.addr not in [v.buyer_wallet_addr, v.seller_wallet_addr]:
+            if wallet is not None and wallet.addr not in [t.buyer_wallet_addr, t.seller_wallet_addr]:
                 continue
 
             for field, value in kwargs.items():
-                if  getattr(v, field, None) != value:
+                if getattr(t, field, None) != value:
                     break
             else:
-                transactions.append(transaction)
+                transactions.append(t)
         return transactions
 
     @classmethod

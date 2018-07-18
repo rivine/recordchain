@@ -17,8 +17,7 @@ class ModelOBJ():
         else:
             self._cobj = self.capnp.new_message()
 
-        for key,val in data.items():
-            self.__dict__[key] = val
+
 
         {# list not as property#}
         {% for ll in obj.lists %}    
@@ -40,6 +39,10 @@ class ModelOBJ():
             self.changed_items["{{prop.name_camel}}"] = self.schema_{{prop.name}}.new()         
         {% endif %} 
         {% endfor %}
+
+
+        for key,val in data.items():
+            setattr(self, key, val)
 
 
     {# generate the properties #}

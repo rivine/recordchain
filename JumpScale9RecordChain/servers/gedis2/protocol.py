@@ -17,8 +17,6 @@ class WebsocketsCommandParser(object):
                 return [c.encode('utf-8') for c in command.split(' ') if c]
         except:
             pass
-        return []
-
 
     def on_disconnect(self):
         pass

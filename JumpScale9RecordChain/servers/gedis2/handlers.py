@@ -22,8 +22,12 @@ class Handler(JSBASE):
 
         while True:
             request = self.parser.read_request()
-            if not request:  # empty string request
-                self.response.error('Empty request body .. probably this is a (TCP port) checking query')
+
+            if request is None:
+                break
+
+            if not request:  # empty list request
+                # self.response.error('Empty request body .. probably this is a (TCP port) checking query')
                 continue
 
             cmd = request[0]

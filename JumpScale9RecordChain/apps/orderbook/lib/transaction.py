@@ -32,11 +32,11 @@ class Transaction:
         """
         # pop state if empty
         # to later match against all states
-        if kwargs.get('state'):
+        
+        if "state" in kwargs:
             if kwargs['state'] == '':
                 kwargs.pop('state')
-
-            if kwargs['state'] not in ['new', 'pending', 'success', 'failure']:
+            elif kwargs['state'] not in ['new', 'pending', 'success', 'failure']:
                 return []
 
         transactions = []

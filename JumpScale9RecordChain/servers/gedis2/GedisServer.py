@@ -31,6 +31,7 @@ class GedisServer(StreamServer, JSConfigBase):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=template or TEMPLATE, interactive=interactive)
 
         self.db = None
+        self.static_files = {}
         self._sig_handler = []
         self.cmds_meta = {}
         self.classes = {}
@@ -64,6 +65,10 @@ class GedisServer(StreamServer, JSConfigBase):
 
         if self.apps_dir not in sys.path:
             sys.path.append(self.apps_dir)
+
+        # make sure static dir exists
+        self.static_files_path = j.sal.fs.joinPaths(self.code_generated_dir, 'static')
+        j.sal.fs.createDir(self.static_files_path)
 
         # make sure app dir is created if not exists
         self.app_dir = j.sal.fs.joinPaths(self.apps_dir, self.instance)
@@ -107,7 +112,21 @@ class GedisServer(StreamServer, JSConfigBase):
             return key, cert
 
     def websocketapp(self, environ, start_response):
-        websocket = environ['wsgi.websocket']
+        if '/static/' in environ['PATH_INFO']:
+            items = [p for p in environ['PATH_INFO'].split('/static/') if p]
+            if len(items) == 1:
+                static_file = items[-1]
+                if not static_file in self.static_files:
+                    self.static_files[static_file] = j.sal.fs.readFile(j.sal.fs.joinPaths(self.static_files_path, static_file)).encode('utf-8')
+                start_response('200 OK', [])
+                return [self.static_files[static_file]]
+            else:
+                start_response('404 NOT FOUND', [])
+                return []
+
+        websocket = environ.get('wsgi.websocket')
+        if not websocket:
+            return []
         addr = '{0}:{1}'.format(environ['REMOTE_ADDR'],environ['REMOTE_PORT'])
         handler = WebsocketRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta)
         handler.handle(websocket, addr)
@@ -130,7 +149,8 @@ class GedisServer(StreamServer, JSConfigBase):
             commands.append(cmds_)
 
         code = j.servers.gedis2.js_client_template.render(commands=commands)
-        dest = os.path.join(self.code_generated_dir, 'client.js')
+        dest = os.path.join(self.code_generated_dir, 'static', 'client.js')
+
         j.sal.fs.writeFile(dest, code)
 
         self.web_client_code = code

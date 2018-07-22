@@ -66,6 +66,9 @@ setup(
         'toml>=0.9.2',
         'pynacl>=1.1.2',
         'websockets>=4.0.1',
+        'python-jose',
+        'cryptocompare',
+        'gevent-websocket'
     ],
     dependency_links=[
         "git+https://github.com/pyca/pynacl"

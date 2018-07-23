@@ -8,6 +8,14 @@ class GedisClientCmds():
     def __init__(self):
         pass
 
+    @property
+    def config(self):
+        return self._client.config
+
+    @property
+    def config_template(self):
+        return self._client.config_template
+
     def __str__(self):
         if self._client.config.data["ssl"]:
             return "Gedis Client: (instance=%s) (address=%s:%-4s)\n(ssl=True, certificate:%s)" % (

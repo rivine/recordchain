@@ -32,7 +32,6 @@ class Transaction:
         """
         # pop state if empty
         # to later match against all states
-        
         if "state" in kwargs:
             if kwargs['state'] == '':
                 kwargs.pop('state')

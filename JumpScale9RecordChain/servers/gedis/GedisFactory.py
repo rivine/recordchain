@@ -35,16 +35,18 @@ class GedisFactory(JSConfigBase):
             instance="main",
             port=8889,
             host="localhost",
-            secret="",
             apps_dir="",
-            ssl=True
+            ssl=False,
+            websockets_port=9901,
+            secret = "",
     ):
         data = {
             "port": port,
             "host": host,
             "adminsecret_": secret,
             "apps_dir":apps_dir,
-            "ssl": ssl
+            "ssl": ssl,
+            "websockets_port" :websockets_port
         }
 
         return self.get(instance, data)

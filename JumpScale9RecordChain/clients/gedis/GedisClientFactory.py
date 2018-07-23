@@ -64,9 +64,9 @@ class GedisClientFactory(JSConfigBase):
 
         data["host"] = host
         data["port"] = port
-        data["secret_"] = secret
+        data["adminsecret_"] = secret
         data["ssl"] = ssl
-        data['adminsecret_'] = ssl_cert_file
+        data['sslkey'] = ssl_cert_file
 
         return self.get(instance=instance, data=data, reset=reset)
 

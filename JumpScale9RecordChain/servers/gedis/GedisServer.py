@@ -72,7 +72,11 @@ class GedisServer(StreamServer, JSConfigBase):
         # make sure app dir is created if not exists
         self.app_dir = j.sal.fs.joinPaths(self.apps_dir, self.instance)
         j.sal.fs.createDir(self.app_dir)
-        j.sal.fs.touch(j.sal.fs.joinPaths(self.app_dir, '__init__.py'))
+
+        p = j.sal.fs.joinPaths(self.app_dir, '__init__.py')
+
+        if not j.sal.fs.exists(p):
+            j.sal.fs.touch(p)
 
         if self.app_dir not in sys.path:
             sys.path.append(self.app_dir)

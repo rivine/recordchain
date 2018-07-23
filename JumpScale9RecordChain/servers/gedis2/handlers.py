@@ -96,7 +96,8 @@ class Handler(JSBASE):
                 msg = str(eco)
                 msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
                 print (msg)
-                self.response.error(e.args[:100])
+                import ipdb; ipdb.set_trace()
+                self.response.error(e.args[0])
                 continue
             self.logger.debug(
                 "response:{}:{}:{}".format(address, cmd, result))
@@ -157,6 +158,12 @@ class Handler(JSBASE):
         """
         raise NotImplementedError()
 
+    def encode_error(self, err):
+        """
+        Get error format to be sent to client
+        """
+        raise NotImplementedError()
+
     def get_parser(self, socket):
         raise NotImplementedError()
 
@@ -177,6 +184,9 @@ class RedisRequestHandler(Handler):
     def encode_result(self, result):
         return result.data
 
+    def encode_error(self, error):
+        return error
+
     def get_parser(self, socket):
         return RedisCommandParser(socket)
 
@@ -195,6 +205,9 @@ class WebsocketRequestHandler(Handler):
 
     def encode_result(self, result):
         return result.ddict_hr
+
+    def encode_error(self, error):
+        return error.encode('utf-8')
 
     def get_parser(self, socket):
         return WebsocketsCommandParser(socket)

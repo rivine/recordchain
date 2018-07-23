@@ -1,5 +1,5 @@
 // SERVER_DOMAIN & SERVER_PORT will come from the client.js 
-socket = new WebSocket("ws://{{host}}:{{port}}/");
+socket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/");
 var execute = (command, args) => {
     return new Promise((resolve, fail) => {
         socket.onmessage = function(e) {

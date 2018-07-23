@@ -148,9 +148,8 @@ class GedisServer(StreamServer, JSConfigBase):
                 continue
             commands.append(cmds_)
 
-        code = j.servers.gedis2.js_client_template.render(commands=commands)
+        code = j.servers.gedis2.js_client_template.render(commands=commands, host=self.host, port=self.websockets_port)
         dest = os.path.join(self.code_generated_dir, 'static', 'client.js')
-
         j.sal.fs.writeFile(dest, code)
 
         self.web_client_code = code

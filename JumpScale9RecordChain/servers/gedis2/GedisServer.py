@@ -117,7 +117,8 @@ class GedisServer(StreamServer, JSConfigBase):
             if len(items) == 1:
                 static_file = items[-1]
                 if not static_file in self.static_files:
-                    self.static_files[static_file] = j.sal.fs.readFile(j.sal.fs.joinPaths(self.static_files_path, static_file)).encode('utf-8')
+                    host = environ.get('HTTP_HOST')
+                    self.static_files[static_file] = j.sal.fs.readFile(j.sal.fs.joinPaths(self.static_files_path, static_file)).replace('%%host%%', host).encode('utf-8')
                 start_response('200 OK', [])
                 return [self.static_files[static_file]]
             else:

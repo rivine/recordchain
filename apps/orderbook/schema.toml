@@ -1,0 +1,54 @@
+# Sell Order
+@url = threefoldtoken.order.sell
+@name = ordersell
+comment = ""
+currency_to_sell = "" (S)   # currency types BTC/ETH/XRP/TFT
+currency_accept = (LS)      # can accept more than one currency 
+price_min = 0 (N)           # can be defined in any currency
+amount = (F)                # amount
+expiration =  (D)           # can be defined as e.g. +1h
+sell_to = (LS)              # list of wallet addresses which are allowed to buy from me
+secret = (LS)               # if used the buyers need to have one of the secrets
+approved = (B)              # if True, object will be scheduled for matching, further updates/deletes are no more possible
+owner_email_addr = (S)      # email addr used through IYO when order was created
+wallet_addr = (S)           # Wallet address
+
+
+# Buy Order
+@url = threefoldtoken.order.buy
+@name = orderbuy
+comment = ""
+currency_to_buy = "" (S)    # currency types BTC/ETH/XRP/TFT
+currency_mine = (LS)        # which of my currencies I am selling (can be more than 1)
+price_max =  (N)           # can be defined in any currency
+amount = (F)                # amount
+expiration =  (D)           # can be defined as e.g. +1h
+buy_from = (LS)             # list of wallet addresses which I want to buy from
+secret = "" (S)             # the optional secret to use when doing a buy order, only relevant when buy_from used
+approved = (B)              # if True, object will be scheduled for matching, further updates/deletes are no more possible
+owner_email_addr = (S)      # email addr used through IYO when order was created
+wallet_addr = (S)           # Wallet address
+
+# Wallet
+@url = threefoldtoken.wallet
+@name = wallet
+jwt = "" (S)                # JWT Token
+addr = ""                   # Address
+ipaddr = (ipaddr)           # IP Address
+email = "" (S)              # Email address
+username = "" (S)           # User name
+
+# Transaction
+@url = threefoldtoken.transaction
+@name = transaction
+buy_order_id = (I)          # id of buy order
+sell_order_id = (I)         # id of sell order
+amount_bought = (F)         # the trade amount
+currency = (S)              # the currency in which the transaction will happen
+total_price = (F)           # total price of the transaction
+state = (S)                 # state of the transaction new/pending/failed/succeeded
+buyer_wallet_addr = (S)     # Buyer wallet address
+seller_wallet_addr = (S)    # Seller Wallet address
+buyer_email_addr = (S)      # email addr used through IYO for the buyer
+seller_email_addr = (S)     # email addr used through IYO for the seller
+

@@ -5,7 +5,7 @@ var execute = (command, args) => {
         socket.onmessage = function(e) {
             resolve("resolved: " + command + ":" + args + ">>" + e.data)
         }
-        if (!args.empty()){
+        if (args.length != 0){
             socket.send(command + " " + args)
         } else {
             socket.send(command)

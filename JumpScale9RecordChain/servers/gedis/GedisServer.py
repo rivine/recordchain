@@ -59,9 +59,8 @@ class GedisServer(StreamServer, JSConfigBase):
             sys.path.append(self.code_generated_dir)
 
         # make sure apps dir is created if not exists
-        self.apps_dir = self.config.data["apps_dir"] or j.sal.fs.joinPaths(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'apps')
+        self.apps_dir = self.config.data["apps_dir"] or j.sal.fs.joinPaths(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'apps')
         j.sal.fs.createDir(self.apps_dir)
-        j.sal.fs.touch(j.sal.fs.joinPaths(self.apps_dir, '__init__.py'))
 
         if self.apps_dir not in sys.path:
             sys.path.append(self.apps_dir)
@@ -118,12 +117,13 @@ class GedisServer(StreamServer, JSConfigBase):
                 static_file = items[-1]
                 if not static_file in self.static_files:
                     host = environ.get('HTTP_HOST')
-                    self.static_files[static_file] = j.sal.fs.readFile(j.sal.fs.joinPaths(self.static_files_path, static_file)).replace('%%host%%', host).encode('utf-8')
-                start_response('200 OK', [])
-                return [self.static_files[static_file]]
-            else:
-                start_response('404 NOT FOUND', [])
-                return []
+                    file_path = j.sal.fs.joinPaths(self.static_files_path, static_file)
+                    if j.sal.fs.exists(file_path):
+                        self.static_files[static_file] = j.sal.fs.readFile(file_path).replace('%%host%%', host).encode('utf-8')
+                        start_response('200 OK', [])
+                        return [self.static_files[static_file]]
+            start_response('404 NOT FOUND', [])
+            return []
 
         websocket = environ.get('wsgi.websocket')
         if not websocket:
@@ -136,7 +136,7 @@ class GedisServer(StreamServer, JSConfigBase):
     def init(self):
         # add the cmds to the server (from generated dir + app_dir)
         namespace_base = self.instance
-        files = j.sal.fs.listFilesInDir(self.code_generated_dir, filter="*.py", exclude=["__*"]) + j.sal.fs.listFilesInDir(self.app_dir, filter="*.py", exclude=["__*"])
+        files = j.sal.fs.listFilesInDir(self.code_generated_dir, filter="*.py", exclude=["__*", "test*"]) + j.sal.fs.listFilesInDir(self.app_dir, filter="*.py", exclude=["__*", "test*"])
         for item in files:
             namespace = namespace_base + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
             self.cmds_add(namespace, path=item)

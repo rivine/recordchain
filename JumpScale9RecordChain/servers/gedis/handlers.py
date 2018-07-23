@@ -96,7 +96,6 @@ class Handler(JSBASE):
                 msg = str(eco)
                 msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
                 print (msg)
-                import ipdb; ipdb.set_trace()
                 self.response.error(e.args[0])
                 continue
             self.logger.debug(

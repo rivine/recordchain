@@ -11,7 +11,7 @@ JSConfigBase = j.tools.configmanager.base_class_configs
 class GedisFactory(JSConfigBase):
 
     def __init__(self):
-        self.__jslocation__ = "j.servers.gedis2"
+        self.__jslocation__ = "j.servers.gedis"
 
         JSConfigBase.__init__(self, GedisServer)
 
@@ -61,7 +61,7 @@ class GedisFactory(JSConfigBase):
             from jinja2 import Environment, PackageLoader
 
             self._template_engine = Environment(
-                loader=PackageLoader('JumpScale9RecordChain.servers.gedis2', 'templates'),
+                loader=PackageLoader('JumpScale9RecordChain.servers.gedis', 'templates'),
                 trim_blocks=True,
                 lstrip_blocks=True,
             )

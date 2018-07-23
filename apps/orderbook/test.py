@@ -1,12 +1,15 @@
 from js9 import j
 print("[-] starting server")
-server  = x=j.servers.gedis2.get(instance="orderbook");
+
+#TODO, can we autoconfigure client & server, is all for test anyhow
+
+server  = x=j.servers.gedis.get(instance="orderbook");
 server.start()
 print("[-] server started")
 
 iyoclient = j.clients.itsyouonline.get()                 
 jwt = iyoclient.jwt                             
-cl = j.clients.gedis2.get('orderbook');                   
+cl = j.clients.gedis.get('orderbook');                   
 cl.order_book.login(jwt=jwt, addr='addr', ipaddr='8.8.8.8')
 
 print("[-] adding buy order1")

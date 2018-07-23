@@ -48,10 +48,10 @@ class GedisServer(StreamServer, JSConfigBase):
         self.ssl = self.config.data["ssl"]
         self.web_client_code = None
 
-        j.servers.gedis2.latest = self
+        j.servers.gedis.latest = self
 
         # create dirs for generated codes
-        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis2", instance, "server")
+        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, "server")
         j.sal.fs.createDir(self.code_generated_dir)
         j.sal.fs.touch(j.sal.fs.joinPaths(self.code_generated_dir, '__init__.py'))
 
@@ -149,7 +149,7 @@ class GedisServer(StreamServer, JSConfigBase):
                 continue
             commands.append(cmds_)
 
-        code = j.servers.gedis2.js_client_template.render(commands=commands)
+        code = j.servers.gedis.js_client_template.render(commands=commands)
         dest = os.path.join(self.code_generated_dir, 'static', 'client.js')
         j.sal.fs.writeFile(dest, code)
 
@@ -168,7 +168,7 @@ class GedisServer(StreamServer, JSConfigBase):
         for item in ["system"]:
             dest = j.sal.fs.joinPaths(self.code_generated_dir, "%s.py" % item)
             if reset or not j.sal.fs.exists(dest):
-                src = j.sal.fs.joinPaths(j.servers.gedis2._path, "templates", '%s.py' % item)
+                src = j.sal.fs.joinPaths(j.servers.gedis._path, "templates", '%s.py' % item)
                 j.sal.fs.copyFile(src, dest)
 
         # Generate models & populate self.schema_urls
@@ -176,7 +176,7 @@ class GedisServer(StreamServer, JSConfigBase):
             # url = table.schema.url.replace(".","_")
             dest = j.sal.fs.joinPaths(self.code_generated_dir, "model_%s.py" % namespace)
             if reset or not j.sal.fs.exists(dest):
-                code = j.servers.gedis2.code_model_template.render(obj=table.schema)
+                code = j.servers.gedis.code_model_template.render(obj=table.schema)
                 j.sal.fs.writeFile(dest, code)
             self.schema_urls.append(table.schema.url)
 
@@ -200,7 +200,7 @@ class GedisServer(StreamServer, JSConfigBase):
         if not background:
             self._start(db, reset)
         else:
-            cmd = "js9 'x=j.servers.gedis2.get(instance=\"%s\");x._start(reset=%s)'" % (self.instance, reset)
+            cmd = "js9 'x=j.servers.gedis.get(instance=\"%s\");x._start(reset=%s)'" % (self.instance, reset)
             j.tools.tmux.execute(
                 cmd,
                 session='main',

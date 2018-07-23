@@ -26,16 +26,16 @@ This is the `Model layer`
 
 ### Tests
 - `python3 apps/example/test.py`
-- `j.clients.gedis2.test()`
-- `j.servers.gedis2.test()`
+- `j.clients.gedis.test()`
+- `j.servers.gedis.test()`
 
 ### Running
 
 **Hello world example**
 Get the `example` app in [HERE](/JumpScale9RecordChain/apps/)
 
-- Configure & Run server `j.servers.gedis2.get('example').start(background=False, reset=True)`
-- Configure & Get client `client = j.clients.gedis2.get('example', reset=True)`
+- Configure & Run server `j.servers.gedis.get('example').start(background=False, reset=True)`
+- Configure & Get client `client = j.clients.gedis.get('example', reset=True)`
 - execute system command `ping`
     ```
     client.system.ping()
@@ -59,7 +59,7 @@ you can change this if you want to create/load apps elsewhere
     - load schema in memory
     - create db table with the same name as schema name
     - create model file names `model_{schema_name}.py` under `/opt/var/codegen/{instance}/server` and add it to dictionary
-    `j.servers.gedis2.latest.db.tables`.
+    `j.servers.gedis.latest.db.tables`.
     - models allow for `CRUD` operations on a table
 
 **Client**
@@ -81,14 +81,14 @@ you can change this if you want to create/load apps elsewhere
 
 - **Make your own app**
     ```
-    app = j.servers.gedis2.get(instance='my_app')
+    app = j.servers.gedis.get(instance='my_app')
     app.start(background=True, reset=True)
     ```
 
     OR configure it directly like
 
     ```
-    server = j.servers.gedis2.configure(
+    server = j.servers.gedis.configure(
             instance="example",
             port=5000,
             host="127.0.0.1",
@@ -102,7 +102,7 @@ you can change this if you want to create/load apps elsewhere
 - **Get Gedis python client**
 
     - You can use any redis library to connect to your app and execute commands
-    - or you use the client from jumpscale `j.clients.gedis2.get({instance}, reset=True/False)`
+    - or you use the client from jumpscale `j.clients.gedis.get({instance}, reset=True/False)`
 
 - **Adding models to your server** 
     - In your `{apps_dir}/{instance_name}` you can add some `toml` files MUST start with `schema`.

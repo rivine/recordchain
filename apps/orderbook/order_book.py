@@ -15,8 +15,8 @@ class order_book(JSBASE):
     def __init__(self):
         JSBASE.__init__(self)
 
-        if not hasattr(j.servers.gedis2.latest, 'context'):
-            j.servers.gedis2.latest.context = {
+        if not hasattr(j.servers.gedis.latest, 'context'):
+            j.servers.gedis.latest.context = {
                 'wallets': {},
                 'sell_orders':{},
                 'buy_orders': {},

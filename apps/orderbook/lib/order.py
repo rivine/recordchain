@@ -5,9 +5,9 @@ class Order(object):
     def __init__(self, order_type='sell'):
         self.type = order_type # order type (sell/buy)
         self.schema = j.data.schema.schema_from_url('threefoldtoken.order.%s' % self.type)
-        self.orders = j.servers.gedis2.latest.context['%s_orders' % self.type]
-        self.db_table = j.servers.gedis2.latest.db.tables['order%s' % self.type]
-        self.matcher = j.servers.gedis2.latest.context['matcher']
+        self.orders = j.servers.gedis.latest.context['%s_orders' % self.type]
+        self.db_table = j.servers.gedis.latest.db.tables['order%s' % self.type]
+        self.matcher = j.servers.gedis.latest.context['matcher']
 
     def add(self, wallet, order):
         """

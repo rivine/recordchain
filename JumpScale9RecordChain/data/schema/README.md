@@ -35,20 +35,20 @@ you can later on save these objects into DB
 #### Schema Examples
 
 ```toml
-@url = test.gedis2.cmd
+@url = test.gedis.cmd
 @name = any
 name = "" 
 comment = "" # type inference will set type to (String)
 schemacode = ""
 
-@url = test.gedis2.serverschema
+@url = test.gedis.serverschema
 @name = cmds
-cmds = (LO) !test.gedis2.cmd
+cmds = (LO) !test.gedis.cmd
 
-@url = test.gedis2.cmd1
+@url = test.gedis.cmd1
 @name = cmd
-cmd = (O) !test.gedis2.cmd # Type Object. then you provide the URL of the schema that it refers to
-cmd2 = (O) !test.gedis2.cmd
+cmd = (O) !test.gedis.cmd # Type Object. then you provide the URL of the schema that it refers to
+cmd2 = (O) !test.gedis.cmd
 ```
 
 ```toml

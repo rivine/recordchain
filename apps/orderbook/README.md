@@ -5,7 +5,7 @@ these topics before you can work with orderbook
 
 - [Schemas](JumpScale9RecordChain/data/schema/README.md)
 - [BCDB database](JumpScale9RecordChain/data/bcdb/README.md)
-- [GEDIS2 Framework](JumpScale9RecordChain/servers/gedis2/README.md)
+- [gedis Framework](JumpScale9RecordChain/servers/gedis/README.md)
 
 # Specs
 
@@ -18,13 +18,13 @@ these topics before you can work with orderbook
     - Make sure in config to leave `apps_dir` empty to load ordrbook from `JumpScale9RecordChain/apps/orderbook`
     - Orderbook is an instance of gedis and you can start server using
         ```python
-        server = j.servers.gedis2.get('orderbook')
+        server = j.servers.gedis.get('orderbook')
         server.start()
         ```
 
 - #### Start client
     ```python
-    client = j.clients.gedis2.get('orderbook')
+    client = j.clients.gedis.get('orderbook')
     ```
 - ####  USing client
     
@@ -167,10 +167,10 @@ these topics before you can work with orderbook
  
 - **Add data to db**
     ```python
-      j.servers.gedis2.latest.db.tablesp['ordersell'].set(id=id, data=order.data)
+      j.servers.gedis.latest.db.tablesp['ordersell'].set(id=id, data=order.data)
 
         # You can add data to db also using
         # data = j.data.serializer.msgpack.dumps([id, order.data])
-        # j.servers.gedis2.latest.models.threefoldtoken_order_sell.set(data)
+        # j.servers.gedis.latest.models.threefoldtoken_order_sell.set(data)
 
     ```

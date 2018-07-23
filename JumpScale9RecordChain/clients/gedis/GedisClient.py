@@ -31,9 +31,9 @@ class GedisClient(JSConfigBase):
     def __init__(self, instance, data={}, parent=None, interactive=False, reset=False):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,template=TEMPLATE , interactive=interactive)
 
-        j.clients.gedis2.latest = self
+        j.clients.gedis.latest = self
 
-        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis2", instance, "client")
+        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, "client")
         j.sal.fs.createDir(self.code_generated_dir)
         j.sal.fs.touch(j.sal.fs.joinPaths(self.code_generated_dir, '__init__.py'))
 
@@ -69,7 +69,7 @@ class GedisClient(JSConfigBase):
             for namespace_full, capnpbin in cmds_meta["cmds"].items():
                 shortname = namespace_full.split(".")[-1]
                 if not shortname.startswith("model"):
-                    self.cmds_meta[namespace_full] = j.servers.gedis2.cmds_get(
+                    self.cmds_meta[namespace_full] = j.servers.gedis.cmds_get(
                         namespace_full,
                         capnpbin
                     ).cmds
@@ -88,7 +88,7 @@ class GedisClient(JSConfigBase):
 
             if reset or not j.sal.fs.exists(dest):
                 schema = j.data.schema.schema_from_url(schema_url)
-                code = j.clients.gedis2.code_model_template.render(obj= schema)
+                code = j.clients.gedis.code_model_template.render(obj= schema)
                 j.sal.fs.writeFile(dest,code)
 
             m=imp.load_source(name=fname, pathname=dest)
@@ -107,7 +107,7 @@ class GedisClient(JSConfigBase):
             dest = os.path.join(self.code_generated_dir, "%s.py"%fname)
 
             if reset or not j.sal.fs.exists(dest):
-                code = j.clients.gedis2.code_client_template.render(obj= cmds)
+                code = j.clients.gedis.code_client_template.render(obj= cmds)
                 j.sal.fs.writeFile(dest,code)
 
             m=imp.load_source(name=fname, pathname=dest)

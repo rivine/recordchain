@@ -28,7 +28,7 @@ class GedisClientCmds():
 
 class GedisClientFactory(JSConfigBase):
     def __init__(self):
-        self.__jslocation__ = "j.clients.gedis2"
+        self.__jslocation__ = "j.clients.gedis"
         JSConfigBase.__init__(self, GedisClient)
         self._template_engine = None
         self._template_code_client = None
@@ -75,7 +75,7 @@ class GedisClientFactory(JSConfigBase):
         if self._template_engine is None:
             from jinja2 import Environment, PackageLoader
             self._template_engine = Environment(
-                loader=PackageLoader('JumpScale9RecordChain.clients.gedis2', 'templates'),
+                loader=PackageLoader('JumpScale9RecordChain.clients.gedis', 'templates'),
                 trim_blocks=True,
                 lstrip_blocks=True,
             )

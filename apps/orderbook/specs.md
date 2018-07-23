@@ -23,17 +23,17 @@ scheduled for matching
     - list/filter (all/client) transactions with tht ability to filter (all/pending/successed/failed) ones
 
 ## Goal
-- implement an orderbook server(on top of gedis2 server)
+- implement an orderbook server(on top of gedis server)
 - Orders are saved in memory and committed to db for history only
 
 ## Deliverables
-- Order book server using gedis2 with SSL support
+- Order book server using gedis with SSL support
 - Python client for orderbook
 - Create a matcher to match selling with buying orders
 - Create a trader to actually do the transactions to user wallets
 
 ## Design
-- API layer accessible through gedis2 server
+- API layer accessible through gedis server
 - SAL layer for handling logic (called by API)
 - Matcher
 - Trader

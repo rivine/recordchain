@@ -4,9 +4,9 @@ from js9 import j
 class Transaction:
     def __init__(self):
         self.schema = j.data.schema.schema_from_url('threefoldtoken.transaction')
-        self.trader = j.servers.gedis2.latest.context['trader']
-        self.transactions = j.servers.gedis2.latest.context['transactions']
-        self.db_table = j.servers.gedis2.latest.db.tables['transaction']
+        self.trader = j.servers.gedis.latest.context['trader']
+        self.transactions = j.servers.gedis.latest.context['transactions']
+        self.db_table = j.servers.gedis.latest.db.tables['transaction']
 
     def list(self, wallet=None, total_items_in_page=20, page_number=1, **kwargs):
         """
@@ -98,7 +98,7 @@ class Transaction:
         transaction.buyer_email_addr = buyer_email_addr
         transaction.state = state
 
-        db_table = j.servers.gedis2.latest.db.tables['transaction']
+        db_table = j.servers.gedis.latest.db.tables['transaction']
 
         transaction = db_table.set(id=None, data=transaction.data)
 

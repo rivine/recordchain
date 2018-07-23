@@ -27,7 +27,7 @@ class Matcher(JSBASE,):
 
     @property
     def trader(self):
-        return j.servers.gedis2.latest.context['trader']
+        return j.servers.gedis.latest.context['trader']
 
     def add_order(self, order):
         """

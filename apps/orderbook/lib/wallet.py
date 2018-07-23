@@ -21,12 +21,12 @@ class Wallet(object):
         # Set current wallet
         self._current = wallet
 
-        if wallet.addr in j.servers.gedis2.latest.context['wallets']:
-            if j.servers.gedis2.latest.context['wallets'][wallet.addr].email != wallet.email:
+        if wallet.addr in j.servers.gedis.latest.context['wallets']:
+            if j.servers.gedis.latest.context['wallets'][wallet.addr].email != wallet.email:
                 raise RuntimeError('Wallet already registered with a different user')
 
         # Add wallet to list of all wallets in system
-        j.servers.gedis2.latest.context['wallets'][wallet.addr] = wallet
+        j.servers.gedis.latest.context['wallets'][wallet.addr] = wallet
 
         return wallet
 
@@ -48,7 +48,7 @@ class Wallet(object):
         :param addr:
         :return:
         """
-        return j.servers.gedis2.latest.context['wallets'].get(addr)
+        return j.servers.gedis.latest.context['wallets'].get(addr)
 
     def remove(self, addr):
         """
@@ -56,8 +56,8 @@ class Wallet(object):
         :param addr: Wallet addr
         :rtype addr: str
         """
-        if addr in j.servers.gedis2.latest.context['wallets']:
-            return j.servers.gedis2.latest.context['wallets'].pop(addr)
+        if addr in j.servers.gedis.latest.context['wallets']:
+            return j.servers.gedis.latest.context['wallets'].pop(addr)
 
     def list(self):
         """
@@ -65,4 +65,4 @@ class Wallet(object):
         :return: List of wallets
         :rtype: list
         """
-        return j.servers.gedis2.latest.context['wallets']
+        return j.servers.gedis.latest.context['wallets']

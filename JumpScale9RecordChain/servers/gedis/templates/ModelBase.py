@@ -14,14 +14,14 @@ class model_{{obj.name}}(JSBASE):
         JSBASE.__init__(self)        
         self.namespace = "{{obj.name}}"
         self.url = "{{obj.url}}"
-        self.db = j.servers.gedis2.latest.db
+        self.db = j.servers.gedis.latest.db
         self.table = self.db.tables["{{obj.name}}"]
         self.schema = self.table.schema
 
     def set(self,data_in):
-        if j.servers.gedis2.latest.serializer:
+        if j.servers.gedis.latest.serializer:
             #e.g. for json
-            ddict = j.servers.gedis2.latest.return_serializer.loads(data_in)
+            ddict = j.servers.gedis.latest.return_serializer.loads(data_in)
             obj = self.schema.get(data=ddict)
             data = obj.data
         else:
@@ -31,8 +31,8 @@ class model_{{obj.name}}(JSBASE):
         if res.id == None:
             raise RuntimeError("cannot be None")
 
-        if j.servers.gedis2.latest.serializer:
-            return j.servers.gedis2.latest.return_serializer.dumps(res.ddict)
+        if j.servers.gedis.latest.serializer:
+            return j.servers.gedis.latest.return_serializer.dumps(res.ddict)
         else:
             return j.data.serializer.msgpack.dumps([res.id,res.data])
 
@@ -40,8 +40,8 @@ class model_{{obj.name}}(JSBASE):
         id=int(id.decode())
         obj = self.table.get(id=id, hook=self.hook_get)
         print("get")
-        if j.servers.gedis2.latest.serializer:
-            return j.servers.gedis2.latest.return_serializer.dumps(obj.ddict)
+        if j.servers.gedis.latest.serializer:
+            return j.servers.gedis.latest.return_serializer.dumps(obj.ddict)
         else:
             return j.data.serializer.msgpack.dumps([obj.id,obj.data])
 

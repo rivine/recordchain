@@ -22,7 +22,7 @@ class Trader(JSBASE):
 
     @property
     def matcher(self):
-        return j.servers.gedis2.latest.context['matcher']
+        return j.servers.gedis.latest.context['matcher']
         
     def put(self, transactions):
         """
@@ -36,7 +36,7 @@ class Trader(JSBASE):
             self.queue.put(transaction)
             transaction = transaction.ddict_hr
             transaction['state'] = 'pending'
-            j.servers.gedis2.latest.context['transactions'].append(transaction)
+            j.servers.gedis.latest.context['transactions'].append(transaction)
 
         # Now notify consumer to consume these transactions
         self.evt.set()

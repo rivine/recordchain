@@ -99,13 +99,13 @@ class GedisCmd(JSBASE):
 
     @property
     def code_runtime(self):
-        code = j.servers.gedis2.code_server_template.render(obj=self)
+        code = j.servers.gedis.code_server_template.render(obj=self)
         return code
 
     @property
     def method_generated(self):
         if self._method is None:
-            path = j.servers.gedis2.code_generation_dir + "%s_%s.py" % (self.namespace,self.name)
+            path = j.servers.gedis.code_generation_dir + "%s_%s.py" % (self.namespace,self.name)
             j.sal.fs.writeFile(path,self.code_runtime)
             m=imp.load_source(name=self.namespace+"."+self.name, pathname=path)
             self._method = m.action

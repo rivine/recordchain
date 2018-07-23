@@ -30,9 +30,9 @@ class system(JSBASE):
         return the api meta information
 
         """  
-        s=j.servers.gedis2.latest.cmds_meta
+        s=j.servers.gedis.latest.cmds_meta
         res={}
-        res["namespace"]=j.servers.gedis2.latest.instance
+        res["namespace"]=j.servers.gedis.latest.instance
         res["cmds"]={}
         for key,item in s.items():
             res["cmds"][key] = item.data.data
@@ -43,7 +43,7 @@ class system(JSBASE):
         return the api meta information
 
         """  
-        s=j.servers.gedis2.latest.schema_urls
+        s=j.servers.gedis.latest.schema_urls
         return j.data.serializer.msgpack.dumps(s)
 
     def test(self,name,nr,schema_out):      
@@ -73,5 +73,5 @@ class system(JSBASE):
         return [name,nr]
 
     def get_web_client(self):
-        return j.servers.gedis2.latest.web_client_code
+        return j.servers.gedis.latest.web_client_code
 

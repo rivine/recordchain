@@ -3,7 +3,7 @@ socket = new WebSocket("ws://{{host}}:{{port}}/");
 var execute = (command, args) => {
     return new Promise((resolve, fail) => {
         socket.onmessage = function(e) {
-            resolve("resolved: " + command + ":" + args + ">>" + e.data)
+            resolve(e.data)
         }
         if (args.length != 0){
             socket.send(command + " " + args)

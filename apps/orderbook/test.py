@@ -27,15 +27,17 @@ s3 = cl.order_book.add_sell_order(price_min='10 XRP', currency_to_sell='BTC' ,cu
 
 transactions = cl.order_book.list_all_transactions()
 transactions = transactions.transactions
+
 print("[-] validating transactions")
-assert transactions[-3]['buy_order_id'] == b1
-assert transactions[-3]['sell_order_id'] == s1
-
-assert transactions[-2]['buy_order_id'] == b2
-assert transactions[-2]['sell_order_id'] == s2
-
-assert transactions[-1]['buy_order_id'] == b3
-assert transactions[-1]['sell_order_id'] == s3
+transaction = transactions.pop()
+assert transaction.buy_order_id == b3
+assert transaction.sell_order_id == s3
+transaction = transactions.pop()
+assert transaction.buy_order_id == b2
+assert transaction.sell_order_id == s2
+transaction = transactions.pop()
+assert transaction.buy_order_id == b1
+assert transaction.sell_order_id == s1
 
 print("** DONE **")
 

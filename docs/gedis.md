@@ -128,12 +128,12 @@ and then you can load apps from there
     - **Schema out**
         - If you want result of function to be an object of certain type, you add extra argument to function signature called `schema_out`
         and in your docstring you define the schema for that object, or refer to another schema by its URL
-        ```python
+        ```
         def test(schema_out):
             """
             ```out
-                name = "" (S)
-                nr = 0 (I)
+            name = "" (S)
+            nr = 0 (I)
             ```
             """
             o=schema_out.new()

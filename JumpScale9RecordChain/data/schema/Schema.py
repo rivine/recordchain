@@ -7,6 +7,7 @@ JSBASE = j.application.jsbase_get_class()
 
 
 class Schema(JSBASE):
+
     def __init__(self, text=None, url=""):
         JSBASE.__init__(self)
         self.properties = []
@@ -22,7 +23,7 @@ class Schema(JSBASE):
             self.url = url
         else:
             self.url = ""
-            
+
         self.name = ""
         if text:
             self._schema_from_text(text)
@@ -79,7 +80,7 @@ class Schema(JSBASE):
             if "!" in line:
                 line, pointer_type = line.split("!", 1)
                 pointer_type = pointer_type.strip()
-                line=line.strip()
+                line = line.strip()
             else:
                 pointer_type = None
 
@@ -93,7 +94,7 @@ class Schema(JSBASE):
             if "(" in line:
                 line_proptype = line.split("(")[1].split(")")[0].strip().lower()
                 line_wo_proptype = line.split("(")[0].strip()
-                if line_proptype=="o": #special case where we have subject directly attached
+                if line_proptype == "o":  # special case where we have subject directly attached
                     js9type = j.data.types.get("jo")
                     js9type.SUBTYPE = pointer_type
                     defvalue = ""
@@ -109,8 +110,8 @@ class Schema(JSBASE):
             else:
                 alias = propname
 
-            if alias[-1]=="*":
-                alias=alias[:-1]
+            if alias[-1] == "*":
+                alias = alias[:-1]
 
             if propname in ["id"]:
                 raise RuntimeError("do not use 'id' in your schema, is reserved for system.")
@@ -141,8 +142,8 @@ class Schema(JSBASE):
             p = SchemaProperty()
 
             if propname.endswith("*"):
-                propname=propname[:-1]
-                p.index=True
+                propname = propname[:-1]
+                p.index = True
 
             p.name = propname
             p.default = defvalue
@@ -159,23 +160,22 @@ class Schema(JSBASE):
         for key, val in systemprops.items():
             self.__dict__[key] = val
 
-        nr=0
+        nr = 0
         for s in self.properties:
             s.nr = nr
             self.__dict__["property_%s" % s.name] = s
-            nr+=1
+            nr += 1
 
         for s in self.lists:
             s.nr = nr
             self.__dict__["property_%s" % s.name] = s
-            nr+=1
-
+            nr += 1
 
     @property
     def capnp_id(self):
-        if self.hash=="":
+        if self.hash == "":
             raise RuntimeError("hash cannot be empty")
-        return "f"+self.hash[1:16]  #first bit needs to be 1
+        return "f" + self.hash[1:16]  # first bit needs to be 1
 
     @property
     def code_template(self):
@@ -187,11 +187,11 @@ class Schema(JSBASE):
     def capnp_template(self):
         if self._capnp_template == None:
             self._capnp_template = j.data.schema.template_engine.get_template("schema.capnp")
-        return self._capnp_template        
+        return self._capnp_template
 
     @property
     def code(self):
-        #make sure the defaults render
+        # make sure the defaults render
         for prop in self.properties:
             prop.default_as_python_code
         for prop in self.lists:
@@ -207,40 +207,40 @@ class Schema(JSBASE):
     @property
     def capnp(self):
         if not self._capnp:
-            self._capnp =  j.data.capnp3.getSchemaFromText(self.capnp_schema)
+            self._capnp = j.data.capnp3.getSchemaFromText(self.capnp_schema)
         return self._capnp
 
     @property
     def objclass(self):
         if self._obj_class is None:
-            url = self.url.replace(".","_")
+            url = self.url.replace(".", "_")
             path = j.sal.fs.joinPaths(j.data.schema.code_generation_dir, "%s.py" % url)
-            j.sal.fs.writeFile(path,self.code)
-            m=imp.load_source(name="url", pathname=path)
+            j.sal.fs.writeFile(path, self.code)
+            m = imp.load_source(name="url", pathname=path)
             self._obj_class = m.ModelOBJ
         return self._obj_class
 
-    def get(self,data={},capnpbin=None):
-        return self.objclass(schema=self,data=data,capnpbin=capnpbin)
+    def get(self, data={}, capnpbin=None):
+        return self.objclass(schema=self, data=data, capnpbin=capnpbin)
 
     def new(self):
         return self.get()
 
     @property
     def index_list(self):
-        if self._index_list==None:
+        if self._index_list == None:
             self._index_list = []
             for prop in self.properties:
                 if prop.index:
                     self._index_list.append(prop.alias)
-        return self._index_list                    
-            
+        return self._index_list
+
     def __str__(self):
-        out=""
+        out = ""
         for item in self.properties:
             out += str(item) + "\n"
         for item in self.lists:
             out += str(item) + "\n"
         return out
 
-    __repr__=__str__
+    __repr__ = __str__

@@ -165,7 +165,10 @@ class GedisFactory(JSConfigBase):
         return self._code_test_template
 
 
-    def test(self):
+    def test(self,start=True):
+        """
+        js9 'j.servers.gedis.test()'
+        """
 
         cl = j.clients.zdb.testdb_server_start_client_get(start=start)  #starts & resets a zdb in seq mode with name test       
 
@@ -178,5 +181,7 @@ class GedisFactory(JSConfigBase):
         gedis = self.configure(instance="test",port=8888,host="localhost",app_dir=dest,ssl=False,\
             zdb_instance = "test",
             websockets_port=9999,secret = "1234")
+
+        gedis.start()
 
         from IPython import embed;embed(colors='Linux')

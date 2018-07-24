@@ -4,7 +4,7 @@ from js9 import j
 
 server = j.servers.gedis.configure(host = "{{config.host}}", port = {{config.port}}, \
     websockets_port = {{config.websockets_port}}, ssl = "{{config.ssl}}", secret = "{{config.secret}}", \
-    apps_dir = "{{config.apps_dir}}", instance='{{instance}}',configureclient=True)
+    app_dir = "{{config.app_dir}}", instance='{{instance}}',configureclient=True)
 
 
 print("[-] starting server")

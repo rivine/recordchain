@@ -3,7 +3,7 @@ print("[-] starting server")
 
 #TODO, can we autoconfigure client & server, is all for test anyhow
 
-server = j.servers.gedis.configure(host = "localhost", port = "8000", websockets_port = "8001", ssl = False, secret = "", apps_dir = "", instance='orderbook')
+server = j.servers.gedis.configure(host = "localhost", port = "8000", websockets_port = "8001", ssl = False, secret = "", app_dir = "", instance='orderbook')
 server.start()
 print("[-] server started")
 

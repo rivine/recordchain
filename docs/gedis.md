@@ -1,13 +1,20 @@
 # Gedis
 
-A framework that allows for creating applications that are `redis protocol` compatible
+Application server which amongst others use the `redis protocol`
 and have their own set of `custom redis commands`
-Gedis exposes these commands automatically.
 
-You create an `app/instance server` and you can get a `client` that can connect tpo your app
+Functions of gedis
+
+- interfaces
+    - redis commands (tcp)
+    - websockets (to use from javascript library)
+- super easy to create
+    - goal is no boilerplate code, all code gets generated
+    - schema's are in 
+
+
+You create an `app/instance server` and you can get a `client` that can connect to your app
 and execute the commands easily
-
-Since `gedis` is a `TCP` level framework, it's very fast and efficient
 
 A `Gedis` server uses [BCDB DB](/JumpScale9RecordChain/data/bcdb/README.md)
 that saysm, you can add `schema` toml files to your generated server directory and 
@@ -17,25 +24,18 @@ This is the `Model layer`
 
 ### installation
 
+see [recordchain_install](/recordchain_install.md)
+
 ```bash
-##OPTIONAL IF UBUNTU
-#apt install libssl-dev`
-
-#install recordchain 
-js9_code get --url="git@github.com:rivine/recordchain.git"
-cd $HOMEDIR/code/github/rivine/recordchain && sh install.sh
-
 #build zdb
 js9 'j.servers.zdb.build()'
 ```
 
-### Tests
+### Test
 
 ```bash
 cd $HOMEDIR/code/github/rivine/recordchain/apps/orderbook/
 python3 test.py
-js9 'j.clients.gedis.test()'
-js9 'j.servers.gedis.test()'
 ```
 
 ### Running
@@ -43,13 +43,15 @@ js9 'j.servers.gedis.test()'
 **Hello world example**
 Get the `example` app in [HERE](/JumpScale9RecordChain/apps/)
 
-- Configure & Run server `j.servers.gedis.get('example').start(background=False, reset=True)`
-- Configure & Get client `client = j.clients.gedis.get('example', reset=True)`
-- execute system command `ping`
-    ```
-    client.system.ping()
-    b'PONG'
-    ```
+```python
+#Configure & Run server
+j.servers.gedis.get('example').start(background=False, reset=True)
+#Configure & Get client 
+client = j.clients.gedis.get('example', reset=True)
+#execute system command ping
+assert client.system.ping()==b'PONG'
+```
+
 - Instance name here refers to application name. In this case our app is called `example`
 - During configuration phase for this helloworld example, leve `apps_dir` empty for both server & client
 This ensures that apps dir will be set to `/JumpScale9RecordChain/apps/` and that the `helloworld` app called `example` will be loaded from there

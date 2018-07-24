@@ -1,6 +1,6 @@
 # Gedis
 
-An Application server with different interfaces allowing to make easy apps easily
+A simple application server, allowing you to write apps easily and expose APIs automatically through different interfaces
 
 #### Interfaces
 - **redis protocol / (tcp)** compatible with any redis client
@@ -17,7 +17,6 @@ An Application server with different interfaces allowing to make easy apps easil
         client = j.clients.gedis.get('test')
         client.system.ping() # SHould return "PONG"
         ```
-    - You can load **`already-existing`** apps or **`create new apps`**
 
 - **Clients**
     - Python (independent of server and generates everything necessary for it to run)
@@ -91,12 +90,12 @@ and then you can load apps from there
 
 - just create a `toml` file(s) start(s) with `schema` and add some schemas inside it
 - [Example](https://github.com/rivine/recordchain/blob/master/apps/orderbook/schema.toml)
-- Now when `gedis` server starts, it will create DB tables from your schemas and db tables will be available at `j.servers.gedis.latest.db.tables`.
+- Now when `gedis` server starts, it will create DB tables from your schemas and db tables will be available at `j.servers.gedis.latest.db.tables` if you want to access them from your app
 - when you get your python client you will find `CRUD` operations in client like
-    - `client.models.{model}.new()`
-    - `client.models.{model}.set()`
-    - `client.models.{model}.get()`
-    - `client.models.{model}.find()`
+    - `client.models.{db_table_name}.new()`
+    - `client.models.{db_table_name}.set()`
+    - `client.models.{db_table_name}.get()`
+    - `client.models.{db_table_name}.find()`
 
 
 ## Add API to your app
@@ -125,14 +124,13 @@ and then you can load apps from there
     - This will expose in the client the functions `client.system.ping()`,`client.system.ping_bool()` that when executed will connect to server and execute them there
 
 
-- For each API / function, you can sepecify `schema in` & `schema_out`
+- For each API / function, you may sepecify `schema in` & `schema_out` if needed
     - **Schema out**
-        - If you want result of cunction to be an object of certain type, you add extra argument to function signature called `schema_out`
+        - If you want result of function to be an object of certain type, you add extra argument to function signature called `schema_out`
         and in your docstring you define the schema for that object, or refer to another schema by its URL
         ```
         def test(schema_out):
             """
-            some test method, which returns something easy
             ```out
             name = "" (S)
             nr = 0 (I)
@@ -150,7 +148,7 @@ and then you can load apps from there
 
         - example
         ```
-        def test(obj, schema_out):
+        def test(in_obj, schema_out):
             """
             some test method, which returns something easy
             ```in
@@ -163,22 +161,38 @@ and then you can load apps from there
             ```
             """
             o=schema_out.new()
-            o.name = obj.name
-            o.nr = obj.nr
+            o.name = in_obj.name
+            o.nr = in_obj.nr
             return o
         ```
-
+        In this case, client will expose the full function signature like `client.system.test(name="", nr=0)` and result will be an object containing `name & nr` as well
     - In `in` & `out` schemas, you may refer to another predefined schema in a `toml` file in your app, you refer to it by `URL` preceeded by `!`
 
 
-    ```
-    def test(wallet, schema_out):
-        """
-        ```in
-        !threeefoldtoken.wallet
         ```
-        return wallet.ipaddr
-    ```
+        def test(wallet):
+            """
+            ```in
+            !threeefoldtoken.wallet
+            ```
+            return wallet.ipaddr
+        ```
+    - Other examples
+        - You define all the types of passed args in `in` schema
+        ```
+        def list_my_sell_orders(self, sortby, desc, total_items_in_page, page_number, schema_out):
+            """
+            ```in
+                sortby = id (S) # Field name to sort with
+                desc = (B) # Descending order
+                total_items_in_page = 20 (I)
+                page_number = 1 (I)
+            ```
+            ```out
+                orders = (LO) !threefoldtoken.order.sell
+            ```
+            """
+        ```
 
 
 ## General Picture for how Server & client work and comunicate

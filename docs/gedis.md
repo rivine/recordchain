@@ -29,9 +29,9 @@ An Application server with different interfaces allowing to make easy apps easil
           ```
           <script src="{server-ip}:{websockets_port}/static/client.js">
           ```
-    - DB
-        - [BCDB](./bcdb.md) DB support
-        - ORM like application layer supported by [`j.data.schema` frameowrk](./schema.md)
+- **DB**
+    - [BCDB](./bcdb.md) DB support
+    - ORM like application layer supported by [`j.data.schema` frameowrk](./schema.md)
 
 
 ### installation

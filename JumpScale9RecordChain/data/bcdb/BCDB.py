@@ -53,5 +53,5 @@ class BCDB(JSConfigBase):
         return self.tables
 
     def destroy(self):
-        self.server.destroy()
+        self.zdb.destroy()
         

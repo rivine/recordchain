@@ -23,15 +23,30 @@ class ZDBFactory(JSConfigBase):
         data["port"] = str(port)
         data["mode"] = str(mode)
         data["namespace"] = str(namespace)
-        data["id_enable"] = bool(id_enable)
+        # data["id_enable"] = bool(id_enable)
         data["adminsecret_"] = adminsecret
         data["secret_"] = secret
         return self.get(instance=instance, data=data, create=True, interactive=False, started=started)
 
-    def test(self):
+    def test(self,start=True):
         """
-        js9 'j.data.zdb.test()'
+        js9 'j.clients.zdb.test(start=False)'
 
         """
-        db = self.configure(port=9900)
-        db.test()
+
+        db = j.servers.zdb.configure(instance="test", adminsecret="1234", reset=True, mode="seq", id_enable=False)
+
+        if start:    
+            db.stop()
+            db.start()
+
+        cl = db.client_get()
+        cl.test()
+
+        from IPython import embed;embed(colors='Linux')
+        s
+
+        # db = self.get("test")
+
+        # db = self.configure(port=9900)
+        

@@ -21,22 +21,24 @@
 
 **Pre-requisites**
 
-- Install zerodb
-    ```bash
-    js9_code get --url="git@github.com:rivine/0-db.git"`
-    cd $HOMEDIR/code/github/rivine/0-db && make && cp bin/zdb /opt/bin/`
-    ```
+
+Install zerodb
+  
+see [recordchain install](/rc_install.md), also make sure zdb has been build.
+
 
 **Start BCDB**
+
 - You can provide an `adminsecret`
 - If `reset` is set to `True`, old data is destroyed
 - Start server ```j.data.bcdb.db_start(instance='example',adminsecret='my_secret', reset=False)```
 
-
 **Get client**
+
 - Use: ```db = j.data.bcdb.get("example")```
 
 **Create db tables from schema file(s)**
+
 - Assuming you have schema file(s) in `/home/hamdy/schemas` where every schema file starts with  the word `schema`
 - Each must provide `@name` field and MUST not be empty as this will be taken as table name
 - Use: 
@@ -48,6 +50,7 @@
     ```
 
 **Create db tables from schema strings**
+
 - Define schemas as following:
     ```python
     schema = """
@@ -114,6 +117,7 @@
     ```
 
 **Find operations on a table**
+
 ```python
 res = t.find(name="name1", email="info2@something.com")
 assert len(res) == 0

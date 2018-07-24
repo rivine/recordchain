@@ -65,18 +65,19 @@ class GedisClientFactory(JSConfigBase):
         secret="",
         ssl=True,
         ssl_cert_file="",
-        reset=False
+        reset=False, get=True
     ):
 
         data = {}
 
         data["host"] = host
-        data["port"] = port
+        data["port"] = str(port)
         data["adminsecret_"] = secret
         data["ssl"] = ssl
         data['sslkey'] = ssl_cert_file
 
-        return self.get(instance=instance, data=data, reset=reset)
+        if get:
+            return self.get(instance=instance, data=data, reset=reset)
 
     @property
     def template_engine(self):

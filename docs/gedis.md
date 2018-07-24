@@ -24,12 +24,7 @@ This is the `Model layer`
 
 ### installation
 
-see [recordchain_install](/recordchain_install.md)
-
-```bash
-#build zdb
-js9 'j.servers.zdb.build()'
-```
+see [recordchain install](/rc_install.md), also make sure zdb has been build.
 
 ### Test
 
@@ -74,6 +69,7 @@ you can change this if you want to create/load apps elsewhere
     - models allow for `CRUD` operations on a table
 
 **Client**
+
 - Creates `/opt/var/codegen/{instance}/client` directory in the 1st time
 - Fetch server for all schemas loaded inside it
 - Create `/opt/var/codegen/{instance}/server`

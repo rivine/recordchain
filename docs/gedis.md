@@ -131,10 +131,10 @@ and then you can load apps from there
         ```
         def test(schema_out):
             """
-            ```out
+            \```out
             name = "" (S)
             nr = 0 (I)
-            ```
+            \```
             """
             o=schema_out.new()
             o.name = "hamdy"

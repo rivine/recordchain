@@ -37,10 +37,11 @@ class GedisFactory(JSConfigBase):
             instance="test",
             port=8889,
             host="localhost",
-            apps_dir="",
+            app_dir="",
             ssl=False,
             websockets_port=9901,
             secret = "",
+            zdb_instance = "",
             path = "",
             reset = False
         ):
@@ -64,14 +65,16 @@ class GedisFactory(JSConfigBase):
             raise RuntimeError("cannot do new app because app or schema dir does exist.")  
 
         
-        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/example")
+        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/template")
         dest = path
         self.logger.info("copy templates to:%s"%dest)
 
-        gedis = self.configure(instance=instance,port=port,host=host,apps_dir=path,ssl=ssl,\
-            websockets_port=websockets_port,secret = "")
+        gedis = self.configure(instance=instance,port=port,host=host,app_dir=path,ssl=ssl,\
+            websockets_port=websockets_port,secret = "",zdb_instance=zdb_instance)
 
-        j.tools.jinja2.copy_dir_render(src,dest,reset=reset, j=j,name="aname", config=gedis.config.data, instance=instance)        
+        j.tools.jinja2.copy_dir_render(src,dest,reset=reset, j=j,name="aname", config=gedis.config.data, instance=instance)     
+
+        self.logger.info("gedis app now in: '%s'\n    do:\n    cd %s;sh start.sh"%(dest,dest))   
 
 
 
@@ -80,25 +83,27 @@ class GedisFactory(JSConfigBase):
             instance="test",
             port=8889,
             host="localhost",
-            apps_dir="",
+            app_dir="",
             ssl=False,
             websockets_port=9901,
             secret = "",
+            zdb_instance = "",
             interactive = False,
             configureclient = True
     ):
 
-        if apps_dir == "":
-            apps_dir = j.sal.fs.getcwd()
+        if app_dir == "":
+            app_dir = j.sal.fs.getcwd()
             
 
         data = {
             "port": str(port),
             "host": host,
             "adminsecret_": secret,
-            "apps_dir":apps_dir,
+            "app_dir":app_dir,
             "ssl": ssl,
-            "websockets_port" :str(websockets_port)
+            "websockets_port" :str(websockets_port),
+            "zdb_instance" :zdb_instance
         }
 
         if configureclient:
@@ -158,3 +163,20 @@ class GedisFactory(JSConfigBase):
         if self._code_test_template is None:
             self._code_test_template = self.template_engine.get_template("test.py")
         return self._code_test_template
+
+
+    def test(self):
+
+        cl = j.clients.zdb.testdb_server_start_client_get(start=start)  #starts & resets a zdb in seq mode with name test       
+
+        dest =  j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/example")
+        self.logger.info("copy templates to:%s"%dest)
+
+        #remove configuration of the gedis factory
+        self.delete("test")
+
+        gedis = self.configure(instance="test",port=8888,host="localhost",app_dir=dest,ssl=False,\
+            zdb_instance = "test",
+            websockets_port=9999,secret = "1234")
+
+        from IPython import embed;embed(colors='Linux')

@@ -103,30 +103,6 @@ class ZDBClientNS(JSBASE):
         key = struct.unpack("<I",self.redis.execute_command("SET", key, data))[0]
         return key
 
-        # elif self.id_enable:
-        #     if id is None:
-        #         id = self._indexfile.count
-        #     if checknew:
-        #         if not j.data.types.bytes.check(data):
-        #             raise j.exceptions.Input("data needs to be binary when checknew feature")
-        #         dataInDB = self.get(id)
-        #         if data == dataInDB:
-        #             return (id, False)
-
-        #     pos = self.redis.execute_command("SET", id, data)
-        #     self._indexfile.set(id, pos)
-
-        #     if checknew:
-        #         return (id, True)
-
-        #     return id
-
-        # else:
-        #     if id is not None or key is not None:
-        #         raise j.exceptions.Input("id and key need to be None because key and id_enable are False")
-        #     pos = self.redis.execute_command("SET", key, data)
-        #     return pos
-
     def get(self, key):
         """[summary]
 
@@ -193,7 +169,7 @@ class ZDBClientNS(JSBASE):
                 res[key] = str(val).strip()
         return res
 
-    def list(self, key_start=None, direction="forward", nrrecords=None,result=None):
+    def list(self, key_start=None, direction="forward", nrrecords=100000,result=None):
         if result is None:
             result=[]
         def do(arg,result):
@@ -229,7 +205,7 @@ class ZDBClientNS(JSBASE):
         else:
             CMD = "RSCAN"
 
-
+        nr=0
         while nr<nrrecords:
             try:
                 if keyb in [None,""]:
@@ -252,6 +228,7 @@ class ZDBClientNS(JSBASE):
                 result = method(key_new, data,result)
 
             keyb = keyb_new
+            nr+=1
 
         return result
 

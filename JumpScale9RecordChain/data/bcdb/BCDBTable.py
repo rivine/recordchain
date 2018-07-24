@@ -6,6 +6,7 @@ import struct
 JSBASE = j.application.jsbase_get_class()
 
 
+
 class BCDBTable(JSBASE):
 
     def __init__(self,bcdb,schema,name=""):
@@ -30,12 +31,12 @@ class BCDBTable(JSBASE):
             if not schema.name:
                 raise RuntimeError("schema name cannot be empty")
 
-        self.db =  self.bcdb.zdb.client_get(namespace=self.name, secret=s.config.data["adminsecret_"])
+        self.db =   self.bcdb.zdbclient.namespace_new(name=name, maxsize=0, die=False)
+        self.index = j.core.db  #only for now, will need better solution in future
 
         self.schema = schema
-        self.index = j.core.db  #only for now
 
-        self._index_key = "index:%s:%s"%(self.db.instance,self.name)
+        self._index_key = "index:%s:%s"%(self.bcdb.zdbclient.instance,self.name)
 
         self.index_load()
 

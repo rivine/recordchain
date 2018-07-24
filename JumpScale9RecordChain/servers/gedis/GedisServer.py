@@ -22,7 +22,8 @@ TEMPLATE = """
     websockets_port = "9901"
     ssl = false
     adminsecret_ = ""
-    apps_dir = ""
+    app_dir = ""
+    zdb_instance = ""
     """
 
 
@@ -59,18 +60,19 @@ class GedisServer(StreamServer, JSConfigBase):
             sys.path.append(self.code_generated_dir)
 
         # make sure apps dir is created if not exists
-        self.apps_dir = self.config.data["apps_dir"] or j.sal.fs.joinPaths(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'apps')
-        j.sal.fs.createDir(self.apps_dir)
+        self.app_dir = self.config.data["app_dir"]
+        
 
-        if self.apps_dir not in sys.path:
-            sys.path.append(self.apps_dir)
+
+        if self.app_dir not in sys.path:
+            sys.path.append(self.app_dir)
 
         # make sure static dir exists
         self.static_files_path = j.sal.fs.joinPaths(self.code_generated_dir, 'static')
         j.sal.fs.createDir(self.static_files_path)
 
         # make sure app dir is created if not exists
-        self.app_dir = j.sal.fs.joinPaths(self.apps_dir, self.instance)
+        self.app_dir = j.sal.fs.joinPaths(self.app_dir, self.instance)
         j.sal.fs.createDir(self.app_dir)
 
         p = j.sal.fs.joinPaths(self.app_dir, '__init__.py')

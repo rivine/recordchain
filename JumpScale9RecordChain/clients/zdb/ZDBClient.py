@@ -87,9 +87,11 @@ class ZDBClient(JSConfigBase):
     def namespace_system(self):
         return self.namespace_get("default")
         
-    def namespace_new(self, name, secret="", maxsize=0):
+    def namespace_new(self, name, secret="", maxsize=0, die=False):
         if self.namespace_exists(name):
-            raise RuntimeError("namespace already exists:%s" % name)
+            if die:
+                raise RuntimeError("namespace already exists:%s" % name)
+            return self.namespace_get(name)
 
         if secret is "" and "default" in self.secrets.keys():
             secret = self.secrets["default"]

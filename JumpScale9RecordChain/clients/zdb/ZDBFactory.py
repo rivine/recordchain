@@ -43,10 +43,4 @@ class ZDBFactory(JSConfigBase):
         cl = db.client_get()
         cl.test()
 
-        from IPython import embed;embed(colors='Linux')
-        s
-
-        # db = self.get("test")
-
-        # db = self.configure(port=9900)
-        
+        #TODO: *1 need to test the other modes as well

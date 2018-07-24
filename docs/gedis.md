@@ -134,7 +134,7 @@ and then you can load apps from there
             ```out
             name = "" (S)
             nr = 0 (I)
-            ``
+            ```
             """
             o=schema_out.new()
             o.name = "hamdy"
@@ -147,7 +147,7 @@ and then you can load apps from there
         - You define `in` schema in docstring
 
         - example
-        ```python
+        ~~~python
         def test(in_obj, schema_out):
             """
             some test method, which returns something easy
@@ -164,22 +164,20 @@ and then you can load apps from there
             o.name = in_obj.name
             o.nr = in_obj.nr
             return o
-        ```
+        ~~~
         In this case, client will expose the full function signature like `client.system.test(name="", nr=0)` and result will be an object containing `name & nr` as well
     - In `in` & `out` schemas, you may refer to another predefined schema in a `toml` file in your app, you refer to it by `URL` preceeded by `!`
-
-
-        ```
+        ~~~
         def test(wallet):
             """
             ```in
             !threeefoldtoken.wallet
             ```
             return wallet.ipaddr
-        ```
+        ~~~
     - Other examples
         - You define all the types of passed args in `in` schema
-        ```
+        ~~~
         def list_my_sell_orders(self, sortby, desc, total_items_in_page, page_number, schema_out):
             """
             ```in
@@ -192,7 +190,7 @@ and then you can load apps from there
                 orders = (LO) !threefoldtoken.order.sell
             ```
             """
-        ```
+        ~~~
 
 
 ## General Picture for how Server & client work and comunicate
@@ -225,6 +223,3 @@ and then you can load apps from there
 - For each namespace registered in server
     - create `/opt/var/codegen/{instance}/client/cmds_{instance}_{namespace}.py` file containign all commands in that name space
     - for each command, make sure if `schema_in` for a command is provided to expand its properties in the client command function arguments
-
-
-

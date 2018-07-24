@@ -128,7 +128,7 @@ and then you can load apps from there
     - **Schema out**
         - If you want result of function to be an object of certain type, you add extra argument to function signature called `schema_out`
         and in your docstring you define the schema for that object, or refer to another schema by its URL
-        ~~~
+        ~~~python
         def test(schema_out):
             """
             ```out
@@ -167,7 +167,7 @@ and then you can load apps from there
         ~~~
         In this case, client will expose the full function signature like `client.system.test(name="", nr=0)` and result will be an object containing `name & nr` as well
     - In `in` & `out` schemas, you may refer to another predefined schema in a `toml` file in your app, you refer to it by `URL` preceeded by `!`
-        ~~~
+        ~~~python
         def test(wallet):
             """
             ```in
@@ -177,7 +177,7 @@ and then you can load apps from there
         ~~~
     - Other examples
         - You define all the types of passed args in `in` schema
-        ~~~
+        ~~~python
         def list_my_sell_orders(self, sortby, desc, total_items_in_page, page_number, schema_out):
             """
             ```in

@@ -16,7 +16,7 @@ class BCDBTable(JSBASE):
 
         self.bcdb = bcdb
 
-        s=bcdb.server
+        s=bcdb.zdb
 
         self.name = name
 
@@ -32,7 +32,7 @@ class BCDBTable(JSBASE):
             if not schema.name:
                 raise RuntimeError("schema name cannot be empty")
 
-        self.db =  self.bcdb.server.client_get(namespace=self.name, secret=s.config.data["adminsecret_"])
+        self.db =  self.bcdb.zdb.client_get(namespace=self.name, secret=s.config.data["adminsecret_"])
 
         self.schema = schema
         self.index = j.core.db  #only for now

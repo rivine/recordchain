@@ -4,6 +4,7 @@ from pprint import pprint as print
 import os
 import struct
 import copy
+import redis
 
 TEMPLATE = """
 addr = "localhost"
@@ -12,7 +13,6 @@ namespace = ""
 adminsecret_ = ""
 secret_ = ""
 mode = "direct"
-id_enable = true
 delete = false
 """
 
@@ -30,8 +30,7 @@ class ZDBClient(JSConfigBase):
         config params:
             secret {str} -- is same as namespace id, is a secret to access the data (default: {None})
             port {[int} -- (default: 9900)
-            mode -- user,direct,sequential see https://github.com/rivine/0-db/blob/master/README.md
-            id_enabled -- if mode: user or sequential then key_enabled needs to be False, there will be pos_id for each change in the DB
+            mode -- user,direct,seq(uential) see https://github.com/rivine/0-db/blob/master/README.md
             namespace -- zdb supports namespace
             adminsecret does not have to be set, but when you want to create namespaces it is a must
 
@@ -43,14 +42,14 @@ class ZDBClient(JSConfigBase):
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
 
-        if self.config.data["id_enable"]:
-            ipath = j.dirs.VARDIR + "/zdb/index/%s.db" % instance
-            j.sal.fs.createDir(j.dirs.VARDIR + "/zdb/index")
-            if reset:
-                j.sal.fs.remove(ipath)
-            self._indexfile = j.data.indexfile.get(name=instance, path=ipath, nrbytes=6)
-        else:
-            self._indexfile = None
+        # if self.config.data["id_enable"]:
+        #     ipath = j.dirs.VARDIR + "/zdb/index/%s.db" % instance
+        #     j.sal.fs.createDir(j.dirs.VARDIR + "/zdb/index")
+        #     if reset:
+        #         j.sal.fs.remove(ipath)
+        #     self._indexfile = j.data.indexfile.get(name=instance, path=ipath, nrbytes=6)
+        # else:
+        #     self._indexfile = None
         
         if not started:
             return
@@ -64,22 +63,22 @@ class ZDBClient(JSConfigBase):
         if self.config.data["adminsecret_"] is not "" and self.config.data["adminsecret_"] is not None:
             self.client.execute_command("AUTH", self.config.data["adminsecret_"])
 
-        self.id_enable = bool(self.config.data["id_enable"])
+        # self.id_enable = bool(self.config.data["id_enable"])
 
-        if self.id_enable:
-            self.config.data["mode"] == "direct"
+        # if self.id_enable:
+        #     self.config.data["mode"] == "direct"
 
-        self.key_enable = False
-        if self.config.data["mode"] == "user":
-            if self.id_enable:
-                raise RuntimeError("cannot have id_enable and user mode on db")
-            self.key_enable = True
-        if self.config.data["mode"] == "direct":
-            self.key_enable = False
-        if self.config.data["mode"] == "seq":
-            self.key_enable = False
-            if self.id_enable:
-                raise RuntimeError("cannot have id_enable and seq mode on db")
+        # self.key_enable = False
+        # if self.config.data["mode"] == "user":
+        #     if self.id_enable:
+        #         raise RuntimeError("cannot have id_enable and user mode on db")
+        #     self.key_enable = True
+        # if self.config.data["mode"] == "direct":
+        #     self.key_enable = False
+        # if self.config.data["mode"] == "seq":
+        #     self.key_enable = False
+        #     if self.id_enable:
+        #         raise RuntimeError("cannot have id_enable and seq mode on db")
 
         nsname = self.config.data["namespace"]
         secret = self.config.data["secret_"]
@@ -115,76 +114,86 @@ class ZDBClient(JSConfigBase):
         del redis.response_callbacks['SET']
         return redis
 
-    def set(self, data, id=None, key=None, checknew=False):
+    def _key_get(self,key,set=True):
+        
+        if self.mode=="seq":
+            if key is None:
+                key=""
+            else:
+                key = struct.pack("<I", key) 
+        elif self.mode=="direct":
+            if set:
+                if not key in ["",None]:
+                    raise j.exceptions.Input("key need to be None or empty string")
+                if key is None:
+                    key=""                
+            else:
+                if key in ["",None]:
+                    raise j.exceptions.Input("key cannot be None or empty string")                
+        elif self.mode=="user":
+            if key in ["",None]:
+                raise j.exceptions.Input("key cannot be None or empty string")
+        return key        
+
+    def set(self, data, key=None):
         """[summary]
 
         Arguments:
             data {str or binary} -- the payload can be e.g. capnp binary
 
         Keyword Arguments:
-            id {int} -- needs id_enabled to be on true, can be used to find info back based on id (default: {None})
-                        if None and id_enabled==True then will autoincrement if not given
+            key {int} -- when used in sequential mode
+                        can be None or int
+                        when None it means its a new object, so will be appended
 
-            key {[type]} -- string, only usable if key_enable == True
+            key {[type]} -- string, only usable for user mode
 
-        @PARAM checknew, if True will return (key,new) and new is bool
+
         """
-        if self.mode=="seq":
-            if id is None:
-                id=""
-            else:
-                id = struct.pack("<I", id)
-            return struct.unpack("<I",self.client.execute_command("SET", id, data))[0]
-        elif self.key_enable:
-            if key is None:
-                raise j.exceptions.Input("key cannot be None")
-            self.client.execute_command("SET", key, data)
-            return key
+        key = self._key_get(key,set=True)
+        
+        key = struct.unpack("<I",self.client.execute_command("SET", key, data))[0]
+        return key
 
-        elif self.id_enable:
-            if id is None:
-                id = self._indexfile.count
-            if checknew:
-                if not j.data.types.bytes.check(data):
-                    raise j.exceptions.Input("data needs to be binary when checknew feature")
-                dataInDB = self.get(id)
-                if data == dataInDB:
-                    return (id, False)
+        # elif self.id_enable:
+        #     if id is None:
+        #         id = self._indexfile.count
+        #     if checknew:
+        #         if not j.data.types.bytes.check(data):
+        #             raise j.exceptions.Input("data needs to be binary when checknew feature")
+        #         dataInDB = self.get(id)
+        #         if data == dataInDB:
+        #             return (id, False)
 
-            pos = self.client.execute_command("SET", id, data)
-            self._indexfile.set(id, pos)
+        #     pos = self.client.execute_command("SET", id, data)
+        #     self._indexfile.set(id, pos)
 
-            if checknew:
-                return (id, True)
+        #     if checknew:
+        #         return (id, True)
 
-            return id
+        #     return id
 
-        else:
-            if id is not None or key is not None:
-                raise j.exceptions.Input("id and key need to be None because key and id_enable are False")
-            pos = self.client.execute_command("SET", key, data)
-            return pos
+        # else:
+        #     if id is not None or key is not None:
+        #         raise j.exceptions.Input("id and key need to be None because key and id_enable are False")
+        #     pos = self.client.execute_command("SET", key, data)
+        #     return pos
 
     def get(self, key):
         """[summary]
 
-        Arguments:
-            key {[type]} - - [description] is id or key
+        Keyword Arguments:
+            key {int} -- when used in sequential mode
+                        can be None or int
+                        when None it means its a new object, so will be appended
+
+            key {[type]} -- string, only usable for user mode
+
+            key {[6 byte binary]} -- is binary position is for direct mode
+
         """
-        if self.mode=="seq":
-            id = struct.pack("<I", key)
-            return self.client.execute_command("GET", id)
-        elif self.key_enable:
-            return self.client.execute_command("GET", key)
-        elif self.id_enable:
-            if not j.data.types.int.check(key):
-                raise j.exceptions.Input("key needs to be int")
-            pos = self._indexfile.get(key)
-            if pos == b"":
-                raise j.exceptions.Input("could not find data with id:%s in database" % key)
-            return self.client.execute_command("GET", pos)
-        else:
-            return self.client.execute_command("GET", key)
+        key = self._key_get(key,set=False)
+        return self.client.execute_command("GET", key)
 
     def exists(self, key):
         """[summary]
@@ -192,18 +201,23 @@ class ZDBClient(JSConfigBase):
         Arguments:
             key {[type]} - - [description] is id or key
         """
-        if self.mode=="seq":
-            id = struct.pack("<I", key)
-            return self.client.execute_command("GET", id) is not None
-        elif self.id_enable:
-            if not j.data.types.int.check(key):
-                raise j.exceptions.Input("key needs to be int")
-            pos = self._indexfile.get(key)
-            if pos == b'':
-                return False
-            return self.client.execute_command("EXISTS", pos)
-        else:
-            return self.client.execute_command("EXISTS", pos)
+        key = self._key_get(key,set=False)
+
+        return self.client.execute_command("EXISTS", key) == 1
+
+
+        # if self.mode=="seq":
+        #     id = struct.pack("<I", key)
+        #     return self.client.execute_command("GET", id) is not None
+        # elif self.id_enable:
+        #     if not j.data.types.int.check(key):
+        #         raise j.exceptions.Input("key needs to be int")
+        #     pos = self._indexfile.get(key)
+        #     if pos == b'':
+        #         return False
+        #     return self.client.execute_command("EXISTS", pos)
+        # else:
+        #     return self.client.execute_command("EXISTS", pos)
 
     @property
     def nsinfo(self):
@@ -231,13 +245,16 @@ class ZDBClient(JSConfigBase):
                 res[key] = str(val).strip()
         return res
 
-    def list(self, start=None, end=None):
-        if self.id_enable == False:
-            raise RuntimeError("only id_enable supported for list")
-        res = self._indexfile.list(start=start, end=end)
-        return [i for i in res.keys()]
+    def list(self, key_start=None, direction="forward", nrrecords=None,result=None):
+        if result is None:
+            result=[]
+        def do(arg,result):
+            result.append(arg)
+            return result
+        self.iterate(do,key_start=key_start,direction=direction,nrrecords=nrrecords,_keyonly=True,result=result)
+        return result
 
-    def iterate(self, method, start=None, end=None, result=None):
+    def iterate(self, method, key_start=None, direction="forward", nrrecords=100000, _keyonly=False, result=None):
         """walk over the data and apply method as follows
 
         ONLY works for when id_enable is True
@@ -253,47 +270,40 @@ class ZDBClient(JSConfigBase):
             method {python method} -- will be called for each item found in the file
 
         Keyword Arguments:
-            start {int} -- start id (default: {0})
-            end {int} -- end id (default: {0}, which means end of file)
+            key_start is the start key, if not given will be start of database when direction = forward, else end
+
         """
-        if self.mode=="seq":
-            if start is None:
-                start = 0
-            id=start
-            while True:
-                try:
-                    data = self.get(id)
-                except Exception as e:
-                    from IPython import embed;embed(colors='Linux')
-                if data==None:
-                    break
-                result = method(id, data, result=result)
-                id+=1
-                if end is not None and id > end:
-                    break
-                       
-        else:        
-            if self.id_enable == False:
-                raise RuntimeError("only id_enable supported for iterate")
+        if result is None:
+            result=[]
+        keyb = self._key_get(key_start,set=False)
+        if direction=="forward":
+            CMD = "SCANX"
+        else:
+            CMD = "RSCAN"
 
-            if start is not None:
-                id = start
+
+        while nr<nrrecords:
+            try:
+                if keyb in [None,""]:
+                    keyb_new = self.client.execute_command(CMD)[0]
+                else:
+                    keyb_new = self.client.execute_command(CMD,keyb)[0]
+            except redis.ResponseError as e:
+                if e.args[0]=='No more data':
+                    return result
+
+            if self.mode == "seq":
+                key_new = struct.unpack("<I",keyb_new)[0]
             else:
-                id = 0
+                key_new = keyb_new
 
-            self._indexfile._f.seek(self._indexfile._offset(id))
+            if _keyonly:
+                result = method(key_new,result)
+            else:
+                data = self.client.execute_command("GET", keyb_new)
+                result = method(key_new, data,result)
 
-            while True:
-                pos = self._indexfile._f.read(self._indexfile.nrbytes)
-                if len(pos) < self._indexfile.nrbytes:
-                    break  # EOF
-
-                data = self.client.execute_command("GET", pos)
-
-                result = method(id, data, result=result)
-                id += 1
-                if end is not None and id > end:
-                    break
+            keyb = keyb_new
 
         return result
 
@@ -323,10 +333,7 @@ class ZDBClient(JSConfigBase):
     @property
     def count(self):
         i = self.nsinfo
-        if self.id_enable:
-            return self._indexfile.count
-        else:
-            return i["entries"]
+        return i["entries"]
 
     def test(self):
 
@@ -336,22 +343,31 @@ class ZDBClient(JSConfigBase):
         id = self.set(b"r")
         assert id == 0
         assert self.get(id) == b"r"
-        newid, exists = self.set(b"r", id=id, checknew=True)
-        assert exists is False
-        assert newid == id
+
+        id2= self.set(b"b")
+        assert id2 == 1
+
+        #NEED TO DO THIS WHEN DB SUPPORTS NOT TO UPDATE EXISTING VALUES
+        # newid, exists = self.set(b"r", id=id, checknew=True)
+        # assert exists is False
+        # assert newid == id
 
         nr = self.nsinfo["entries"]
+        assert nr==2
 
-        self.set("test", 1)
-        print (self.nsinfo)
+        # self.set("test", 1)
+        # print (self.nsinfo)
 
         # test the list function
-        assert self.list(0, 0) == [0]
-        assert self.list(0, 1) == [0, 1]
-        assert self.list(1, 1) == [1]
+        assert self.list() == [0, 1]
+        assert self.list(1) == []
+        assert self.list(0) == [1]
 
-        res = self.list()
-        assert res == [0, 1]
+
+
+        from IPython import embed;embed(colors='Linux')
+        ss
+
 
         print(res)
 

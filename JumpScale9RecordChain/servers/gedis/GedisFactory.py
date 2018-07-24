@@ -25,31 +25,87 @@ class GedisFactory(JSConfigBase):
     def get(
         self,
         instance='main',
-        data={}
+        data={},
+        interactive = True
     ):
 
-        return super(GedisFactory, self).get(instance=instance, data=data)
+        return super(GedisFactory, self).get(instance=instance, data=data, interactive=interactive)
 
-    def configure(
+
+    def new(
             self,
-            instance="main",
+            instance="test",
             port=8889,
             host="localhost",
             apps_dir="",
             ssl=False,
             websockets_port=9901,
             secret = "",
+            path = "",
+            reset = False
+        ):
+        """
+        creates new server on path, if not specified will be current path
+        will start from example app
+
+        js9 'j.servers.gedis.new(path="{{DIRS.TMPDIR}}/jumpscale/gedisapp/",reset=True)'
+
+        """
+        
+        if path == "":
+            path = j.sal.fs.getcwd()
+        else:
+            path = j.tools.jinja2.text_render(path)
+
+        if reset:
+            j.sal.fs.removeDirTree(path)
+
+        if j.sal.fs.exists("%s/app"%path) or j.sal.fs.exists("%s/schema"%path):
+            raise RuntimeError("cannot do new app because app or schema dir does exist.")  
+
+        
+        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/example")
+        dest = path
+        self.logger.info("copy templates to:%s"%dest)
+
+        gedis = self.configure(instance=instance,port=port,host=host,apps_dir=path,ssl=ssl,\
+            websockets_port=websockets_port,secret = "")
+
+        j.tools.jinja2.copy_dir_render(src,dest,reset=reset, j=j,name="aname", config=gedis.config.data, instance=instance)        
+
+
+
+    def configure(
+            self,
+            instance="test",
+            port=8889,
+            host="localhost",
+            apps_dir="",
+            ssl=False,
+            websockets_port=9901,
+            secret = "",
+            interactive = False,
+            configureclient = True
     ):
+
+        if apps_dir == "":
+            apps_dir = j.sal.fs.getcwd()
+            
+
         data = {
-            "port": port,
+            "port": str(port),
             "host": host,
             "adminsecret_": secret,
             "apps_dir":apps_dir,
             "ssl": ssl,
-            "websockets_port" :websockets_port
+            "websockets_port" :str(websockets_port)
         }
 
-        return self.get(instance, data)
+        if configureclient:
+            j.clients.gedis.configure(instance=instance,
+                host=host,port=port,secret=secret,ssl=ssl,reset=True,get=False)
+
+        return self.get(instance, data,interactive=interactive)
 
     def cmds_get(self,namespace,capnpbin):
         """

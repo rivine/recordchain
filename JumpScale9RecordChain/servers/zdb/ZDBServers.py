@@ -42,7 +42,7 @@ class ZDBServers(JSConfigBase):
         data["verbose"] = verbose
         data["id_enable"] = id_enable
 
-        instance = self.get(instance=instance, data=data)
+        instance = self.get(instance=instance, data=data,interactive=False)
         if reset:
             instance.destroy()
 

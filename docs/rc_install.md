@@ -12,3 +12,9 @@ sh install.sh
 
 ```
 
+## build zdb
+
+```bash
+#build zdb
+js9 'j.servers.zdb.build()'
+```

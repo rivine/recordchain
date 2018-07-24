@@ -13,17 +13,16 @@ class BCDBFactory(JSConfigBase):
         self.__jslocation__ = "j.data.bcdb"
         super().__init__(child_class=BCDB)
 
-    def db_start(self, instance, adminsecret, port=8888, reset=False):
+    def db_start(self, instance="test", adminsecret="", port=8888, reset=False):
         self.instance_last = instance
-        s = j.servers.zdb.configure(instance=instance, port=port, mode="direct", reset=reset, adminsecret=adminsecret, start=True, id_enable=True)
+        s = j.zdbs.zdb.configure(instance=instance, port=port, mode="seq", reset=reset, adminsecret=adminsecret, start=True, id_enable=True)
 
-    def get(self, instance):
-        s = j.servers.zdb.get(instance=instance)
+    def get(self, zdbclient, instance):
         data = {}
         data["zdb_adminsecret_"] = s.config.data["adminsecret_"]
         data["zdb_port"] = str(s.config.data["port"])
         bcdb = self._child_class(instance=instance, data=data, parent=self, interactive=False)
-        bcdb.server = s
+        bcdb.zdb = zdbclient
         return bcdb
 
     def test(self):

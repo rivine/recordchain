@@ -1,0 +1,7 @@
+# Sell Order
+@url = recordchain.digitalme.dnsrecord
+@name = dnsrecord
+comment = ""
+type = "" (S)   # A, AAAA, NS, MX, CNAME, TXT, PTR
+data = "" (S)     
+

@@ -13,7 +13,7 @@ class ZDBFactory(JSConfigBase):
         self.__jslocation__ = "j.clients.zdb"
         super(ZDBFactory, self).__init__(ZDBClient)
 
-    def configure(self, instance="main", namespace="default", secret="", addr="localhost", port=None, adminsecret="", mode="user", id_enable=False, started=True):
+    def configure(self, instance="main", secrets="", addr="localhost", port=None, adminsecret="", mode="user",encryptionkey=""):
 
         if port is None:
             raise InputError("port cannot be None")
@@ -22,11 +22,10 @@ class ZDBFactory(JSConfigBase):
         data["addr"] = addr
         data["port"] = str(port)
         data["mode"] = str(mode)
-        data["namespace"] = str(namespace)
-        # data["id_enable"] = bool(id_enable)
         data["adminsecret_"] = adminsecret
-        data["secret_"] = secret
-        return self.get(instance=instance, data=data, create=True, interactive=False, started=started)
+        data["secrets_"] = secrets
+        data["encryptionkey_"] = encryptionkey
+        return self.get(instance=instance, data=data, create=True, interactive=False)
 
     def test(self,start=True):
         """
@@ -34,13 +33,18 @@ class ZDBFactory(JSConfigBase):
 
         """
 
-        db = j.servers.zdb.configure(instance="test", adminsecret="1234", reset=True, mode="seq", id_enable=False)
+        #will delete the config info
+        self.delete(instance="test")
+
+        db = j.servers.zdb.configure(instance="test", adminsecret="123456", reset=True, mode="seq")
 
         if start:    
             db.stop()
             db.start()
 
-        cl = db.client_get()
-        cl.test()
+        cl = db.client_get(secrets="1234",encryptionkey="abcdefgh")
+        cl1 = cl.namespace_new("test")
+        cl1.test()
+
 
         #TODO: *1 need to test the other modes as well

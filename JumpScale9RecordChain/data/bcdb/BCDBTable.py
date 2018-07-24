@@ -16,8 +16,6 @@ class BCDBTable(JSBASE):
 
         self.bcdb = bcdb
 
-        s=bcdb.zdb
-
         self.name = name
 
         if j.data.types.string.check(schema):

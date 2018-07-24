@@ -1,12 +1,6 @@
 
 from JumpScale9 import j
 
-
-TEMPLATE = """
-zdb_port = "9901"
-zdb_adminsecret_ = ""
-"""
-
 JSConfigBase = j.tools.configmanager.base_class_config
 
 from .BCDBTable import BCDBTable

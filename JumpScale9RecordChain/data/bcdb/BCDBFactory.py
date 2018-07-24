@@ -15,14 +15,10 @@ class BCDBFactory(JSConfigBase):
 
     def db_start(self, instance="test", adminsecret="", port=8888, reset=False):
         self.instance_last = instance
-        s = j.zdbs.zdb.configure(instance=instance, port=port, mode="seq", reset=reset, adminsecret=adminsecret, start=True, id_enable=True)
+        s = j.zdbs.zdb.configure(instance=instance, port=port, mode="seq", reset=reset, adminsecret=adminsecret, start=True)
 
-    def get(self, zdbclient, instance):
-        data = {}
-        data["zdb_adminsecret_"] = s.config.data["adminsecret_"]
-        data["zdb_port"] = str(s.config.data["port"])
-        bcdb = self._child_class(instance=instance, data=data, parent=self, interactive=False)
-        bcdb.zdb = zdbclient
+    def get(self, zdbclient, namespace):
+        
         return bcdb
 
     def test(self):

@@ -1,5 +1,9 @@
 ## Recordchain
 
+documentation see
+
+- https://threefoldfoundation.github.io/info_foundation/#/
+
 - [Schemas](JumpScale9RecordChain/data/schema/README.md)
 - [BCDB database](JumpScale9RecordChain/data/bcdb/README.md)
 - [gedis](JumpScale9RecordChain/servers/gedis/README.md)

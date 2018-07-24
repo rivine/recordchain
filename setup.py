@@ -68,7 +68,8 @@ setup(
         'websockets>=4.0.1',
         'python-jose',
         'cryptocompare',
-        'gevent-websocket'
+        'gevent-websocket',
+        'dnslib'
     ],
     dependency_links=[
         "git+https://github.com/pyca/pynacl"

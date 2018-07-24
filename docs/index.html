@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, shrink-to-fit=no">
+	<meta name="description" content="A demonstration of docsify-themable: a delightfully simple theme system for docsify.js">
+  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <style>
+
+		:root {
+			/* Reduce the font size */ 
+			/* --base-font-size: 14px; */
+
+			/* Change the theme color hue (0-360) */
+			/* --theme-hue: 325; */
+
+			/* Add sidebar navigation bullets */
+			/* --sidebar-nav-link-before-content-l1: '😀'; */
+			/* --sidebar-nav-link-before-content-l2: '💩'; */
+		}
+    .markdown-section{max-width:1024px;}
+  </style>
+
+</head>
+
+<body>
+  <div id="app">
+  </div>
+
+  <!-- <script>
+    if (typeof navigator.serviceWorker !== 'undefined') {
+      navigator.serviceWorker.register('sw.js')
+    }
+  </script> -->
+
+  <!-- <script src="//unpkg.com/docsify-edit-on-github@1.0.1/index.js"></script> -->
+
+  <script>
+    window.$docsify = {
+    }
+  </script> -->
+  <script src="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <!-- <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.css"> -->
+  <link rel="stylesheet" href="https://unpkg.com/docsify-themeable/dist/css/theme-simple.css">
+
+  <script>
+    mermaid.initialize({ startOnLoad: false });
+  </script>
+  <script>
+    window.$docsify = {
+      coverpage: false,
+      name: 'RecordChain',
+      disqus: '//jumpscale.disqus.com/embed.js',
+      repo: 'https://github.com/rivine/recordchain',
+      loadSidebar: true,
+      markdown: {
+        renderer: {
+          code: function (code, lang) {
+            if (lang === "mermaid") {
+              return (
+                '<div class="mermaid">' + mermaid.render(lang, code) + "</div>"
+              );
+            }
+            return this.origin.code.apply(this, arguments);
+          }
+        }
+      },
+			themeable : { 
+				// readyTransition : false, 
+				// responsiveTables: false 
+			}      
+    };
+
+  </script>
+  <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+  <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
+  <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script>
+  <script src="//unpkg.com/prismjs/components/prism-python.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/echarts@latest/dist/echarts.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-echarts-plugin/lib/index.min.js"></script>
+  <script src="//unpkg.com/docsify-plantuml/dist/docsify-plantuml.min.js"></script>
+  <script src="//unpkg.com/docsify/lib/plugins/disqus.min.js"></script>
+  <script src="//unpkg.com/docsify-themeable"></script>
+</body>
+
+</html>

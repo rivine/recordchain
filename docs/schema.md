@@ -84,44 +84,44 @@ The generated file is created from a template file in `schema/templates/template
 
 - Use `j.data.schema.schema_add(schema_string)` which returns list of added schemas objects
 
-- ```python
-    schema = """
-    @url = threefoldtoken.wallet
-    @name = wallet
-    jwt = "" (S)                # JWT Token
-    addr = ""                   # Address
-    ipaddr = (ipaddr)           # IP Address
-    email = "" (S)              # Email address
-    username = "" (S)           # User name
-    payment = (N)               # Registration fees
-    """ 
-    # List of schemas returned from 
-    schemas = j.data.schema.schema_add(schema)
-    schema = schemas[0]
-    
-    print(schema) 
-    
-    prop:jwt                       (string)   default:""
-    prop:addr                      (string)   default:""
-    prop:ipaddr                    (ipaddr)
-    prop:email                     (string)   default:""
-    prop:username                  (string)   default:""
-    prop:payment                   (numeric)   default:b'\x01\x97\x00\x00\x00\x00\x00\x00\x00\x00'
-    ```
+```python
+schema = """
+@url = threefoldtoken.wallet
+@name = wallet
+jwt = "" (S)                # JWT Token
+addr = ""                   # Address
+ipaddr = (ipaddr)           # IP Address
+email = "" (S)              # Email address
+username = "" (S)           # User name
+payment = (N)               # Registration fees
+""" 
+# List of schemas returned from 
+schemas = j.data.schema.schema_add(schema)
+schema = schemas[0]
+
+print(schema) 
+
+prop:jwt                       (string)   default:""
+prop:addr                      (string)   default:""
+prop:ipaddr                    (ipaddr)
+prop:email                     (string)   default:""
+prop:username                  (string)   default:""
+prop:payment                   (numeric)   default:b'\x01\x97\x00\x00\x00\x00\x00\x00\x00\x00'
+```
 
 **Get a registered schema from a URL**
 - Use `j.data.schema.schema_from_url(url)`
 
-- ```python
-    schema = j.data.schema.schema_from_url("threefoldtoken.wallet")
-    print(schema)
-    prop:jwt                       (string)   default:""
-    prop:addr                      (string)   default:""
-    prop:ipaddr                    (ipaddr)
-    prop:email                     (string)   default:""
-    prop:username                  (string)   default:""
-    prop:payment                   (numeric)   default:b'\x01\x97\x00\x00\x00\x00\x00\x00\x00\x00'
-  ```
+```python
+schema = j.data.schema.schema_from_url("threefoldtoken.wallet")
+print(schema)
+prop:jwt                       (string)   default:""
+prop:addr                      (string)   default:""
+prop:ipaddr                    (ipaddr)
+prop:email                     (string)   default:""
+prop:username                  (string)   default:""
+prop:payment                   (numeric)   default:b'\x01\x97\x00\x00\x00\x00\x00\x00\x00\x00'
+```
 
 **Create new Object**
 - ```python
@@ -179,6 +179,7 @@ The generated file is created from a template file in `schema/templates/template
 - CAPNP: ```obj.data```
 
 **Deserialize from capnp**
+
 - ```python
     data = obj.data
     print(data)
@@ -200,6 +201,7 @@ The generated file is created from a template file in `schema/templates/template
    ```
 
 **Numeric / Curency Data type manipulation**
+
 - When you define a field of type `j.data.types.numeric` or `(N)` you get extra currency conversion functions withput effort
 - ```python
     print(obj.payment_eur)

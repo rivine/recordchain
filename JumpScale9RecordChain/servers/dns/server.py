@@ -28,9 +28,9 @@ soaexample = dnslib.SOA(
 
 class DNSServer(DatagramServer, JSBASE):
 
-    def __init__(self):
+    def __init__(self,port=53):
         JSBASE.__init__(self)
-        DatagramServer.__init__(self,":53",handle=self.handle)
+        DatagramServer.__init__(self,":%s"%port,handle=self.handle)
         self.TTL = 60 * 5
 
         self.rtypes = {}
@@ -45,7 +45,7 @@ class DNSServer(DatagramServer, JSBASE):
         self.rdatatypes["NS"] = dnslib.NS
         self.rdatatypes["MX"] = dnslib.MX
         
-        self.db = j.clients.redis.core_get()
+        # self.db = j.clients.redis.core_get()
 
         self.serve_forever()
 
@@ -96,16 +96,17 @@ class DNSServer(DatagramServer, JSBASE):
                     return ["127.0.0.1"]
                 else:
                     return ["192.168.1.1"]
+                #TODO: need to get DNS records from a source
         
         res = self.cache.get(key="resolve_%s_%s"%(qname,type),method=do,expire=600, qname=qname,type=type)
-        self.cache.reset() #basically don't use cache, just for debugging later should turn on
+        self.cache.reset() #basically don't use cache, just for debugging later should disable this line
         return res
 
     def dns_response(self,data):
         
         request = dnslib.DNSRecord.parse(data)
 
-        # self.logger.debug ("request:%s"%request)
+        self.logger.debug ("request:%s"%request)
 
         reply = dnslib.DNSRecord(dnslib.DNSHeader(id=request.header.id, qr=1, aa=1, ra=1), q=request.q)
 
@@ -119,7 +120,7 @@ class DNSServer(DatagramServer, JSBASE):
         if qt in ["A","MX","NS","AAAA"]:
             for item in addrs:
                 reply.add_answer(dnslib.RR(rname=qname, rtype=self.rtypes[qt], rclass=1, ttl=self.TTL, rdata=self.rdatatypes[qt](item)))
-                # self.logger.debug("reply:%s:%s"%(qt,reply))
+                self.logger.debug("DNS reply:%s:%s"%(qt,reply))
         else:
             #TODO:*1 add the other record types e.g. SOA & txt & ...
             self.logger.error("did not find type:\n%s"%request)

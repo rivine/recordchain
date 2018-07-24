@@ -17,17 +17,26 @@ This is the `Model layer`
 
 ### installation
 
-- Install libssl-dev `apt install libssl-dev`
-- `pip3 install python-jose cryptocompare gevent-websocket`
-- Get recordchain `js9_code get --url="git@github.com:rivine/recordchain.git"`
-- Install recordchain `cd $HOMEDIR/code/github/rivine/recordchain && sh install.sh`
-- Get 0-db `js9_code get --url="git@github.com:rivine/0-db.git"`
-- Install 0-db `cd $HOMEDIR/code/github/rivine/0-db && make && cp bin/zdb /opt/bin/`
+```bash
+##OPTIONAL IF UBUNTU
+#apt install libssl-dev`
+
+#install recordchain 
+js9_code get --url="git@github.com:rivine/recordchain.git"
+cd $HOMEDIR/code/github/rivine/recordchain && sh install.sh
+
+#build zdb
+js9 'j.servers.zdb.build()'
+```
 
 ### Tests
-- `python3 apps/example/test.py`
-- `j.clients.gedis.test()`
-- `j.servers.gedis.test()`
+
+```bash
+cd $HOMEDIR/code/github/rivine/recordchain/apps/orderbook/
+python3 test.py
+js9 'j.clients.gedis.test()'
+js9 'j.servers.gedis.test()'
+```
 
 ### Running
 

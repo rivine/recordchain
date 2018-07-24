@@ -69,7 +69,9 @@ setup(
         'python-jose',
         'cryptocompare',
         'gevent-websocket',
-        'dnslib'
+        'dnslib',
+        'unidecode',
+        'python-jwt'
     ],
     dependency_links=[
         "git+https://github.com/pyca/pynacl"

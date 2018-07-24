@@ -170,7 +170,7 @@ class ZDBClientNS(JSBASE):
     @property
     def nsinfo(self):
         res = {}
-        for item in self.redis.execute_command("NSINFO", self.namespace).decode().split("\n"):
+        for item in self.redis.execute_command("NSINFO", self.nsname).decode().split("\n"):
             item = item.strip()
             if item == "":
                 continue
@@ -337,13 +337,13 @@ class ZDBClientNS(JSBASE):
 
         for i in range(1000):
             nsname = "testns_%s" % i
-            exists = self.namespace_exists(nsname)
+            exists = self.nsname_exists(nsname)
             if not exists:
                 break
 
         print ("count:%s" % self.count)
 
-        self.namespace_new(nsname, secret="1234", maxsize=1000, instance=None)
+        self.nsname_new(nsname, secret="1234", maxsize=1000, instance=None)
 
         assert self.nsinfo["data_limits_bytes"] == 1000
         assert self.nsinfo["data_size_bytes"] == 0
@@ -355,7 +355,7 @@ class ZDBClientNS(JSBASE):
         assert self.nsinfo["password"] == "yes"
         assert self.nsinfo["public"] == "no"
 
-        assert self.namespace == nsname
+        assert self.nsname == nsname
 
         # both should be same
         id = self.set(b"a")
@@ -368,7 +368,7 @@ class ZDBClientNS(JSBASE):
         except Exception as e:
             assert "No space left" in str(e)
 
-        self.namespace_new(nsname+"2", secret="1234", instance=None)
+        self.nsname_new(nsname+"2", secret="1234", instance=None)
 
         nritems = 100000
         j.tools.timer.start("zdb")

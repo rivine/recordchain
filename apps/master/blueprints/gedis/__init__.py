@@ -6,7 +6,7 @@ name =  j.sal.fs.getDirName(__file__,True)
 blueprint = Blueprint(
     '%s_blueprint'%name,
     __name__,
-    url_prefix=name,
+    url_prefix="/%s"%name,
     template_folder='templates',
     static_folder='static'
 )

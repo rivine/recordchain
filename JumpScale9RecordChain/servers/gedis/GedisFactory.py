@@ -4,6 +4,7 @@ from js9 import j
 
 from .GedisServer import GedisServer
 from .GedisCmds import GedisCmds
+from .GedisChatBot import GedisChatBotFactory
 
 JSConfigBase = j.tools.configmanager.base_class_configs
 
@@ -22,14 +23,17 @@ class GedisFactory(JSConfigBase):
         self._code_test_template = None
         self._js_client_template = None
 
-    def get(
-        self,
-        instance='main',
-        data={},
-        interactive = True
-    ):
+    def get(self,instance='main',data={},interactive = True):
 
         return super(GedisFactory, self).get(instance=instance, data=data, interactive=interactive)
+
+    def chatbot_test(self):
+        """
+        js9 'j.servers.gedis.chatbot_test()'
+        """
+        bot = GedisChatBotFactory()
+        bot.test()
+
 
 
     def new(
@@ -61,7 +65,7 @@ class GedisFactory(JSConfigBase):
         if reset:
             j.sal.fs.removeDirTree(path)
 
-        if j.sal.fs.exists("%s/app"%path) or j.sal.fs.exists("%s/schema"%path):
+        if j.sal.fs.exists("%s/actors"%path) or j.sal.fs.exists("%s/schema"%path):
             raise RuntimeError("cannot do new app because app or schema dir does exist.")  
 
         

@@ -49,56 +49,6 @@ class GedisServer(StreamServer, JSConfigBase):
         self.ssl = self.config.data["ssl"]
         self.web_client_code = None
 
-        j.servers.gedis.latest = self
-
-        # create dirs for generated codes and make sure is empty
-        for cat in ["server","client"]:
-            code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, cat)
-            j.sal.fs.remove(code_generated_dir)
-            j.sal.fs.createDir(code_generated_dir)
-            j.sal.fs.touch(j.sal.fs.joinPaths(code_generated_dir, '__init__.py'))
-
-        #now add the one for the server
-        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, "server")
-        if self.code_generated_dir not in sys.path:
-            sys.path.append(self.code_generated_dir)
-
-        # make sure apps dir is created if not exists
-        self.app_dir = self.config.data["app_dir"]
-        j.sal.fs.createDir(self.app_dir)
-        
-        if self.app_dir.strip() is "":
-            raise RuntimeError("appdir cannot be empty")
-
-        self.logger.debug("copy base to:%s"%self.app_dir )
-        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/JumpScale9RecordChain/servers/gedis/base")
-        j.tools.jinja2.copy_dir_render(src,self.app_dir ,reset=False, j=j, config=self.config.data, instance=self.instance)     
-
-        # make sure static dir exists
-        self.static_files_path = j.sal.fs.joinPaths(self.code_generated_dir, 'static')
-        j.sal.fs.createDir(self.static_files_path)
-
-        if self.ssl:
-            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
-
-            # Server always supports SSL
-            # client can use to talk to it in SSL or not
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
-                keyfile=self.ssl_priv_key_path,
-                certfile=self.ssl_cert_path
-            )
-            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
-        else:
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
-            )
-            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
-
     def sslkeys_generate(self):
         if self.ssl:
             path = os.path.dirname(self.code_generated_dir)
@@ -137,14 +87,41 @@ class GedisServer(StreamServer, JSConfigBase):
 
     def init(self):
         # add the cmds to the server (from generated dir + app_dir)
-        namespace_base = self.instance
+        j.servers.gedis.latest = self
+
+        # create dirs for generated codes and make sure is empty
+        for cat in ["server","client"]:
+            code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, cat)
+            j.sal.fs.remove(code_generated_dir)
+            j.sal.fs.createDir(code_generated_dir)
+            j.sal.fs.touch(j.sal.fs.joinPaths(code_generated_dir, '__init__.py'))
+
+        #now add the one for the server
+        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, "server")
+        if self.code_generated_dir not in sys.path:
+            sys.path.append(self.code_generated_dir)
+
+        # make sure apps dir is created if not exists
+        self.app_dir = self.config.data["app_dir"]
+        j.sal.fs.createDir(self.app_dir)
+        
+        if self.app_dir.strip() is "":
+            raise RuntimeError("appdir cannot be empty")
+
+        self.logger.debug("copy base to:%s"%self.app_dir )
+        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/JumpScale9RecordChain/servers/gedis/base")
+        j.tools.jinja2.copy_dir_render(src,self.app_dir ,reset=False, j=j, config=self.config.data, instance=self.instance)     
+
+        # make sure static dir exists
+        self.static_files_path = j.sal.fs.joinPaths(self.code_generated_dir, 'static')
+        j.sal.fs.createDir(self.static_files_path)
 
 
         files = j.sal.fs.listFilesInDir(self.code_generated_dir,"server", filter="*.py", exclude=["__*", "test*"]) 
-        files += j.sal.fs.listFilesInDir(self.app_dir+"/app", filter="*.py", exclude=["__*"])
+        files += j.sal.fs.listFilesInDir(self.app_dir+"/actors", filter="*.py", exclude=["__*"])
 
         for item in files:
-            namespace = namespace_base + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
+            namespace = self.instance + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
             self.logger.debug("cmds generated add:%s"%item)
             self.cmds_add(namespace, path=item)
 
@@ -163,7 +140,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self.web_client_code = code
         self._inited = True
 
-    def _start(self):
+    def _startt(self):
         
         reset=True
 
@@ -193,6 +170,29 @@ class GedisServer(StreamServer, JSConfigBase):
         from gevent import monkey
         monkey.patch_thread() #TODO:*1 dirty hack, need to use gevent primitives, suggest to add flask server
         import threading
+
+        if self.ssl:
+            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
+
+            # Server always supports SSL
+            # client can use to talk to it in SSL or not
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
+                keyfile=self.ssl_priv_key_path,
+                certfile=self.ssl_cert_path
+            )
+            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+        else:
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
+            )
+            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+
+
 
         t = threading.Thread(target=self.websocket_server.serve_forever)
         t.setDaemon(True)

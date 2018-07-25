@@ -42,4 +42,3 @@ class chat(JSBASE):
         pass
         
 
-

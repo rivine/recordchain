@@ -104,11 +104,7 @@ class BCDBTable(JSBASE):
         if hook:
             obj = hook(obj, index)
 
-        if id == None:
-            # means a new one
-            id = self.db.set(data)
-        else:
-            id2 = self.db.set(data, id=id)
+        id = self.db.set(data, key=id)
 
         obj.id = id
         obj.index = index
@@ -208,3 +204,6 @@ class BCDBTable(JSBASE):
                 obj = hook(obj)
             res4.append(obj)
         return res4
+
+    def delete(self, id):
+        self.db.delete(id)

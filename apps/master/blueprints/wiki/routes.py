@@ -1,4 +1,4 @@
-from app.wiki import blueprint
+from blueprints.wiki import blueprint
 from flask import render_template, send_file
 from flask import abort, redirect, url_for
 

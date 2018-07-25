@@ -6,7 +6,7 @@ login_manager = j.servers.web.latest.loader.login_manager
 
 @blueprint.route('/')
 def route_default():
-    return redirect('gedis/index_.html')
+    return redirect('/%s/index_.html'%name)
 
 
 # @login_required

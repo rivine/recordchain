@@ -25,7 +25,7 @@ login_manager = j.servers.web.latest.loader.login_manager
 #     return redirect(url_for('base_blueprint.login'))
 
 # @login_required
-@blueprint.route('/t/<template>')
+@blueprint.route('/<template>')
 def route_template(template):
     if template=="favicon.ico":
         return url_for('static',filename="images/favicon.png")

@@ -8,9 +8,10 @@ import redis
 
 JSBASE = j.application.jsbase_get_class()
 
+
 class ZDBClientNS(JSBASE):
 
-    def __init__(self,zdbclient,nsname ):
+    def __init__(self, zdbclient, nsname):
         """
         is connection to ZDB
 
@@ -24,14 +25,13 @@ class ZDBClientNS(JSBASE):
             adminsecret does not have to be set, but when you want to create namespaces it is a must
 
         """
-
+        JSBASE.__init__(self)
         self.zdbclient = zdbclient
         self.redis = j.clients.redis.get(ipaddr=zdbclient.config.data['addr'],
-                                    port=zdbclient.config.data['port'],
-                                    fromcache=False)
+                                         port=zdbclient.config.data['port'],
+                                         fromcache=False)
 
         self.redis = self._patch_redis_client(self.redis)
-
 
         self.nsname = nsname.lower().strip()
         self.mode = self.zdbclient.mode
@@ -39,14 +39,14 @@ class ZDBClientNS(JSBASE):
         if self.adminsecret is not "":
             self.redis.execute_command("AUTH", self.adminsecret)
 
-        #put secret on namespace & select namespace
+        # put secret on namespace & select namespace
         if self.secret is "":
             self.redis.execute_command("SELECT", self.nsname)
         else:
             self.redis.execute_command("SELECT", self.nsname, self.secret)
 
     @property
-    def adminsecret(self):        
+    def adminsecret(self):
         return self.zdbclient.adminsecret
 
     @property
@@ -62,28 +62,28 @@ class ZDBClientNS(JSBASE):
         del redis.response_callbacks['SET']
         return redis
 
-    def _key_get(self,key,set=True):
-        
-        if self.mode=="seq":
+    def _key_get(self, key, set=True):
+
+        if self.mode == "seq":
             if key is None:
-                key=""
+                key = ""
             else:
-                key = struct.pack("<I", key) 
-        elif self.mode=="direct":
+                key = struct.pack("<I", key)
+        elif self.mode == "direct":
             if set:
-                if not key in ["",None]:
+                if not key in ["", None]:
                     raise j.exceptions.Input("key need to be None or empty string")
                 if key is None:
-                    key=""                
+                    key = ""
             else:
-                if key in ["",None]:
-                    raise j.exceptions.Input("key cannot be None or empty string")                
-        elif self.mode=="user":
-            if key in ["",None]:
+                if key in ["", None]:
+                    raise j.exceptions.Input("key cannot be None or empty string")
+        elif self.mode == "user":
+            if key in ["", None]:
                 raise j.exceptions.Input("key cannot be None or empty string")
-        return key        
+        return key
 
-    def set(self, data, key=None):
+    def set(self, data, key=None, check_new=False):
         """[summary]
 
         Arguments:
@@ -98,9 +98,21 @@ class ZDBClientNS(JSBASE):
 
 
         """
-        key = self._key_get(key,set=True)
-        
-        key = struct.unpack("<I",self.redis.execute_command("SET", key, data))[0]
+        k = self._key_get(key, set=True)
+
+        try:
+            res = self.redis.execute_command("SET", k, data)
+        except Exception as e:
+            raise j.exceptions.Input(e)
+
+        new = True
+        if res:
+            key = struct.unpack("<I", res)[0]
+        if not res: 
+            new = False
+            self.logger.info("Value for key {} is the same. Ignoring".format(key))
+        if check_new:
+            return key, new
         return key
 
     def get(self, key):
@@ -116,7 +128,7 @@ class ZDBClientNS(JSBASE):
             key {[6 byte binary]} -- is binary position is for direct mode
 
         """
-        key = self._key_get(key,set=False)
+        key = self._key_get(key, set=False)
         return self.redis.execute_command("GET", key)
 
     def exists(self, key):
@@ -125,10 +137,9 @@ class ZDBClientNS(JSBASE):
         Arguments:
             key {[type]} - - [description] is id or key
         """
-        key = self._key_get(key,set=False)
+        key = self._key_get(key, set=False)
 
         return self.redis.execute_command("EXISTS", key) == 1
-
 
         # if self.mode=="seq":
         #     id = struct.pack("<I", key)
@@ -169,16 +180,18 @@ class ZDBClientNS(JSBASE):
                 res[key] = str(val).strip()
         return res
 
-    def list(self, key_start=None, direction="forward", nrrecords=100000,result=None):
+    def list(self, key_start=None, key_end=None, direction="forward", nr_records=100000, result=None):
         if result is None:
-            result=[]
-        def do(arg,result):
+            result = []
+
+        def do(arg, result):
             result.append(arg)
             return result
-        self.iterate(do,key_start=key_start,direction=direction,nrrecords=nrrecords,_keyonly=True,result=result)
+
+        self.iterate(do, key_start=key_start, key_end=key_end, direction=direction, nr_records=nr_records, _keyonly=True, result=result)
         return result
 
-    def iterate(self, method, key_start=None, direction="forward", nrrecords=100000, _keyonly=False, result=None):
+    def iterate(self, method, key_start=None, key_end=None, direction="forward", nr_records=100000, _keyonly=False, result=None):
         """walk over the data and apply method as follows
 
         ONLY works for when id_enable is True
@@ -195,40 +208,50 @@ class ZDBClientNS(JSBASE):
 
         Keyword Arguments:
             key_start is the start key, if not given will be start of database when direction = forward, else end
+            key_end is the end key, if not given will be end of database when direction = forward, else start
 
         """
         if result is None:
-            result=[]
-        keyb = self._key_get(key_start,set=False)
-        if direction=="forward":
-            CMD = "SCANX"
+            result = []
+
+        if self.mode == "seq":
+            key_start = key_start - 1 if key_start else None
+            key_end = key_end - 1 if key_end else key_end
+
+        keyb = self._key_get(key_start, set=False)
+        keye = self._key_get(key_end, set=False)
+
+        if direction == "forward":
+            CMD = "SCANX" # SCAN but to avoid redis lib conventions
         else:
             CMD = "RSCAN"
 
-        nr=0
-        while nr<nrrecords:
+        nr = 0
+        while nr < nr_records:
             try:
-                if keyb in [None,""]:
+                if keyb in [None, ""]:
                     keyb_new = self.redis.execute_command(CMD)[0]
                 else:
-                    keyb_new = self.redis.execute_command(CMD,keyb)[0]
+                    keyb_new = self.redis.execute_command(CMD, keyb)[0]
             except redis.ResponseError as e:
-                if e.args[0]=='No more data':
+                if e.args[0] == 'No more data':
                     return result
 
             if self.mode == "seq":
-                key_new = struct.unpack("<I",keyb_new)[0]
+                key_new = struct.unpack("<I", keyb_new)[0]
             else:
                 key_new = keyb_new
 
             if _keyonly:
-                result = method(key_new,result)
+                result = method(key_new, result)
             else:
                 data = self.redis.execute_command("GET", keyb_new)
-                result = method(key_new, data,result)
+                result = method(key_new, data, result)
 
             keyb = keyb_new
-            nr+=1
+            if keyb == keye:
+                break
+            nr += 1
 
         return result
 
@@ -246,32 +269,25 @@ class ZDBClientNS(JSBASE):
         assert id == 0
         assert self.get(id) == b"r"
 
-        id2= self.set(b"b")
+        id2 = self.set(b"b")
         assert id2 == 1
 
-        #NEED TO DO THIS WHEN DB SUPPORTS NOT TO UPDATE EXISTING VALUES
-        # newid, exists = self.set(b"r", id=id, checknew=True)
-        # assert exists is False
-        # assert newid == id
+
+        # Test that updating key with its current value doesn't change key
+        newid, exists = self.set(b"r", key=id, check_new=True)
+        assert exists is False
+        assert newid == id
 
         nr = self.nsinfo["entries"]
-        assert nr==2
+        assert nr == 2
 
         # self.set("test", 1)
         # print (self.nsinfo)
 
         # test the list function
         assert self.list() == [0, 1]
-        assert self.list(1) == []
-        assert self.list(0) == [1]
-
-
-
-        from IPython import embed;embed(colors='Linux')
-        ss
-
-
-        print(res)
+        assert self.list(1) == [1]
+        assert self.list(0) == [0, 1]
 
         result = {}
 
@@ -282,30 +298,22 @@ class ZDBClientNS(JSBASE):
 
         result = self.iterate(test, result={})
 
-        assert self.list(start=newid, end=newid) == [newid]
+        assert self.list(key_start=newid, key_end=newid) == [newid]
 
-        result = self.iterate(test, result={}, start=newid, end=newid)
+        result = self.iterate(test, result={}, key_start=newid, key_end=newid)
 
         assert result == {newid: b'r'}
 
         assert self.exists(newid)
 
         def dumpdata():
+            inputs = {}
+            for i in range(4):
+                data = os.urandom(4096)
+                key = self.set(data)
+                inputs[key] = data
 
-            if self.key_enable:
-                inputs = {}
-                for i in range(4):
-                    data = os.urandom(4096)
-                    key = self.set(data, key=str(i))
-                    inputs[key] = data
-
-            elif self.id_enable: #NO LONGER SUPPORTED
-                inputs = {}
-                for i in range(4):
-                    data = os.urandom(4096)
-                    key = self.set(data)
-                    inputs[key] = data
-
+            inputs = {}
             for k, expected in inputs.items():
                 actual = self.get(k)
                 assert expected == actual
@@ -314,44 +322,42 @@ class ZDBClientNS(JSBASE):
 
         for i in range(1000):
             nsname = "testns_%s" % i
-            exists = self.nsname_exists(nsname)
+            exists = self.nsinfo['name'] == nsname
             if not exists:
                 break
 
         print ("count:%s" % self.count)
 
-        self.nsname_new(nsname, secret="1234", maxsize=1000, instance=None)
+        namespace = self.zdbclient.namespace_new(nsname, secret="1234", maxsize=1000)
 
-        assert self.nsinfo["data_limits_bytes"] == 1000
-        assert self.nsinfo["data_size_bytes"] == 0
-        assert self.nsinfo["data_size_mb"] == 0.0
-        assert self.nsinfo["entries"] == 0
-        assert self.nsinfo["index_size_bytes"] == 0
-        assert self.nsinfo["index_size_kb"] == 0.0
-        assert self.nsinfo["name"] == nsname
-        assert self.nsinfo["password"] == "yes"
-        assert self.nsinfo["public"] == "no"
+        assert namespace.nsinfo["data_limits_bytes"] == 1000
+        assert namespace.nsinfo["data_size_bytes"] == 0
+        assert namespace.nsinfo["data_size_mb"] == 0.0
+        assert namespace.nsinfo["entries"] == 0
+        assert namespace.nsinfo["index_size_bytes"] == 0
+        assert namespace.nsinfo["index_size_kb"] == 0.0
+        assert namespace.nsinfo["name"] == nsname
+        assert namespace.nsinfo["password"] == "yes"
+        assert namespace.nsinfo["public"] == "no"
 
-        assert self.nsname == nsname
 
-        # both should be same
-        id = self.set(b"a")
-        assert self.get(id) == b"a"
-        assert self._indexfile.count == 1
-        assert self.nsinfo["entries"] == 1
+        id = namespace.set(b"a")
+        assert namespace.get(id) == b"a"
+        assert namespace.count == 1
+        assert namespace.nsinfo["entries"] == 1
 
         try:
             dumpdata()
         except Exception as e:
             assert "No space left" in str(e)
 
-        self.nsname_new(nsname+"2", secret="1234", instance=None)
+        namespace2 = self.zdbclient.namespace_new(nsname+"2", secret="1234")
 
         nritems = 100000
         j.tools.timer.start("zdb")
 
         print("perftest for 100.000 records, should get above 10k per sec")
         for i in range(nritems):
-            id = self.set(b"a")
+            id = namespace2.set(b"a")
 
         j.tools.timer.stop(nritems)

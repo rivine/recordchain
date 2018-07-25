@@ -166,10 +166,9 @@ class GedisServer(StreamServer, JSConfigBase):
     def _start(self):
         
         reset=True
-
-        zdb = j.clients.zdb.get(self.config.data["zdb_instance"]) 
+        zdb = j.clients.zdb.get(self.config.data["zdb_instance"])
         db = j.data.bcdb.get(zdb)
-        db.tables_get(self.app_dir)
+        db.tables_get(j.sal.fs.joinPaths(self.app_dir, 'schemas'))
         self.db = db
 
 
@@ -180,7 +179,9 @@ class GedisServer(StreamServer, JSConfigBase):
             self.logger.info("generate model: model_%s.py" % namespace)
             dest = j.sal.fs.joinPaths(self.code_generated_dir, "model_%s.py" % namespace)
             if reset or not j.sal.fs.exists(dest):
-                code = j.servers.gedis.code_model_template.render(obj=table.schema)
+                find_args = ''.join(["{0}={1},".format(p.name, p.default_as_python_code) for p in table.schema.properties if p.index]).strip(',')
+                kwargs = ''.join(["{0}={0},".format(p.name, p.name) for p in table.schema.properties if p.index]).strip(',')
+                code = j.servers.gedis.code_model_template.render(obj=table.schema, find_args=find_args, kwargs=kwargs)
                 j.sal.fs.writeFile(dest, code)
             self.schema_urls.append(table.schema.url)
 

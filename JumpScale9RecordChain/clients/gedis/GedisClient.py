@@ -88,7 +88,11 @@ class GedisClient(JSConfigBase):
 
             if reset or not j.sal.fs.exists(dest):
                 schema = j.data.schema.schema_from_url(schema_url)
-                code = j.clients.gedis.code_model_template.render(obj= schema)
+                args = sorted([p for p in schema.properties if p.index], key=lambda p:p.name)
+
+                find_args = ''.join(["{0}={1},".format(p.name, p.default_as_python_code) for p in args]).strip(',')
+                kwargs = ''.join(["{0}".format(p.name) for p in args]).strip(',')
+                code = j.clients.gedis.code_model_template.render(obj= schema, find_args=find_args, kwargs=kwargs)
                 j.sal.fs.writeFile(dest,code)
 
             m=imp.load_source(name=fname, pathname=dest)

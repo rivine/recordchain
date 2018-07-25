@@ -32,15 +32,15 @@ class model(JSBASE):
         obj.id = id
         return obj
 
-    def find(self,id):
-        items = self.redis.execute_command("model_%s.find"%self.name, id)
-        items = j.data.serializer.json.loads(items)
+    def find(self, total_items_in_page=20, page_number=1, only_fields=[], {{find_args}}):
+        items = self.redis.execute_command("model_%s.find"%self.name, total_items_in_page, page_number, only_fields, {{kwargs}})
+        items = j.data.serializer.msgpack.loads(items)
         result = []
 
         for item in items:
-            obj = self.new()
-            for k, v in item.items():
-                setattr(obj, k, v)
+            id, data = j.data.serializer.msgpack.loads(item)
+            obj = self.schema.get(capnpbin=data)
+            obj.id = id
             result.append(obj)
         return result
 

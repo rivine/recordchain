@@ -1,0 +1,34 @@
+
+[[docsite]]
+name = "foundation"
+url = "https://github.com/threefoldfoundation/tree/info_foundation"
+publish = "/foundation"
+
+[[docsite]]
+name = "grid"
+url = "https://github.com/threefoldfoundation/info_grid"
+publish = "/grid"
+
+[[docsite]]
+name = "tokens"
+url = "https://github.com/threefoldfoundation/info_tokens"
+publish = "/tokens"
+
+[[docsite]]
+name = "tech"
+url = "https://github.com/threefoldfoundation/info_tech"
+publish = "/tech"
+
+[[docsite]]
+name = "tools"
+url = "https://github.com/threefoldfoundation/info_tools"
+publish = "/tools"
+
+
+# [webserver]
+# addr = "localhost"
+# port = 5000
+
+# [[docsite]]
+# name = "core9"
+# url = "https://github.com/Jumpscale/core9/tree/development"

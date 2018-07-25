@@ -49,6 +49,48 @@ class GedisServer(StreamServer, JSConfigBase):
         self.ssl = self.config.data["ssl"]
         self.web_client_code = None
 
+    def sslkeys_generate(self):
+        if self.ssl:
+            path = os.path.dirname(self.code_generated_dir)
+            res = j.sal.ssl.ca_cert_generate(path)
+            if res:
+                self.logger.info("generated sslkeys for gedis in %s" % path)
+            else:
+                self.logger.info('using existing key and cerificate for gedis @ %s' % path)
+            key = j.sal.fs.joinPaths(path, 'ca.key')
+            cert = j.sal.fs.joinPaths(path, 'ca.crt')
+            return key, cert
+
+
+    def websocketapp(self, environ, start_response):
+        if '/static/' in environ['PATH_INFO']:
+            items = [p for p in environ['PATH_INFO'].split('/static/') if p]
+            if len(items) == 1:
+                static_file = items[-1]
+                if static_file in self.static_files:
+                    start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
+                    return [self.static_files[static_file]]
+
+                host = environ.get('HTTP_HOST')
+                file_path = j.sal.fs.joinPaths(self.static_files_path, static_file)
+                if j.sal.fs.exists(file_path):
+                    self.static_files[static_file] = j.sal.fs.readFile(file_path).replace('%%host%%', host).encode('utf-8')
+                    start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
+                    return [self.static_files[static_file]]
+            
+            start_response('404 NOT FOUND', [])
+            return []
+
+        websocket = environ.get('wsgi.websocket')
+        if not websocket:
+            return []
+        addr = '{0}:{1}'.format(environ['REMOTE_ADDR'],environ['REMOTE_PORT'])
+        handler = WebsocketRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta)
+        handler.handle(websocket, addr)
+        return []
+
+    def init(self):
+        # add the cmds to the server (from generated dir + app_dir)
         j.servers.gedis.latest = self
 
         # create dirs for generated codes and make sure is empty
@@ -78,73 +120,12 @@ class GedisServer(StreamServer, JSConfigBase):
         self.static_files_path = j.sal.fs.joinPaths(self.code_generated_dir, 'static')
         j.sal.fs.createDir(self.static_files_path)
 
-        if self.ssl:
-            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
-
-            # Server always supports SSL
-            # client can use to talk to it in SSL or not
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
-                keyfile=self.ssl_priv_key_path,
-                certfile=self.ssl_cert_path
-            )
-            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
-        else:
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
-            )
-            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
-
-    def sslkeys_generate(self):
-        if self.ssl:
-            path = os.path.dirname(self.code_generated_dir)
-            res = j.sal.ssl.ca_cert_generate(path)
-            if res:
-                self.logger.info("generated sslkeys for gedis in %s" % path)
-            else:
-                self.logger.info('using existing key and cerificate for gedis @ %s' % path)
-            key = j.sal.fs.joinPaths(path, 'ca.key')
-            cert = j.sal.fs.joinPaths(path, 'ca.crt')
-            return key, cert
-
-
-    def websocketapp(self, environ, start_response):
-        if '/static/' in environ['PATH_INFO']:
-            items = [p for p in environ['PATH_INFO'].split('/static/') if p]
-            if len(items) == 1:
-                static_file = items[-1]
-                if not static_file in self.static_files:
-                    host = environ.get('HTTP_HOST')
-                    file_path = j.sal.fs.joinPaths(self.static_files_path, static_file)
-                    if j.sal.fs.exists(file_path):
-                        self.static_files[static_file] = j.sal.fs.readFile(file_path).replace('%%host%%', host).encode('utf-8')
-                        start_response('200 OK', [])
-                        return [self.static_files[static_file]]
-            start_response('404 NOT FOUND', [])
-            return []
-
-        websocket = environ.get('wsgi.websocket')
-        if not websocket:
-            return []
-        addr = '{0}:{1}'.format(environ['REMOTE_ADDR'],environ['REMOTE_PORT'])
-        handler = WebsocketRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta)
-        handler.handle(websocket, addr)
-        return []
-
-    def init(self):
-        # add the cmds to the server (from generated dir + app_dir)
-        namespace_base = self.instance
-
 
         files = j.sal.fs.listFilesInDir(self.code_generated_dir,"server", filter="*.py", exclude=["__*", "test*"]) 
-        files += j.sal.fs.listFilesInDir(self.app_dir+"/app", filter="*.py", exclude=["__*"])
+        files += j.sal.fs.listFilesInDir(self.app_dir+"/actors", filter="*.py", exclude=["__*"])
 
         for item in files:
-            namespace = namespace_base + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
+            namespace = self.instance + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
             self.logger.debug("cmds generated add:%s"%item)
             self.cmds_add(namespace, path=item)
 
@@ -163,7 +144,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self.web_client_code = code
         self._inited = True
 
-    def _start(self):
+    def _startt(self):
         
         reset=True
         zdb = j.clients.zdb.get(self.config.data["zdb_instance"])
@@ -194,6 +175,29 @@ class GedisServer(StreamServer, JSConfigBase):
         from gevent import monkey
         monkey.patch_thread() #TODO:*1 dirty hack, need to use gevent primitives, suggest to add flask server
         import threading
+
+        if self.ssl:
+            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
+
+            # Server always supports SSL
+            # client can use to talk to it in SSL or not
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
+                keyfile=self.ssl_priv_key_path,
+                certfile=self.ssl_cert_path
+            )
+            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+        else:
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
+            )
+            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+
+
 
         t = threading.Thread(target=self.websocket_server.serve_forever)
         t.setDaemon(True)

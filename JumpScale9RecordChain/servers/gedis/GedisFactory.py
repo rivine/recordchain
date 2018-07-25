@@ -65,7 +65,7 @@ class GedisFactory(JSConfigBase):
         if reset:
             j.sal.fs.removeDirTree(path)
 
-        if j.sal.fs.exists("%s/app"%path) or j.sal.fs.exists("%s/schema"%path):
+        if j.sal.fs.exists("%s/actors"%path) or j.sal.fs.exists("%s/schema"%path):
             raise RuntimeError("cannot do new app because app or schema dir does exist.")  
 
         

@@ -4,7 +4,7 @@ from pprint import pprint as print
 import time
 
 TEMPLATE = """
-addr = "localhost"
+addr = "127.0.0.1"
 port = 9900
 path = ""
 mode = ""
@@ -22,12 +22,12 @@ class ZDBServer(JSConfigBase):
         """
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
-        
+
         j.sal.fs.createDir(self.config.data["path"])
 
         self._initdir()
 
-    def client_get(self, secrets="",encryptionkey=""):
+    def client_get(self, secrets="", encryptionkey=""):
         return j.clients.zdb.configure(instance=self.instance,
                                        secrets=secrets,
                                        adminsecret=self.config.data['adminsecret_'],
@@ -52,9 +52,9 @@ class ZDBServer(JSConfigBase):
 
         mode = self.config.data['mode']
 
-        d=self.config.data
-        if j.sal.nettools.tcpPortConnectionTest(d["addr"],d["port"]):
-            r=j.clients.redis.get(ipaddr=d["addr"], port=d["port"])
+        d = self.config.data
+        if j.sal.nettools.tcpPortConnectionTest(d["addr"], d["port"]):
+            r = j.clients.redis.get(ipaddr=d["addr"], port=d["port"])
             r.ping()
             return()
 

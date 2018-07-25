@@ -1,0 +1,5 @@
+# Sell Order
+@url = recordchain.digitalme.dnsrecord
+@name = dnsrecord
+type = "" (S)   # A, AAAA, NS, MX, CNAME, TXT, PTR
+val = "" (S)     

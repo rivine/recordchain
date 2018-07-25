@@ -22,7 +22,8 @@ TEMPLATE = """
     websockets_port = "9901"
     ssl = false
     adminsecret_ = ""
-    apps_dir = ""
+    app_dir = ""
+    zdb_instance = ""
     """
 
 
@@ -48,60 +49,6 @@ class GedisServer(StreamServer, JSConfigBase):
         self.ssl = self.config.data["ssl"]
         self.web_client_code = None
 
-        j.servers.gedis.latest = self
-
-        # create dirs for generated codes
-        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, "server")
-        j.sal.fs.createDir(self.code_generated_dir)
-        j.sal.fs.touch(j.sal.fs.joinPaths(self.code_generated_dir, '__init__.py'))
-
-        if self.code_generated_dir not in sys.path:
-            sys.path.append(self.code_generated_dir)
-
-        # make sure apps dir is created if not exists
-        self.apps_dir = self.config.data["apps_dir"] or j.sal.fs.joinPaths(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'apps')
-        j.sal.fs.createDir(self.apps_dir)
-
-        if self.apps_dir not in sys.path:
-            sys.path.append(self.apps_dir)
-
-        # make sure static dir exists
-        self.static_files_path = j.sal.fs.joinPaths(self.code_generated_dir, 'static')
-        j.sal.fs.createDir(self.static_files_path)
-
-        # make sure app dir is created if not exists
-        self.app_dir = j.sal.fs.joinPaths(self.apps_dir, self.instance)
-        j.sal.fs.createDir(self.app_dir)
-
-        p = j.sal.fs.joinPaths(self.app_dir, '__init__.py')
-
-        if not j.sal.fs.exists(p):
-            j.sal.fs.touch(p)
-
-        if self.app_dir not in sys.path:
-            sys.path.append(self.app_dir)
-
-        if self.ssl:
-            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
-
-            # Server always supports SSL
-            # client can use to talk to it in SSL or not
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
-                keyfile=self.ssl_priv_key_path,
-                certfile=self.ssl_cert_path
-            )
-            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
-        else:
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
-            )
-            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
-
     def sslkeys_generate(self):
         if self.ssl:
             path = os.path.dirname(self.code_generated_dir)
@@ -113,6 +60,7 @@ class GedisServer(StreamServer, JSConfigBase):
             key = j.sal.fs.joinPaths(path, 'ca.key')
             cert = j.sal.fs.joinPaths(path, 'ca.crt')
             return key, cert
+
 
     def websocketapp(self, environ, start_response):
         if '/static/' in environ['PATH_INFO']:
@@ -143,10 +91,42 @@ class GedisServer(StreamServer, JSConfigBase):
 
     def init(self):
         # add the cmds to the server (from generated dir + app_dir)
-        namespace_base = self.instance
-        files = j.sal.fs.listFilesInDir(self.code_generated_dir, filter="*.py", exclude=["__*", "test*"]) + j.sal.fs.listFilesInDir(self.app_dir, filter="*.py", exclude=["__*", "test*"])
+        j.servers.gedis.latest = self
+
+        # create dirs for generated codes and make sure is empty
+        for cat in ["server","client"]:
+            code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, cat)
+            j.sal.fs.remove(code_generated_dir)
+            j.sal.fs.createDir(code_generated_dir)
+            j.sal.fs.touch(j.sal.fs.joinPaths(code_generated_dir, '__init__.py'))
+
+        #now add the one for the server
+        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, "server")
+        if self.code_generated_dir not in sys.path:
+            sys.path.append(self.code_generated_dir)
+
+        # make sure apps dir is created if not exists
+        self.app_dir = self.config.data["app_dir"]
+        j.sal.fs.createDir(self.app_dir)
+        
+        if self.app_dir.strip() is "":
+            raise RuntimeError("appdir cannot be empty")
+
+        self.logger.debug("copy base to:%s"%self.app_dir )
+        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/JumpScale9RecordChain/servers/gedis/base")
+        j.tools.jinja2.copy_dir_render(src,self.app_dir ,reset=False, j=j, config=self.config.data, instance=self.instance)     
+
+        # make sure static dir exists
+        self.static_files_path = j.sal.fs.joinPaths(self.code_generated_dir, 'static')
+        j.sal.fs.createDir(self.static_files_path)
+
+
+        files = j.sal.fs.listFilesInDir(self.code_generated_dir,"server", filter="*.py", exclude=["__*", "test*"]) 
+        files += j.sal.fs.listFilesInDir(self.app_dir+"/actors", filter="*.py", exclude=["__*"])
+
         for item in files:
-            namespace = namespace_base + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
+            namespace = self.instance + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
+            self.logger.debug("cmds generated add:%s"%item)
             self.cmds_add(namespace, path=item)
 
         # generate web client
@@ -164,27 +144,25 @@ class GedisServer(StreamServer, JSConfigBase):
         self.web_client_code = code
         self._inited = True
 
-    def _start(self, db=None,reset=False):
-
-        if not db:
-            j.data.bcdb.db_start(self.instance, adminsecret=self.config.data["adminsecret_"], reset=reset)
-            db = j.data.bcdb.get(self.instance)
-            db.tables_get(self.app_dir)
+    def _startt(self):
+        
+        reset=True
+        zdb = j.clients.zdb.get(self.config.data["zdb_instance"])
+        db = j.data.bcdb.get(zdb)
+        db.tables_get(j.sal.fs.joinPaths(self.app_dir, 'schemas'))
         self.db = db
 
-        # copy the templates in the local server dir
-        for item in ["system"]:
-            dest = j.sal.fs.joinPaths(self.code_generated_dir, "%s.py" % item)
-            if reset or not j.sal.fs.exists(dest):
-                src = j.sal.fs.joinPaths(j.servers.gedis._path, "templates", '%s.py' % item)
-                j.sal.fs.copyFile(src, dest)
 
-        # Generate models & populate self.schema_urls
+        self.logger.info("Generate models & populate self.schema_urls")
+        self.logger.info("in: %s"%self.code_generated_dir)
         for namespace, table in db.tables.items():
             # url = table.schema.url.replace(".","_")
+            self.logger.info("generate model: model_%s.py" % namespace)
             dest = j.sal.fs.joinPaths(self.code_generated_dir, "model_%s.py" % namespace)
             if reset or not j.sal.fs.exists(dest):
-                code = j.servers.gedis.code_model_template.render(obj=table.schema)
+                find_args = ''.join(["{0}={1},".format(p.name, p.default_as_python_code) for p in table.schema.properties if p.index]).strip(',')
+                kwargs = ''.join(["{0}={0},".format(p.name, p.name) for p in table.schema.properties if p.index]).strip(',')
+                code = j.servers.gedis.code_model_template.render(obj=table.schema, find_args=find_args, kwargs=kwargs)
                 j.sal.fs.writeFile(dest, code)
             self.schema_urls.append(table.schema.url)
 
@@ -195,8 +173,31 @@ class GedisServer(StreamServer, JSConfigBase):
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
 
         from gevent import monkey
-        monkey.patch_thread()
+        monkey.patch_thread() #TODO:*1 dirty hack, need to use gevent primitives, suggest to add flask server
         import threading
+
+        if self.ssl:
+            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
+
+            # Server always supports SSL
+            # client can use to talk to it in SSL or not
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
+                keyfile=self.ssl_priv_key_path,
+                certfile=self.ssl_cert_path
+            )
+            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+        else:
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
+            )
+            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+
+
 
         t = threading.Thread(target=self.websocket_server.serve_forever)
         t.setDaemon(True)
@@ -204,11 +205,11 @@ class GedisServer(StreamServer, JSConfigBase):
         self.logger.info("start Server on {0} - PORT: {1} - WEBSOCKETS PORT: {2}".format(self.host, self.port, self.websockets_port))
         self.redis_server.serve_forever()
 
-    def start(self, db=None,reset=False, background=True):
+    def start(self, reset=False, background=True):
         if not background:
-            self._start(db, reset)
+            self._start()
         else:
-            cmd = "js9 'x=j.servers.gedis.get(instance=\"%s\");x._start(reset=%s)'" % (self.instance, reset)
+            cmd = "js9 'x=j.servers.gedis.get(instance=\"%s\");x._start()'" % (self.instance)
             j.tools.tmux.execute(
                 cmd,
                 session='main',
@@ -246,6 +247,16 @@ class GedisServer(StreamServer, JSConfigBase):
             class_ = eval(classname)
         self.cmds_meta[namespace] = GedisCmds(self, namespace=namespace, class_=class_)
         self.classes[namespace] =class_()
+
+    def client_get(self):
+
+        data ={}
+        data["host"] = self.config.data["host"]
+        data["port"] = self.config.data["port"]
+        data["adminsecret_"] = self.config.data["adminsecret_"]
+        data["ssl"] = self.config.data["ssl"]
+        
+        return j.clients.gedis.get(instance=self.instance, data=data, reset=False)
 
     def __repr__(self):
         return '<Gedis Server address=%s  app_dir=%s generated_code_dir=%s)' % (self.address, self.app_dir, self.code_generated_dir)

@@ -8,7 +8,6 @@ addr = "localhost"
 port = 9900
 path = ""
 mode = ""
-id_enable = false
 verbose = true
 adminsecret_ = ""
 """
@@ -23,22 +22,20 @@ class ZDBServer(JSConfigBase):
         """
         JSConfigBase.__init__(self, instance=instance, data=data,
                               parent=parent, template=TEMPLATE, ui=None, interactive=interactive)
+        
         j.sal.fs.createDir(self.config.data["path"])
-
-        if self.config.data["id_enable"]:
-            self.config.data["mode"] = "direct"
 
         self._initdir()
 
-    def client_get(self, namespace="default", secret=""):
+    def client_get(self, secrets="",encryptionkey=""):
         return j.clients.zdb.configure(instance=self.instance,
-                                       namespace=namespace,
-                                       secret=secret,
+                                       secrets=secrets,
                                        adminsecret=self.config.data['adminsecret_'],
                                        addr=self.config.data['addr'],
                                        port=self.config.data['port'],
                                        mode=self.config.data['mode'],
-                                       id_enable=self.config.data['id_enable'])
+                                       encryptionkey=encryptionkey
+                                       )
 
     def _initdir(self):
         root_path = self.config.data['path']
@@ -53,10 +50,7 @@ class ZDBServer(JSConfigBase):
         start zdb in tmux using this directory (use prefab)
         """
 
-        if self.config.data['id_enable']:
-            mode = 'direct'
-        else:
-            mode = self.config.data['mode']
+        mode = self.config.data['mode']
 
         d=self.config.data
         if j.sal.nettools.tcpPortConnectionTest(d["addr"],d["port"]):

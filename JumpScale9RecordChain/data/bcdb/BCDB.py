@@ -1,28 +1,24 @@
 
 from JumpScale9 import j
 
-
-TEMPLATE = """
-zdb_port = "9901"
-zdb_adminsecret_ = ""
-"""
-
-JSConfigBase = j.tools.configmanager.base_class_config
+JSBASE = j.application.jsbase_get_class()
 
 from .BCDBTable import BCDBTable
 
 
-class BCDB(JSConfigBase):
+class BCDB(JSBASE):
     
-    def __init__(self,instance, data={}, parent=None, interactive=False, reset=False):
-        JSConfigBase.__init__(self, instance=instance, data=data,
-                              parent=parent, interactive=interactive, template=TEMPLATE)      
-
+    def __init__(self,zdbclient):
+        self.zdbclient = zdbclient
+        
         self.tables = {}
 
     def table_get(self, schema, name=""):
+        if name in self.tables:
+            return self.tables[name]
+
         t = BCDBTable(self,schema=schema,name=name)
-        self.tables[t.name]=t
+        self.tables[name]=t
         return t
 
 
@@ -35,6 +31,9 @@ class BCDB(JSConfigBase):
         if schema_path=="":
             # j.data.schema.reset() #start from empty situation
             schema_path=j.sal.fs.getcwd()
+
+        if j.sal.fs.isDir(schema_path) and j.sal.fs.exists("%s/schemas"%(schema_path)):
+            schema_path = "%s/schemas"%(schema_path)
         
         if j.sal.fs.isDir(schema_path):
             for path in j.sal.fs.listFilesInDir(schema_path, recursive=False, filter="schema*"):
@@ -53,5 +52,5 @@ class BCDB(JSConfigBase):
         return self.tables
 
     def destroy(self):
-        self.server.destroy()
+        self.zdb.destroy()
         

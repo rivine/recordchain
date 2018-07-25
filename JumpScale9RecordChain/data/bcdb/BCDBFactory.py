@@ -4,31 +4,22 @@ from js9 import j
 from .BCDB import BCDB
 
 
-JSConfigBase = j.tools.configmanager.base_class_configs
+JSBASE = j.application.jsbase_get_class()
 
 
-class BCDBFactory(JSConfigBase):
+class BCDBFactory(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.data.bcdb"
-        super().__init__(child_class=BCDB)
 
-    def db_start(self, instance, adminsecret, port=8888, reset=False):
-        self.instance_last = instance
-        s = j.servers.zdb.configure(instance=instance, port=port, mode="direct", reset=reset, adminsecret=adminsecret, start=True, id_enable=True)
+    def get(self, zdbclient):       
+        if j.data.types.string.check(zdbclient):
+            raise RuntimeError("zdbclient cannot be str")
+        return BCDB(zdbclient)
 
-    def get(self, instance):
-        s = j.servers.zdb.get(instance=instance)
-        data = {}
-        data["zdb_adminsecret_"] = s.config.data["adminsecret_"]
-        data["zdb_port"] = str(s.config.data["port"])
-        bcdb = self._child_class(instance=instance, data=data, parent=self, interactive=False)
-        bcdb.server = s
-        return bcdb
-
-    def test(self):
+    def test(self,start=True):
         """
-        js9 'j.data.bcdb.test()'
+        js9 'j.data.bcdb.test(start=True)'
         """
 
         schema = """
@@ -58,11 +49,13 @@ class BCDBFactory(JSConfigBase):
         nr = 0
         """
 
-        def load():
-            self.db_start("test", adminsecret="g007g", reset=True)
-            db = self.get("test")
+        def load(start):
+    
+            cl = j.clients.zdb.testdb_server_start_client_get(start=start)        
+            db = j.data.bcdb.get(cl)
+
             t = db.table_get(name="t1", schema=schema)   #why does name have to be t1
-            t2 = db.table_get(name="t1", schema=schema2)
+            t2 = db.table_get(name="t2", schema=schema2)
 
             for i in range(10):
                 o = t.new()
@@ -85,9 +78,10 @@ class BCDBFactory(JSConfigBase):
             assert o3.ddict == o2.ddict
             assert o3.ddict == o.ddict
 
-        load()
+            return db
 
-        db = self.get("test")
+        db = load(start=start)
+
         t = db.table_get(name="t1", schema=schema)
 
         res = t.find(name="name1", email="info2@something.com")
@@ -109,3 +103,5 @@ class BCDBFactory(JSConfigBase):
         assert o.changed_prop == True  # now it really changed
 
         assert o.ddict["name"] == "name3"
+
+        print ("TEST DONE")

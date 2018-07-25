@@ -4,5 +4,5 @@
 
 * [gedis](/gedis.md)
 * [BCDB](/bcdb.md)
-* [install](/recordchain_install.md)
-* [schema](/bcdb.md)
+* [install](/rc_install.md)
+* [schema](/schema.md)

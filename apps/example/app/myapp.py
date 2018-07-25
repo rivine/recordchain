@@ -17,7 +17,7 @@ class myapp(JSBASE):
         ```
 
         ```out
-        !recordchain.digitalme.dnsrecord
+        !recordchain.digitalme.dnsrecord 
         ```
         """
         #TODO:*1 the obj in should be one populate at client, now is the properties of the obj so not ok
@@ -26,7 +26,7 @@ class myapp(JSBASE):
     def test_dns2(self, type,val, schema_out):
         """
         ```out
-        !recordchain.digitalme.dnsrecord
+        [!recordchain.digitalme.dnsrecord]
         ```
         """
         o = schema_out.new()

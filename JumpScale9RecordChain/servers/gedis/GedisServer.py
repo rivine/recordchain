@@ -122,7 +122,7 @@ class GedisServer(StreamServer, JSConfigBase):
                     file_path = j.sal.fs.joinPaths(self.static_files_path, static_file)
                     if j.sal.fs.exists(file_path):
                         self.static_files[static_file] = j.sal.fs.readFile(file_path).replace('%%host%%', host).encode('utf-8')
-                        start_response('200 OK', [])
+                        start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
                         return [self.static_files[static_file]]
             start_response('404 NOT FOUND', [])
             return []

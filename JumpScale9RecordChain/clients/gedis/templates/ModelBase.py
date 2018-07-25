@@ -21,8 +21,7 @@ class model(JSBASE):
     def set(self,obj):
         bdata=j.data.serializer.msgpack.dumps([obj.id,obj.data])
         res = self.redis.execute_command("model_%s.set"%self.name,bdata)
-        id,data=j.data.serializer.msgpack.loads(res)
-        obj = self.schema.get(capnpbin=data)
+        id,_= j.data.serializer.msgpack.loads(res)
         obj.id = id
         return obj
 

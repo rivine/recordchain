@@ -12,17 +12,17 @@ def route_default():
     # return redirect(url_for('index_.html'))
     return redirect('/%s/index.html'%name)
 
-@blueprint.route('/blog/<name>.html')
-@blueprint.route('/blog/<name>')
-def route_blog(name):
-    doc = ds.doc_get(name,cat="blog")
-    return render_template('%s_blog.html'%(name),doc=doc,name=name)
+@blueprint.route('/blog/<page>.html')
+@blueprint.route('/blog/<page>')
+def route_blog(page):
+    # doc = ds.doc_get(page,cat="blog")
+    return render_template('%s_%s.html'%(name, page))
 
 
-# ds.doc_get(template)
-# @login_required
-@blueprint.route('/<template>.html')
-def route_template(template):
-    # from IPython import embed;embed(colors='Linux')
-    return render_template('%s_%s.html'%(name,template))
+# # ds.doc_get(template)
+# # @login_required
+# @blueprint.route('/<template>.html')
+# def route_template(template):
+#     # from IPython import embed;embed(colors='Linux')
+#     return render_template('%s_%s.html'%(name,template))
 

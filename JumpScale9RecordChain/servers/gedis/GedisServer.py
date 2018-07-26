@@ -67,13 +67,17 @@ class GedisServer(StreamServer, JSConfigBase):
             items = [p for p in environ['PATH_INFO'].split('/static/') if p]
             if len(items) == 1:
                 static_file = items[-1]
-                if not static_file in self.static_files:
-                    host = environ.get('HTTP_HOST')
-                    file_path = j.sal.fs.joinPaths(self.static_files_path, static_file)
-                    if j.sal.fs.exists(file_path):
-                        self.static_files[static_file] = j.sal.fs.readFile(file_path).replace('%%host%%', host).encode('utf-8')
-                        start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
-                        return [self.static_files[static_file]]
+                if static_file in self.static_files:
+                    start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
+                    return [self.static_files[static_file]]
+
+                host = environ.get('HTTP_HOST')
+                file_path = j.sal.fs.joinPaths(self.static_files_path, static_file)
+                if j.sal.fs.exists(file_path):
+                    self.static_files[static_file] = j.sal.fs.readFile(file_path).replace('%%host%%', host).encode('utf-8')
+                    start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
+                    return [self.static_files[static_file]]
+            
             start_response('404 NOT FOUND', [])
             return []
 
@@ -143,10 +147,9 @@ class GedisServer(StreamServer, JSConfigBase):
     def _startt(self):
         
         reset=True
-
-        zdb = j.clients.zdb.get(self.config.data["zdb_instance"]) 
+        zdb = j.clients.zdb.get(self.config.data["zdb_instance"])
         db = j.data.bcdb.get(zdb)
-        db.tables_get(self.app_dir)
+        db.tables_get(j.sal.fs.joinPaths(self.app_dir, 'schemas'))
         self.db = db
 
 
@@ -157,7 +160,9 @@ class GedisServer(StreamServer, JSConfigBase):
             self.logger.info("generate model: model_%s.py" % namespace)
             dest = j.sal.fs.joinPaths(self.code_generated_dir, "model_%s.py" % namespace)
             if reset or not j.sal.fs.exists(dest):
-                code = j.servers.gedis.code_model_template.render(obj=table.schema)
+                find_args = ''.join(["{0}={1},".format(p.name, p.default_as_python_code) for p in table.schema.properties if p.index]).strip(',')
+                kwargs = ''.join(["{0}={0},".format(p.name, p.name) for p in table.schema.properties if p.index]).strip(',')
+                code = j.servers.gedis.code_model_template.render(obj=table.schema, find_args=find_args, kwargs=kwargs)
                 j.sal.fs.writeFile(dest, code)
             self.schema_urls.append(table.schema.url)
 

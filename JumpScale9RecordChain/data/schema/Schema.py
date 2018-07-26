@@ -187,7 +187,7 @@ class Schema(JSBASE):
     def capnp_template(self):
         if self._capnp_template == None:
             self._capnp_template = j.data.schema.template_engine.get_template("schema.capnp")
-        return self._capnp_template        
+        return self._capnp_template
 
     @property
     def code(self):
@@ -220,11 +220,13 @@ class Schema(JSBASE):
             self._obj_class = m.ModelOBJ
         return self._obj_class
 
-    def get(self,data={},capnpbin=None):
-        return self.objclass(schema=self,data=data,capnpbin=capnpbin)
+    def get(self,data={},capnpbin=None, only_fields=[]):
+        # @TODO: implement only_fields
+        obj =  self.objclass(schema=self,data=data,capnpbin=capnpbin)
+        return obj
 
-    def new(self):
-        return self.get()
+    def new(self, only_fields=[]):
+        return self.get(only_fields=only_fields)
 
     @property
     def index_list(self):

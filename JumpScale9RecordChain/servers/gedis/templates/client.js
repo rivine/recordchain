@@ -54,5 +54,5 @@ const client = (function(){
 return client    
 })()
 export {
-    default as client
+    client as default
 } 

@@ -45,8 +45,11 @@ class model_{{obj.name}}(JSBASE):
         else:
             return j.data.serializer.msgpack.dumps([obj.id,obj.data])
 
-    def find(self,id):
-        return self.table.find(hook=self.hook_get,id=id)
+    def find(self, total_items_in_page=20, page_number=1, only_fields=[], {{find_args}}):
+        if isinstance(only_fields, bytes):
+            import ast
+            only_fields = ast.literal_eval(only_fields.decode())
+        return self.table.find(hook=self.hook_get, capnp=True, total_items_in_page=total_items_in_page, page_number=page_number, only_fields=only_fields, {{kwargs}})
         
     def new(self):
         return self.table.new()

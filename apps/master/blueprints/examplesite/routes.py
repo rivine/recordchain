@@ -4,10 +4,10 @@ from js9 import j
 
 login_manager = j.servers.web.latest.loader.login_manager
 
-@blueprint.route('/')
-def route_default():
-    # return redirect(url_for('index_.html'))
-    return redirect('%s/index_.html'%name)
+# @blueprint.route('/')
+# def route_default():
+#     # return redirect(url_for('index_.html'))
+#     return redirect('%s/index_.html'%name)
 
 
 # @login_required

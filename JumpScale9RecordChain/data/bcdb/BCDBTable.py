@@ -146,7 +146,7 @@ class BCDBTable(JSBASE):
     def new(self):
         return self.schema.get()
 
-    def get(self,id,capnp=False,hook=None):
+    def get(self,id,capnp=False,hook=None, only_fields=[]):
         """
         @PARAM capnp if true will return data as capnp binary object, no hook will be done !
         @RETURN obj    (.index is in obj)
@@ -168,48 +168,70 @@ class BCDBTable(JSBASE):
             raise RuntimeError("not supported format in table yet")
 
         if capnp:
-            return bdata
+            if not only_fields:
+                return bdata
+            else:
+                obj = self.schema.get(capnpbin=bdata, only_fields=only_fields)
+                return obj.data
         else:
-            obj = self.schema.get(capnpbin=bdata)
+            obj = self.schema.get(capnpbin=bdata, only_fields=only_fields)
             obj.id = id
             obj.index = index
             if hook:
                 obj = hook(obj)
             return obj
 
-    def find(self,hook=None,**args):
+    def find(self,hook=None, capnp=False, total_items_in_page=20, page_number=1, only_fields=[], **args):
+        total_items_in_page = int(total_items_in_page)
+        page_number = int(page_number)
+
         res=[]
+        # for each item in passed filter args, get result
         for key,val in args.items():
+
+            if not val:
+                continue
+
             indexkey=self._index_key+":%s"%key
-            res2=[]
+            ids=[]
 
             if val == '*' or val == b'*':
                 for item in self.index.hkeys(indexkey):
                     id=self.index.hget(indexkey,item)
                     id=struct.unpack("<I",id)[0]            
-                    if id not in res2:
-                        res2.append(id)
+                    ids.append(id)
             else:
                 id=self.index.hget(indexkey,val)
                 if id is not None:
-                    id=struct.unpack("<I",id)[0]            
-                    if id not in res2:
-                        res2.append(id)
-            res.append(res2)
+                    ids.extend(msgpack.unpackb(id))
+            if ids:
+                res.append(ids)
 
-        res = [set(item) for item in res]
+        res = reduce(set.intersection, res)
 
-        if not res:
-            return []
+        final = []
 
-        res3 = reduce(set.intersection, res)
-        res4=[]
-        for item in res3:
-            obj=self.get(item)
-            if hook:
-                obj = hook(obj)
-            res4.append(obj)     
-        return res4
+        # pagination
+        start = (page_number - 1) * total_items_in_page
+        end = total_items_in_page + start - 1
+        current = -1
 
+        for id in res:
+            current += 1
 
+            if current < start:
+                continue
+
+            if current > end:
+                break
+
+            obj=self.get(id=id, capnp=capnp, hook=hook, only_fields=only_fields)
+            if not obj:
+                continue
+            if capnp:
+                obj = j.data.serializer.msgpack.dumps([id,obj])
+                final.append(obj)
+        if capnp:
+            final = j.data.serializer.msgpack.dumps(final)
+        return final
 

@@ -3,7 +3,7 @@ from pprint import pprint as print
 
 from js9 import j
 
-from .server import DNSServer
+from .DNSServer import DNSServer
 import os
 JSBASE = j.application.jsbase_get_class()
 from gevent import socket

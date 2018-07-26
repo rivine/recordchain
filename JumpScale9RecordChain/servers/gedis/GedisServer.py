@@ -31,7 +31,6 @@ class GedisServer(StreamServer, JSConfigBase):
     def __init__(self, instance, data={}, parent=None, interactive=False, template=None):
         JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=template or TEMPLATE, interactive=interactive)
 
-        self.db = None
         self.static_files = {}
         self._sig_handler = []
         self.cmds_meta = {}
@@ -39,17 +38,23 @@ class GedisServer(StreamServer, JSConfigBase):
         self.cmds = {}
         self.schema_urls = []
         self.serializer = None
-        self._inited = False
+
         self.ssl_priv_key_path = None
         self.ssl_cert_path = None
+
         self.host = self.config.data["host"]
         self.port = int(self.config.data["port"])
         self.websockets_port = int(self.config.data["websockets_port"])
         self.address = '{}:{}'.format(self.host, self.port)
         self.app_dir = self.config.data["app_dir"]
         self.ssl = self.config.data["ssl"]
+
         self.web_client_code = None
         self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.instance, "server")
+        
+        self.init()
+
+        # self._servers_init()
 
     def sslkeys_generate(self):
         if self.ssl:
@@ -64,36 +69,37 @@ class GedisServer(StreamServer, JSConfigBase):
             return key, cert
 
 
-    def websocketapp(self, environ, start_response):
-        if '/static/' in environ['PATH_INFO']:
-            items = [p for p in environ['PATH_INFO'].split('/static/') if p]
-            if len(items) == 1:
-                static_file = items[-1]
-                if static_file in self.static_files:
-                    start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
-                    return [self.static_files[static_file]]
+    # def websocketapp(self, environ, start_response):
+    #     if '/static/' in environ['PATH_INFO']:
+    #         items = [p for p in environ['PATH_INFO'].split('/static/') if p]
+    #         if len(items) == 1:
+    #             static_file = items[-1]
+    #             if static_file in self.static_files:
+    #                 start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
+    #                 return [self.static_files[static_file]]
 
-                host = environ.get('HTTP_HOST')
-                file_path = j.sal.fs.joinPaths(self.static_files_path, static_file)
-                if j.sal.fs.exists(file_path):
-                    self.static_files[static_file] = j.sal.fs.readFile(file_path).replace('%%host%%', host).encode('utf-8')
-                    start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
-                    return [self.static_files[static_file]]
+    #             host = environ.get('HTTP_HOST')
+    #             file_path = j.sal.fs.joinPaths(self.static_files_path, static_file)
+    #             if j.sal.fs.exists(file_path):
+    #                 self.static_files[static_file] = j.sal.fs.readFile(file_path).replace('%%host%%', host).encode('utf-8')
+    #                 start_response('200 OK', [('Content-Type', 'application/javascript;charset=utf-8'),('Access-Control-Allow-Origin','*')])
+    #                 return [self.static_files[static_file]]
             
-            start_response('404 NOT FOUND', [])
-            return []
+    #         start_response('404 NOT FOUND', [])
+    #         return []
 
-        websocket = environ.get('wsgi.websocket')
-        if not websocket:
-            return []
-        addr = '{0}:{1}'.format(environ['REMOTE_ADDR'],environ['REMOTE_PORT'])
-        handler = WebsocketRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta)
-        handler.handle(websocket, addr)
-        return []
+    #     websocket = environ.get('wsgi.websocket')
+    #     if not websocket:
+    #         return []
+    #     addr = '{0}:{1}'.format(environ['REMOTE_ADDR'],environ['REMOTE_PORT'])
+    #     handler = WebsocketRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta)
+    #     handler.handle(websocket, addr)
+    #     return []
 
     def init(self):
-        # add the cmds to the server (from generated dir + app_dir)
-        j.servers.gedis.latest = self
+        
+        #hook to allow external servers to find this gedis
+        j.servers.gedis.latest = self        
 
         # create dirs for generated codes and make sure is empty
         for cat in ["server","client"]:
@@ -107,133 +113,164 @@ class GedisServer(StreamServer, JSConfigBase):
             sys.path.append(self.code_generated_dir)
 
         # make sure apps dir is created if not exists
-        j.sal.fs.createDir(self.app_dir)
-        
         if self.app_dir.strip() is "":
             raise RuntimeError("appdir cannot be empty")
-
+        j.sal.fs.createDir(self.app_dir)
+        
+        #copies the base from the jumpscale lib to the appdir
         self.logger.debug("copy base to:%s"%self.app_dir )
-        src = j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/JumpScale9RecordChain/servers/gedis/base")
-        j.tools.jinja2.copy_dir_render(src,self.app_dir ,reset=False, j=j, config=self.config.data, instance=self.instance)     
+        #make sure reset stays false
+        j.tools.jinja2.copy_dir_render("%s/base"%j.servers.gedis.path,self.app_dir ,overwriteFiles=True, reset=False, \
+            j=j, config=self.config.data, instance=self.instance)     
 
-        # make sure static dir exists
-        self.static_files_path = j.sal.fs.joinPaths(self.code_generated_dir, 'static')
-        j.sal.fs.createDir(self.static_files_path)
+        # add the cmds to the server (from generated dir + app_dir)
+        self.bcdb_init() #make sure we know the schemas
+        self.code_generate_model_actors() #make sure we have the actors generated for the model, is in server on code generation dir
 
-
+        #now in code generation dir we have the actors generated for the model
+        #load the commands into the namespace of the server (self.cmds_add)
         files = j.sal.fs.listFilesInDir(self.code_generated_dir,"server", filter="*.py", exclude=["__*", "test*"]) 
         files += j.sal.fs.listFilesInDir(self.app_dir+"/actors", filter="*.py", exclude=["__*"])
-
         for item in files:
             namespace = self.instance + '.' + j.sal.fs.getBaseName(item)[:-3].lower()
             self.logger.debug("cmds generated add:%s"%item)
             self.cmds_add(namespace, path=item)
 
-        # generate web client
-        commands = []
+        self.code_generate_js_client()
 
-        for nsfull, cmds_ in self.cmds_meta.items():
-            if 'model_' in nsfull:
-                continue
-            commands.append(cmds_)
+        self._inited = True        
 
-        code = j.servers.gedis.js_client_template.render(commands=commands)
-        dest = os.path.join(self.code_generated_dir, 'static', 'client.js')
-        j.sal.fs.writeFile(dest, code)
-
-        self.web_client_code = code
-        self._inited = True
-
-    def _start(self):
-        reset=True
+    def bcdb_init(self):
+        """
+        result is schema's are loaded & known, can be accesed in self.bcdb
+        """
         zdb = j.clients.zdb.get(self.config.data["zdb_instance"])
-        db = j.data.bcdb.get(zdb)
-        db.tables_get(j.sal.fs.joinPaths(self.app_dir, 'schemas'))
-        self.db = db
+        bcdb = j.data.bcdb.get(zdb)
+        bcdb.tables_get(j.sal.fs.joinPaths(self.app_dir, 'schemas'))
+        self.bcdb = bcdb     
 
-
+    def code_generate_model_actors(self):
+        """
+        generate the actors (methods to work with model) for the model and put in code generated dir
+        """
+        reset=True
         self.logger.info("Generate models & populate self.schema_urls")
         self.logger.info("in: %s"%self.code_generated_dir)
-        for namespace, table in db.tables.items():
+        for namespace, table in self.bcdb.tables.items():
             # url = table.schema.url.replace(".","_")
             self.logger.info("generate model: model_%s.py" % namespace)
             dest = j.sal.fs.joinPaths(self.code_generated_dir, "model_%s.py" % namespace)
             if reset or not j.sal.fs.exists(dest):
                 find_args = ''.join(["{0}={1},".format(p.name, p.default_as_python_code) for p in table.schema.properties if p.index]).strip(',')
                 kwargs = ''.join(["{0}={0},".format(p.name, p.name) for p in table.schema.properties if p.index]).strip(',')
-                code = j.servers.gedis.code_model_template.render(obj=table.schema, find_args=find_args, kwargs=kwargs)
-                j.sal.fs.writeFile(dest, code)
+                code = j.tools.jinja2.file_render("%s/templates/actor_model_server.py"%(j.servers.gedis.path),
+                    obj=table.schema, find_args=find_args, dest=dest, kwargs=kwargs)
             self.schema_urls.append(table.schema.url)
 
-        # load commands if not loaded before
-        if self._inited is False:
-            self.init()
-
-        self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
-
-        from gevent import monkey
-        monkey.patch_thread() #TODO:*1 dirty hack, need to use gevent primitives, suggest to add flask server
-        import threading
-
-        if self.ssl:
-            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
-
-            # Server always supports SSL
-            # client can use to talk to it in SSL or not
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
-                keyfile=self.ssl_priv_key_path,
-                certfile=self.ssl_cert_path
-            )
-            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
-        else:
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
-            )
-            self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
-
-
-
-        t = threading.Thread(target=self.websocket_server.serve_forever)
-        t.setDaemon(True)
-        t.start()
-        self.logger.info("start Server on {0} - PORT: {1} - WEBSOCKETS PORT: {2}".format(self.host, self.port, self.websockets_port))
-        self.redis_server.serve_forever()
-
-    def start(self, reset=False, background=True):
-        if not background:
-            self._start()
-        else:
-            cmd = "js9 'x=j.servers.gedis.get(instance=\"%s\");x._start()'" % (self.instance)
-            j.tools.tmux.execute(
-                cmd,
-                session='main',
-                window='gedis_%s' % self.instance,
-                pane='main',
-                session_reset=False,
-                window_reset=True
-            )
-
-            res = j.sal.nettools.waitConnectionTest("localhost", int(self.config.data["port"]), timeoutTotal=1000)
-            if res == False:
-                raise RuntimeError("Could not start gedis server on port:%s" % int(self.config.data["port"]))
-            self.logger.info("gedis server '%s' started" % self.instance)
-
-    def stop(self):
+    def code_generate_js_client(self):
         """
-        stop receiving requests and close the server
+        "generate the code for the javascript browser
         """
-        # prevent the signal handler to be called again if
-        # more signal are received
-        for h in self._sig_handler:
-            h.cancel()
+        # generate web client
+        commands = []
 
-        self.logger.info('stopping server')
-        self.redis_server.stop()
+        for nsfull, cmds_ in self.cmds_meta.items():
+            if 'model_' in nsfull:
+                continue
+            commands.append(cmds_)        
+        self.code_js_client = j.tools.jinja2.file_render("%s/templates/client.js"%(j.servers.gedis.path),commands=commands)
+
+    # def _start(self):
+
+        # self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
+
+        # from gevent import monkey
+        # monkey.patch_thread() #TODO:*1 dirty hack, need to use gevent primitives, suggest to add flask server
+        # import threading
+
+        # if self.ssl:
+        #     self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
+
+        #     # Server always supports SSL
+        #     # client can use to talk to it in SSL or not
+        #     self.redis_server = StreamServer(
+        #         (self.host, self.port),
+        #         spawn=Pool(),
+        #         handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
+        #         keyfile=self.ssl_priv_key_path,
+        #         certfile=self.ssl_cert_path
+        #     )
+        #     self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+        # else:
+        #     self.redis_server = StreamServer(
+        #         (self.host, self.port),
+        #         spawn=Pool(),
+        #         handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
+        #     )
+        #     self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+
+
+
+        # t = threading.Thread(target=self.websocket_server.serve_forever)
+        # t.setDaemon(True)
+        # t.start()
+        # self.logger.info("start Server on {0} - PORT: {1} - WEBSOCKETS PORT: {2}".format(self.host, self.port, self.websockets_port))
+        # self.redis_server.serve_forever()
+
+    # def _servers_init(self):
+    #     if self.ssl:
+    #         self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
+    #         # Server always supports SSL
+    #         # client can use to talk to it in SSL or not
+    #         self.redis_server = StreamServer(
+    #             (self.host, self.port),
+    #             spawn=Pool(),
+    #             handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
+    #             keyfile=self.ssl_priv_key_path,
+    #             certfile=self.ssl_cert_path
+    #         )
+    #         #NO SSL ON WEBSOCKET SERVER? TODO:*1
+    #         self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+    #     else:
+    #         self.redis_server = StreamServer(
+    #             (self.host, self.port),
+    #             spawn=Pool(),
+    #             handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
+    #         )
+    #         self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+
+
+    
+    # def start(self, reset=False, background=True):
+    #     if not background:
+    #         self._start()
+    #     else:
+    #         cmd = "js9 'x=j.servers.gedis.get(instance=\"%s\");x._start()'" % (self.instance)
+    #         j.tools.tmux.execute(
+    #             cmd,
+    #             session='main',
+    #             window='gedis_%s' % self.instance,
+    #             pane='main',
+    #             session_reset=False,
+    #             window_reset=True
+    #         )
+
+    #         res = j.sal.nettools.waitConnectionTest("localhost", int(self.config.data["port"]), timeoutTotal=1000)
+    #         if res == False:
+    #             raise RuntimeError("Could not start gedis server on port:%s" % int(self.config.data["port"]))
+    #         self.logger.info("gedis server '%s' started" % self.instance)
+
+    # def stop(self):
+    #     """
+    #     stop receiving requests and close the server
+    #     """
+    #     # prevent the signal handler to be called again if
+    #     # more signal are received
+    #     for h in self._sig_handler:
+    #         h.cancel()
+
+    #     self.logger.info('stopping server')
+    #     self.redis_server.stop()
 
     def cmds_add(self, namespace, path=None, class_=None):
         self.logger.debug("cmds_add:%s:%s"%(namespace,path))

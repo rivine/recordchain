@@ -14,8 +14,8 @@ class model_{{obj.name}}(JSBASE):
         JSBASE.__init__(self)        
         self.namespace = "{{obj.name}}"
         self.url = "{{obj.url}}"
-        self.db = j.servers.gedis.latest.db
-        self.table = self.db.tables["{{obj.name}}"]
+        self.bcdb = j.servers.gedis.latest.bcdb
+        self.table = self.bcdb.tables["{{obj.name}}"]
         self.schema = self.table.schema
 
     def set(self,data_in):
@@ -68,5 +68,4 @@ class model_{{obj.name}}(JSBASE):
         this allows addional manipulation of object or security checks
         """
         return obj
-
 

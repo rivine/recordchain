@@ -9,6 +9,9 @@ JSBASE = j.application.jsbase_get_class()
 
 class GedisCmd(JSBASE):
     def __init__(self,cmds,cmd):
+        """
+        these are the cmds which get executed by the gevent server handler for gedis (cmds coming from websockets or redis interface)
+        """
         JSBASE.__init__(self)
 
         self.cmdobj = cmd
@@ -98,15 +101,14 @@ class GedisCmd(JSBASE):
         return j.data.text.indent(self.cmdobj.comment,nspaces=8).rstrip()
 
     @property
-    def code_runtime(self):
-        code = j.servers.gedis.code_server_template.render(obj=self)
-        return code
-
-    @property
     def method_generated(self):
+        """
+        is a real python method, can be called, here it gets loaded & interpreted
+        """
         if self._method is None:
             path = j.servers.gedis.code_generation_dir + "%s_%s.py" % (self.namespace,self.name)
-            j.sal.fs.writeFile(path,self.code_runtime)
+            code_runtime = j.tools.jinja2.file_render("%s/templates/actor_command_server.py"%j.servers.gedis.path,obj=self)
+            j.sal.fs.writeFile(path,code_runtime)
             m=imp.load_source(name=self.namespace+"."+self.name, pathname=path)
             self._method = m.action
         return self._method

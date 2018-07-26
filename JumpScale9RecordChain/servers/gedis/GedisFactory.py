@@ -23,7 +23,7 @@ class GedisFactory(JSConfigBase):
         self._code_test_template = None
         self._js_client_template = None
 
-    def get(self,instance='main',data={},interactive = True):
+    def get(self,instance='main',data={},interactive = False):
 
         return super(GedisFactory, self).get(instance=instance, data=data, interactive=interactive)
 
@@ -81,6 +81,11 @@ class GedisFactory(JSConfigBase):
         self.logger.info("gedis app now in: '%s'\n    do:\n    cd %s;sh start.sh"%(dest,dest))   
 
 
+    def geventserver_get(self,instance=""):
+        server = self.get(instance=instance)
+        # res.append(server.websocket_server)
+        return server.redis_server
+ 
 
     def configure(
             self,
@@ -94,7 +99,7 @@ class GedisFactory(JSConfigBase):
             zdb_instance = "",
             interactive = False,
             configureclient = True
-    ):
+        ):
 
         if app_dir == "":
             app_dir = j.sal.fs.getcwd()
@@ -123,69 +128,63 @@ class GedisFactory(JSConfigBase):
         return GedisCmds(namespace=namespace,capnpbin=capnpbin)
 
     @property
-    def template_engine(self):
-        if self._template_engine is None:
-            from jinja2 import Environment, PackageLoader
-
-            self._template_engine = Environment(
-                loader=PackageLoader('JumpScale9RecordChain.servers.gedis', 'templates'),
-                trim_blocks=True,
-                lstrip_blocks=True,
-            )
-        return self._template_engine
-
-    @property
-    def _path(self):
+    def path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
 
-    @property
-    def code_server_template(self):
-        if self._template_code_server is None:
-            self._template_code_server = self.template_engine.get_template("template.py")
-        return self._template_code_server
-
-    @property
-    def code_model_template(self):
-        if self._code_model_template is None:
-            self._code_model_template = self.template_engine.get_template("ModelBase.py")
-        return self._code_model_template
-
-    @property
-    def js_client_template(self):
-        if self._js_client_template is None:
-            self._js_client_template = self.template_engine.get_template("client.js")
-        return self._js_client_template
-
-    @property
-    def code_start_template(self):
-        if self._code_start_template is None:
-            self._code_start_template = self.template_engine.get_template("start.py")
-        return self._code_start_template
-
-    @property
-    def code_test_template(self):
-        if self._code_test_template is None:
-            self._code_test_template = self.template_engine.get_template("test.py")
-        return self._code_test_template
-
-
-    def test(self,start=True):
+    def test(self,zdb_start=True):
         """
-        js9 'j.servers.gedis.test()'
+        js9 'j.servers.gedis.test(zdb_start=False)'
         """
-
-        cl = j.clients.zdb.testdb_server_start_client_get(start=start)  #starts & resets a zdb in seq mode with name test       
-
-        dest =  j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/example")
-        self.logger.info("copy templates to:%s"%dest)
 
         #remove configuration of the gedis factory
         self.delete("test")
 
+        if zdb_start:
+            cl = j.clients.zdb.testdb_server_start_client_get(start=start)  #starts & resets a zdb in seq mode with name test       
+
+        dest =  j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/example")
         gedis = self.configure(instance="test",port=8888,host="localhost",app_dir=dest,ssl=False,\
             zdb_instance = "test",
             websockets_port=9999,secret = "1234")
 
-        gedis.start()
+        #we need to run multiple servers, lets get a rack for gevent
+        rack=j.servers.gevent_servers_racks.get()
+
+        rack.add(j.servers.gedis.geventserver_get("test"))    
+    
 
         from IPython import embed;embed(colors='Linux')
+
+
+
+
+
+    # @property
+    # def code_server_template(self):
+    #     if self._template_code_server is None:
+    #         self._template_code_server = self.template_engine.get_template("template.py")
+    #     return self._template_code_server
+
+    # @property
+    # def code_model_template(self):
+    #     if self._code_model_template is None:
+    #         self._code_model_template = self.template_engine.get_template("ModelBase.py")
+    #     return self._code_model_template
+
+    # @property
+    # def js_client_template(self):
+    #     if self._js_client_template is None:
+    #         self._js_client_template = self.template_engine.get_template("client.js")
+    #     return self._js_client_template
+
+    # @property
+    # def code_start_template(self):
+    #     if self._code_start_template is None:
+    #         self._code_start_template = self.template_engine.get_template("start.py")
+    #     return self._code_start_template
+
+    # @property
+    # def code_test_template(self):
+    #     if self._code_test_template is None:
+    #         self._code_test_template = self.template_engine.get_template("test.py")
+    #     return self._code_test_template

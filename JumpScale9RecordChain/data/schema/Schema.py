@@ -215,6 +215,7 @@ class Schema(JSBASE):
         if self._obj_class is None:
             url = self.url.replace(".","_")
             path = j.sal.fs.joinPaths(j.data.schema.code_generation_dir, "%s.py" % url)
+            import pudb; pudb.set_trace()
             j.sal.fs.writeFile(path,self.code)
             m=imp.load_source(name="url", pathname=path)
             self._obj_class = m.ModelOBJ

@@ -46,8 +46,10 @@ class GedisServer(StreamServer, JSConfigBase):
         self.port = int(self.config.data["port"])
         self.websockets_port = int(self.config.data["websockets_port"])
         self.address = '{}:{}'.format(self.host, self.port)
+        self.app_dir = self.config.data["app_dir"]
         self.ssl = self.config.data["ssl"]
         self.web_client_code = None
+        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.instance, "server")
 
     def sslkeys_generate(self):
         if self.ssl:
@@ -95,18 +97,16 @@ class GedisServer(StreamServer, JSConfigBase):
 
         # create dirs for generated codes and make sure is empty
         for cat in ["server","client"]:
-            code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, cat)
+            code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.instance, cat)
             j.sal.fs.remove(code_generated_dir)
             j.sal.fs.createDir(code_generated_dir)
             j.sal.fs.touch(j.sal.fs.joinPaths(code_generated_dir, '__init__.py'))
 
         #now add the one for the server
-        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", instance, "server")
         if self.code_generated_dir not in sys.path:
             sys.path.append(self.code_generated_dir)
 
         # make sure apps dir is created if not exists
-        self.app_dir = self.config.data["app_dir"]
         j.sal.fs.createDir(self.app_dir)
         
         if self.app_dir.strip() is "":
@@ -144,8 +144,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self.web_client_code = code
         self._inited = True
 
-    def _startt(self):
-        
+    def _start(self):
         reset=True
         zdb = j.clients.zdb.get(self.config.data["zdb_instance"])
         db = j.data.bcdb.get(zdb)

@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Modish - Open Source Admin Dashboard Template</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE-Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://fonts.googleapis.com/css?family=Raleway:300,400,600,800" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet">
+    <link rel="stylesheet" href="/base/static/bootstrap4/bootstrap.min.css">
+    <link rel="stylesheet" href="/base/static/modish/css/core.css">
+    <link rel="stylesheet" href="/base/static/modish/css/components.css">
+    <link rel="stylesheet" href="/base/static/fontawesome4/fontawesome.min.css">
+
+    <script type="text/javascript" src="/base/static/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="/base/static/modish/js/tether.min.js"></script>
+    <script type="text/javascript" src="/base/static/bootstrap4/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="/base/static/modish/js/app.min.js"></script>
+
+    {% block extrascripts %}
+
+    {% endblock extrascripts %}
+</head>
+
+<body>
+    {% include "_adminsite2_nav.html" %}
+
+    <div class="page-container">
+        <div class="page-content">
+            {% include "_adminsite2_sidebar.html" %}
+
+            <!-- PAGE CONTENT -->
+            <div class="content-wrapper">
+                <div class="content">
+                    {% block content %}
+                    {% endblock %}
+                </div>
+            </div>
+            <!-- /PAGE CONTENT -->
+        </div>
+    </div>
+
+    {% block jsafter %}
+    {% endblock %}
+</body>
+
+</html>

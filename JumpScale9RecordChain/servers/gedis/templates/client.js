@@ -1,31 +1,36 @@
 // SERVER_DOMAIN & SERVER_PORT will come from the client.js 
 const client = (function(){
-    var socket = new WebSocket("wss://%%host%%/");
-    var connected = false
-    var connect = ()=> {
-        return new Promise(res =>{
-            if(!connected){
-                socket.onopen = () => {
-                connected = true
-                res(true)
-            }
-            } else {
-                res(true)
-            }
+    var connect = () => {
+        return new Promise(function (resolve, reject) {
+            var socket = new WebSocket("wss://%%host%%/");
+            socket.onopen = function () {
+                resolve(socket);
+            };
+            socket.onerror = function (err) {
+                reject(err);
+            };
+        });
+    }
+    var execute = (command, args) => {
+        return connect().then((socket, err) => {
+            return new Promise((resolve, fail) => {
+                if (socket) {
+                    socket.onmessage = function (e) {
+                        resolve(e.data)
+                        socket.close()
+                    }
+                    if (args.length != 0) {
+                        socket.send(command + " " + args)
+                    } else {
+                        socket.send(command)
+                    }
+                } else {
+                    fail(err)
+                }
+
+            })
         })
-      }
-      var execute = (command, args) => {
-          return connect().then((res) => { return new Promise((resolve, fail) => {
-              socket.onmessage = function(e) {
-                  resolve(e.data)
-              }
-              if (args.length != 0){
-                  socket.send(command + " " + args)
-              } else {
-                  socket.send(command)
-              }
-          })})
-      }
+    }
     
     var client = {}
     

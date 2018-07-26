@@ -1,0 +1,593 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Modish - Open Source Admin Dashboard Template</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE-Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://fonts.googleapis.com/css?family=Raleway:300,400,600,800" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/bootstrap.css">
+    <link rel="stylesheet" href="assets/css/core.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/icons/fontawesome/styles.min.css">
+
+    <script type="text/javascript" src="lib/js/jquery.min.js"></script>
+    <script type="text/javascript" src="lib/js/tether.min.js"></script>
+    <script type="text/javascript" src="lib/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="assets/js/app.min.js"></script>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-toggleable-md">
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav">
+            <span>
+                <i class="fa fa-code-fork"></i>
+            </span>
+        </button>
+
+        <button class="navbar-toggler navbar-toggler-left" type="button" id="toggle-sidebar">
+            <span>
+               <i class="fa fa-align-justify"></i>
+            </span>
+        </button>
+
+        <a class="navbar-brand logo" href="#">
+            <img src="assets/img/logo.png" alt="Modish">
+        </a>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <button class="sidebar-toggle btn btn-flat" id="toggle-sidebar-desktop">
+                <span>
+                    <i class="fa fa-align-justify"></i>
+                </span>
+            </button>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle nav-icon" data-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-bell-o"></i>
+                        <span class="hidden-lg-up position-right">Notifications</span>
+                        <span class="badge bg-danger-4">8</span>
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-right width-300 list-notifications">
+                        <ul class="list-unstyled">
+                            <li class="media notif-unread">
+                                You have 3 unread notifications!
+                            </li>
+                            <li class="media">
+                                <div class="notif-icon bg-primary-4">
+                                    <i class="fa fa-bell-o"></i>
+                                </div>
+                                <div class="media-body notif-text">
+                                    You may want to check this!
+                                </div>
+                            </li>
+                            <li class="media mr-2">
+                                <div class="notif-icon bg-danger-4">
+                                    <i class="fa fa-exclamation"></i>
+                                </div>
+                                <div class="media-body notif-text text-danger-4">
+                                    Server Banshee is not responding.
+                                </div>
+                            </li>
+                            <li class="media">
+                                <div class="notif-icon bg-success-4">
+                                    <i class="fa fa-check"></i>
+                                </div>
+                                <div class="media-body notif-text text-success-4">
+                                    Backup completed successfully.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle dropdown-has-after" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        <img src="assets/img/default-user.jpg" alt="" class="user-img"> John Doe
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" href="#">
+                            <i class="fa fa-user"></i> <span>Profile</span></a>
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fa fa-comment"></i> <span>Messages</span></a>
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fa fa-cog"></i> <span>Settings</span></a>
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fa fa-sign-out"></i> <span>Logout</span></a>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <!-- /NAVBAR -->
+
+    <div class="page-container">
+        <div class="page-content">
+            <!-- inject:SIDEBAR -->
+
+            <div id="sidebar-main" class="sidebar sidebar-default">
+    <div class="sidebar-content">
+        <ul class="navigation">
+            <li class="navigation-header">
+                <span>Main</span>
+                <i class="icon-menu"></i>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-home"></i> <span>Dashboard</span></a>
+            </li>
+
+            <li class="navigation-header">
+                <span>Forms</span>
+                <i class="icon-menu"></i>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-pencil"></i> <span>Form Elements</span></a>
+                <ul>
+                    <li><a href="inputs.html">Inputs</a></li>
+                    <li><a href="input_groups.html">Input Groups</a></li>
+                    <li><a href="layout_horizontal.html">Horizontal Layout</a></li>
+                    <li><a href="layout_vertical.html">Vertical Layout</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-th"></i> <span>Components</span></a>
+                <ul>
+                    <li><a href="components_buttons.html">Buttons</a></li>
+                    <li><a href="components_dropdowns.html">Dropdown Menus</a></li>
+                    <li><a href="components_navs.html">Tabs, Accordions &amp; Navs</a></li>
+                    <li><a href="components_badges.html">Labels &amp; Badges</a></li>
+                    <li><a href="components_alerts.html">Alerts</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-heart"></i> <span>Icons</span></a>
+                <ul>
+                    <li><a href="icons_fontawesome.html">Font Awesome</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-mouse-pointer"></i> <span>Pickers</span></a>
+                <ul>
+                    <li><a href="pickers_date.html">Date Pickers</a></li>
+                    <li><a href="pickers_time.html">Time Pickers</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-table"></i> <span>Tables</span></a>
+                <ul>
+                    <li><a href="tables_basic.html">Basic Tables</a></li>
+                    <li><a href="tables_datatables.html">Data Tables</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-area-chart"></i> <span>Charts</span></a>
+                <ul>
+                    <li><a href="charts_chartist.html">Chartist.js</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-magic"></i> <span>Appearence</span></a>
+                <ul>
+                    <li><a href="appearence_panels.html">Content Panels</a></li>
+                    <li><a href="appearence_typography.html">Typography</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-edit"></i> <span>Editors</span></a>
+                <ul>
+                    <li><a href="editors_ck.html">CK Editor</a></li>
+                </ul>
+            </li>
+
+            <li class="navigation-header">
+                <span>Pages</span>
+                <i class="icon-menu"></i>
+            </li>
+
+            <li>
+                <a href="index.html"><i class="fa fa-file-o"></i> <span>Pages</span></a>
+                <ul>
+                    <li><a href="pages_login.html">Login</a></li>
+                    <li><a href="pages_register.html">Register</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>
+
+            <!-- inject:/SIDEBAR -->
+
+            <!-- PAGE CONTENT -->
+            <div class="content-wrapper">
+                <div class="content">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <h4 class="card-title">Tabs</h4>
+                            <p>
+                                Tabs can be activated via calling bootstrap's JavaScript API. For this template, the tabs are activated in <code>app.js</code>                                file.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold">Simple Tabs</h6>
+                                    <!-- Nav tabs -->
+                                    <ul class="nav nav-tabs" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" data-toggle="tab" href="#home" role="tab">Home</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="tab" href="#profile" role="tab">Profile</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="tab" href="#messages" role="tab">Messages</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="tab" href="#settings" role="tab">Settings</a>
+                                        </li>
+                                    </ul>
+
+                                    <!-- Tab panes -->
+                                    <div class="tab-content">
+                                        <div class="tab-pane active" id="home" role="tabpanel">
+                                            Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec velit neque, auctor sit amet
+                                            aliquam vel, ullamcorper sit amet ligula. Cras ultricies ligula sed magna dictum
+                                            porta. Vivamus suscipit tortor eget felis porttitor volutpat.
+                                        </div>
+                                        <div class="tab-pane" id="profile" role="tabpanel">
+                                            Curabitur non nulla sit amet nisl tempus convallis quis ac lectus. Mauris blandit aliquet elit, eget tincidunt nibh pulvinar
+                                            a. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia
+                                            Curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula.
+                                            Donec sollicitudin molestie malesuada.
+                                        </div>
+                                        <div class="tab-pane" id="messages" role="tabpanel">
+                                            Praesent sapien massa, convallis a pellentesque nec, egestas non nisi. Cras ultricies ligula sed magna dictum porta. Vivamus
+                                            magna justo, lacinia eget consectetur sed, convallis at tellus. Quisque velit
+                                            nisi, pretium ut lacinia in, elementum id enim.
+                                            <br/> Curabitur aliquet quam id dui posuere blandit. Proin eget tortor risus.
+                                            Curabitur arcu erat, accumsan id imperdiet et, porttitor at sem. Cras ultricies
+                                            ligula sed magna dictum porta.
+                                        </div>
+                                        <div class="tab-pane" id="settings" role="tabpanel">
+                                            Vestibulum ac diam sit amet quam vehicula elementum sed sit amet dui. Curabitur non nulla sit amet nisl tempus convallis
+                                            quis ac lectus. Nulla quis lorem ut libero malesuada feugiat. Pellentesque in
+                                            ipsum id orci porta dapibus. Lorem ipsum dolor sit amet, consectetur adipiscing
+                                            elit. Donec sollicitudin molestie malesuada. Vestibulum ac diam sit amet quam
+                                            vehicula elementum sed sit amet dui. Vestibulum ante ipsum primis in faucibus
+                                            orci luctus et ultrices posuere cubilia Curae; Donec velit neque, auctor sit
+                                            amet aliquam vel, ullamcorper sit amet ligula.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold">Justified Tabs</h6>
+                                    <!-- Nav tabs -->
+                                    <ul class="nav nav-tabs nav-justified" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" data-toggle="tab" href="#home1" role="tab">Home</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="tab" href="#profile1" role="tab">Profile</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="tab" href="#messages1" role="tab">Messages</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="tab" href="#settings1" role="tab">Settings</a>
+                                        </li>
+                                    </ul>
+
+                                    <!-- Tab panes -->
+                                    <div class="tab-content">
+                                        <div class="tab-pane active" id="home1" role="tabpanel">
+                                            Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec velit neque, auctor sit amet
+                                            aliquam vel, ullamcorper sit amet ligula. Cras ultricies ligula sed magna dictum
+                                            porta. Vivamus suscipit tortor eget felis porttitor volutpat.
+                                        </div>
+                                        <div class="tab-pane" id="profile1" role="tabpanel">
+                                            Curabitur non nulla sit amet nisl tempus convallis quis ac lectus. Mauris blandit aliquet elit, eget tincidunt nibh pulvinar
+                                            a. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia
+                                            Curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula.
+                                            Donec sollicitudin molestie malesuada.
+                                        </div>
+                                        <div class="tab-pane" id="messages1" role="tabpanel">
+                                            Praesent sapien massa, convallis a pellentesque nec, egestas non nisi. Cras ultricies ligula sed magna dictum porta. Vivamus
+                                            magna justo, lacinia eget consectetur sed, convallis at tellus. Quisque velit
+                                            nisi, pretium ut lacinia in, elementum id enim.
+                                            <br/> Curabitur aliquet quam id dui posuere blandit. Proin eget tortor risus.
+                                            Curabitur arcu erat, accumsan id imperdiet et, porttitor at sem. Cras ultricies
+                                            ligula sed magna dictum porta.
+                                        </div>
+                                        <div class="tab-pane" id="settings1" role="tabpanel">
+                                            Vestibulum ac diam sit amet quam vehicula elementum sed sit amet dui. Curabitur non nulla sit amet nisl tempus convallis
+                                            quis ac lectus. Nulla quis lorem ut libero malesuada feugiat. Pellentesque in
+                                            ipsum id orci porta dapibus. Lorem ipsum dolor sit amet, consectetur adipiscing
+                                            elit. Donec sollicitudin molestie malesuada. Vestibulum ac diam sit amet quam
+                                            vehicula elementum sed sit amet dui. Vestibulum ante ipsum primis in faucibus
+                                            orci luctus et ultrices posuere cubilia Curae; Donec velit neque, auctor sit
+                                            amet aliquam vel, ullamcorper sit amet ligula.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <h4 class="card-title">Pills</h4>
+                            <p class="content-group-sm">
+                                Take the same elements, just use <code>.nav-pills</code> class instead.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold content-group">Nav Pills</h6>
+                                    <ul class="nav nav-pills">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#">Active</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link disabled" href="#">Disabled</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold content-group">Nav Pills Justified</h6>
+                                    <ul class="nav nav-pills nav-fill">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#">Active</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link disabled" href="#">Disabled</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold content-group">Nav Pills With Dropdown</h6>
+                                    <ul class="nav nav-pills">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#">Active</a>
+                                        </li>
+                                        <li class="nav-item dropdown">
+                                            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="#">Action</a>
+                                                <a class="dropdown-item" href="#">Another action</a>
+                                                <a class="dropdown-item" href="#">Something else here</a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="#">Separated link</a>
+                                            </div>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <h4 class="card-title">Navs</h4>
+                            <p class="content-group-sm">
+                                Navigation available in Bootstrap share general markup and styles, from the base <code>.nav</code>                                class to the active and disabled states. Swap modifier classes to switch between each style.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold content-group">Basic Nav</h6>
+                                    <ul class="nav">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#">Active</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link disabled" href="#">Disabled</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold content-group">Basic Nav Justified</h6>
+                                    <ul class="nav justify-content-center">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#">Active</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link disabled" href="#">Disabled</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold content-group">Basic Nav Justified (End)</h6>
+                                    <ul class="nav justify-content-end">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#">Active</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#">Link</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link disabled" href="#">Disabled</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <h4 class="card-title">Accordions</h4>
+                            <p class="content-group">
+                                The Bootstrap collapse plugin allows you to toggle content on your pages with a few classes thanks to some helpful JavaScript.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold">Accordion</h6>
+                                    <div id="accordion" role="tablist" aria-multiselectable="true" class="accordion">
+                                        <div class="card">
+                                            <div class="card-header" role="tab" id="headingOne">
+                                                <h5 class="mb-0">
+                                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                                        Collapsible Group Item #1
+                                                    </a>
+                                                </h5>
+                                            </div>
+
+                                            <div id="collapseOne" class="collapse show" role="tabpanel" aria-labelledby="headingOne">
+                                                <div class="card-block">
+                                                    Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute,
+                                                    non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum
+                                                    eiusmod.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card">
+                                            <div class="card-header" role="tab" id="headingTwo">
+                                                <h5 class="mb-0">
+                                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                                    Collapsible Group Item #2
+                                                </a>
+                                                </h5>
+                                            </div>
+                                            <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
+                                                <div class="card-block">
+                                                    Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute,
+                                                    non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum
+                                                    eiusmod.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card">
+                                            <div class="card-header" role="tab" id="headingThree">
+                                                <h5 class="mb-0">
+                                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                                    Collapsible Group Item #3
+                                                </a>
+                                                </h5>
+                                            </div>
+                                            <div id="collapseThree" class="collapse" role="tabpanel" aria-labelledby="headingThree">
+                                                <div class="card-block">
+                                                    Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher
+                                                    vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic
+                                                    synth nesciunt you probably haven't heard of them accusamus labore sustainable
+                                                    VHS.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-block text-center">
+                                    <h6 class="text-bold">Toggle</h6>
+                                    <p>
+                                        <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                            Link with href
+                                        </a>
+                                        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false"
+                                            aria-controls="collapseExample">
+                                            Button with data-target
+                                        </button>
+                                    </p>
+                                    <div class="collapse" id="collapseExample">
+                                        <div class="card card-block">
+                                            Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica,
+                                            craft beer labore wes anderson cred nesciunt sapiente ea proident.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /PAGE CONTENT -->
+        </div>
+    </div>
+</body>
+
+</html>

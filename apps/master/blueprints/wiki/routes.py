@@ -16,7 +16,7 @@ def index():
     return redirect("wiki/foundation")
 
 
-@blueprint.route('/<sub>')
+@blueprint.route('')
 def index_sub(sub):
     return render_template('index_docsify.html')
 
@@ -28,7 +28,6 @@ def wiki_route(subpath):
     parts = subpath.split("/")
 
     if len(parts)<2:
-        raise RuntimeError("s")
         return render_template('error_notfound.html',url=subpath)
         
     wikicat = parts[0].lower().strip()

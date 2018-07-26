@@ -1,7 +1,7 @@
 
 [[docsite]]
 name = "foundation"
-url = "https://github.com/threefoldfoundation/tree/info_foundation"
+url = "https://github.com/threefoldfoundation/info_foundation"
 publish = "/foundation"
 
 [[docsite]]

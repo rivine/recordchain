@@ -47,6 +47,7 @@ class DNSServer(DatagramServer, JSBASE):
         
         # self.db = j.clients.redis.core_get()
 
+    def start(self):
         self.serve_forever()
 
 

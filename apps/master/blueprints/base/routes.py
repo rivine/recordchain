@@ -25,6 +25,15 @@ login_manager = j.servers.web.latest.loader.login_manager
 #     return redirect(url_for('base_blueprint.login'))
 
 # @login_required
+@blueprint.route('/githook', methods=['POST'])
+def route_github():
+    d=request.json
+    name=d["repository"]['full_name']
+    #will be something like 'threefoldfoundation/info_foundation'
+    account,repo=name.split("/",1)
+    print("GITHUB:%s:%s"%(account,repo))
+    return ("OK")
+
 @blueprint.route('/<template>')
 def route_template(template):
     if template=="favicon.ico":

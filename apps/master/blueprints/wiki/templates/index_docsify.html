@@ -8,8 +8,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, shrink-to-fit=no">
 	<meta name="description" content="A demonstration of docsify-themable: a delightfully simple theme system for docsify.js">
-  <link rel="stylesheet" href="{{ url_for('static', filename='vendors/docsify/vue.css')}}">
-  <link rel="stylesheet" href="{{url_for('static', filename='vendors/docsify/theme-simple.css')}}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='docsify/vue.css')}}">
+  <link rel="stylesheet" href="{{url_for('static', filename='docsify/theme-simple.css')}}">
   <style>
 
 		:root {
@@ -47,7 +47,7 @@
 
   <!-- <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.css"> -->
 
-  <script src="{{ url_for('static', filename='vendors/docsify/mermaid.min.js')}}"</script>
+  <script src="{{ url_for('static', filename='mermaid/mermaid.min.js')}}"</script>
   
 
   <script>
@@ -58,7 +58,7 @@
       coverpage: false,
       name: 'ThreeFold Foundation',
       disqus: '//tf-foundation.disqus.com/embed.js',
-      repo: 'https://github.com/threefoldfoundation/info_foundation',
+      repo: 'https://github.com/threefoldfoundation/wiki_{{name}}',
       loadSidebar: true,
       markdown: {
         renderer: {
@@ -80,15 +80,15 @@
 
   </script>
 
-<script src= "{{ url_for('static', filename='vendors/docsify/docsify.min.js')}}"></script>
-<script src= "{{ url_for('static', filename='vendors/docsify/search.min.js')}}"></script>
-<script src= "{{ url_for('static', filename='vendors/docsify/prism-bash.min.js')}}"></script>
-<script src= "{{ url_for('static', filename='vendors/docsify/prism-python.min.js')}}"></script>
-<script src= "{{ url_for('static', filename='vendors/docsify/echarts.min.js')}}"></script>
-<script src= "{{ url_for('static', filename='vendors/docsify/index.min.js')}}"></script>
-<script src= "{{ url_for('static', filename='vendors/docsify/docsify-plantuml.min.js')}}"></script>
-<script src= "{{ url_for('static', filename='vendors/docsify/disqus.min.js')}}"></script>
-<script src= "{{ url_for('static', filename='vendors/docsify/docsify-themeable')}}"></script>
+<script src= "{{ url_for('static', filename='docsify/docsify.min.js')}}"></script>
+<script src= "{{ url_for('static', filename='docsify/search.min.js')}}"></script>
+<script src= "{{ url_for('static', filename='docsify/prism-bash.min.js')}}"></script>
+<script src= "{{ url_for('static', filename='docsify/prism-python.min.js')}}"></script>
+<script src= "{{ url_for('static', filename='docsify/echarts.min.js')}}"></script>
+<script src= "{{ url_for('static', filename='docsify/index.min.js')}}"></script>
+<script src= "{{ url_for('static', filename='docsify/docsify-plantuml.min.js')}}"></script>
+<script src= "{{ url_for('static', filename='disqus/disqus.min.js')}}"></script>
+<script src= "{{ url_for('static', filename='docsify/docsify-themeable')}}"></script>
 
 </body>
 

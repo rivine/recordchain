@@ -36,6 +36,7 @@ class DNSServerFactory(JSBASE):
             res = j.sal.nettools.waitConnectionTest("localhost",port)
         else:
             s = self.get(port=port)
+            s.start()
 
     
     @property

@@ -9,6 +9,7 @@ from gevent.server import StreamServer
 from .handlers import WebsocketRequestHandler, RedisRequestHandler
 # from geventwebsocket.handler import WebSocketHandler
 from .JSAPIServer import JSAPIServer
+from .GedisChatBot import GedisChatBotFactory
 
 
 from .protocol import RedisCommandParser, RedisResponseWriter, WebsocketsCommandParser, WebsocketResponseWriter
@@ -54,6 +55,7 @@ class GedisServer(StreamServer, JSConfigBase):
         self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.instance, "server")
 
         self.jsapi_server = JSAPIServer()
+        self.chatbot = GedisChatBotFactory(ws=self)
         
         self.init()
 

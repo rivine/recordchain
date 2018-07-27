@@ -27,6 +27,10 @@ def wiki_route(subpath):
     subpath=subpath.strip("/")
     parts = subpath.split("/")
 
+    if len(parts)==1: #"readme" in parts[0].lower() or "index" in parts[0].lower()
+        #means we are in root of a wiki, need to load the html 
+        return render_template('index_docsify.html')
+
     if len(parts)<2:
         return render_template('error_notfound.html',url=subpath)
         
@@ -34,11 +38,6 @@ def wiki_route(subpath):
 
     parts = parts[1:]
 
-    if len(parts)==0: #"readme" in parts[0].lower() or "index" in parts[0].lower()
-        #means we are in root of a wiki, need to load the html 
-        return render_template('index_docsify.html')
-
-    
     try:
         #at this point we know the docsite
 

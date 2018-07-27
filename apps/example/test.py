@@ -9,7 +9,7 @@ app_dir =  j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/
 server = j.servers.gedis.configure(host = "localhost", port = "8000", ssl = False, \
     zdb_instance = "test",
     secret = "", app_dir = app_dir, instance='example')
-server.start()
+
 print("[-] server started")
 
 cl = server.client_get()

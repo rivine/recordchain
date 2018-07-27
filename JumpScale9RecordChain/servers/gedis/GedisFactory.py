@@ -140,17 +140,18 @@ class GedisFactory(JSConfigBase):
         self.delete("test")
 
         if zdb_start:
-            cl = j.clients.zdb.testdb_server_start_client_get(start=start)  #starts & resets a zdb in seq mode with name test       
+            cl = j.clients.zdb.testdb_server_start_client_get(start=zdb_start)  #starts & resets a zdb in seq mode with name test       
 
         dest =  j.clients.git.getContentPathFromURLorPath("https://github.com/rivine/recordchain/tree/development/apps/example")
         gedis = self.configure(instance="test",port=8888,host="localhost",app_dir=dest,ssl=False,\
             zdb_instance = "test",
-            websockets_port=9999,secret = "1234")
+            websockets_port=9999,secret = "1234",
+            interactive=False)
 
         #we need to run multiple servers, lets get a rack for gevent
         rack=j.servers.gevent_servers_racks.get()
 
-        rack.add(j.servers.gedis.geventserver_get("test"))    
+        rack.add(j.servers.gedis.geventserver_get("test"))
     
 
         from IPython import embed;embed(colors='Linux')

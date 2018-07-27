@@ -29,95 +29,28 @@ const client = (function(){
     
     var client = {}
     
-    
-    client.system = {
-    
-        "api_meta": async () => {
-        
-            return await execute("system.api_meta", "")
-        
-        },
-    
-        "core_schemas_get": async () => {
-        
-            return await execute("system.core_schemas_get", "")
-        
-        },
-    
-        "get_web_client": async () => {
-        
-            return await execute("system.get_web_client", "")
-        
-        },
-    
-        "ping": async () => {
-        
-            return await execute("system.ping", "")
-        
-        },
-    
-        "ping_bool": async () => {
-        
-            return await execute("system.ping_bool", "")
-        
-        },
-    
-        "schema_urls": async () => {
-        
-            return await execute("system.schema_urls", "")
-        
-        },
-    
-        "test": async (name='', nr=0) => {
-        
+    {% for command in commands %}
+    client.{{command.namespace.split('.')[1]}} = {
+    {% for  name, cmd in command.cmds.items() %}
+        "{{name}}": async ({{cmd.args_client.strip(",").replace("False", "false").replace("True", "true") if cmd.args_client.strip() != ",schema_out" else ""}}) => {
+        {% if cmd.schema_in %}
             var args = {}
-            
-            
-            args["name"] = name
-            
-            
-            
-            args["nr"] = nr
-            
-            
-            return await execute("system.test", JSON.stringify(args))
-        
+            {% for prop in cmd.schema_in.properties + cmd.schema_in.lists %}
+            {% if prop.js9type.NAME != 'list' %}
+            args["{{prop.name}}"] = {{prop.name}}
+            {% else %}
+            args["{{prop.name}}"] = []
+            {{prop.name}}.forEach(function(item){args["{{prop.name}}"].push(item)})
+            {% endif %}
+            {% endfor %}
+            return await execute("{{command.namespace.split('.')[1]}}.{{name}}", JSON.stringify(args))
+        {% else %}
+            return await execute("{{command.namespace.split('.')[1]}}.{{name}}", "")
+        {% endif %}
         },
-    
-        "test_nontyped": async (name,nr) => {
-        
-            return await execute("system.test_nontyped", "")
-        
-        },
-    
+    {% endfor %}
     }
-    
-    client.myapp = {
-    
-        "test_dns": async (id=0,type='', val='') => {
-        
-            var args = {}
-            
-            
-            args["type"] = type
-            
-            
-            
-            args["val"] = val
-            
-            
-            return await execute("myapp.test_dns", JSON.stringify(args))
-        
-        },
-    
-        "test_dns2": async (type,val) => {
-        
-            return await execute("myapp.test_dns2", "")
-        
-        },
-    
-    }
-    
+    {% endfor %}
 return client    
 })()
 export {

@@ -138,6 +138,8 @@ class GedisServer(StreamServer, JSConfigBase):
 
         self.code_generate_js_client()
 
+        self._servers_init()
+
         self._inited = True        
 
     def bcdb_init(self):
@@ -178,7 +180,7 @@ class GedisServer(StreamServer, JSConfigBase):
             if 'model_' in nsfull:
                 continue
             commands.append(cmds_)        
-        self.code_js_client = j.tools.jinja2.file_render("%s/templates/client.js"%(j.servers.gedis.path),commands=commands)
+        self.code_js_client = j.tools.jinja2.file_render("%s/templates/client.js"%(j.servers.gedis.path),commands=commands,write=False)
 
     # def _start(self):
 
@@ -217,27 +219,27 @@ class GedisServer(StreamServer, JSConfigBase):
         # self.logger.info("start Server on {0} - PORT: {1} - WEBSOCKETS PORT: {2}".format(self.host, self.port, self.websockets_port))
         # self.redis_server.serve_forever()
 
-    # def _servers_init(self):
-    #     if self.ssl:
-    #         self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
-    #         # Server always supports SSL
-    #         # client can use to talk to it in SSL or not
-    #         self.redis_server = StreamServer(
-    #             (self.host, self.port),
-    #             spawn=Pool(),
-    #             handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
-    #             keyfile=self.ssl_priv_key_path,
-    #             certfile=self.ssl_cert_path
-    #         )
-    #         #NO SSL ON WEBSOCKET SERVER? TODO:*1
-    #         self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
-    #     else:
-    #         self.redis_server = StreamServer(
-    #             (self.host, self.port),
-    #             spawn=Pool(),
-    #             handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
-    #         )
-    #         self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+    def _servers_init(self):
+        if self.ssl:
+            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
+            # Server always supports SSL
+            # client can use to talk to it in SSL or not
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle,
+                keyfile=self.ssl_priv_key_path,
+                certfile=self.ssl_cert_path
+            )
+            #NO SSL ON WEBSOCKET SERVER? TODO:*1
+            # self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
+        else:
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=RedisRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta).handle
+            )
+            # self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', self.websockets_port), self.websocketapp, handler_class=WebSocketHandler)
 
 
     

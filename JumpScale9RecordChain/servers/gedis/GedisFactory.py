@@ -81,10 +81,13 @@ class GedisFactory(JSConfigBase):
         self.logger.info("gedis app now in: '%s'\n    do:\n    cd %s;sh start.sh"%(dest,dest))   
 
 
-    def geventserver_get(self,instance=""):
+    def geventservers_get(self,instance=""):
+        """
+        return (redis_server,websocket_server)
+        """
         server = self.get(instance=instance)
         # res.append(server.websocket_server)
-        return server.redis_server
+        return (server.redis_server,server.websocket_server)
  
 
     def configure(

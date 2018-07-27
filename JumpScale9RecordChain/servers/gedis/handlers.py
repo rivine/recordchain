@@ -203,7 +203,7 @@ class WebsocketRequestHandler(Handler):
             self.logger.info('close connection from {}'.format(address))
 
     def encode_result(self, result):
-        return result.ddict_hr
+        return result
 
     def encode_error(self, error):
         return error.encode('utf-8')

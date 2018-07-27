@@ -1,27 +1,27 @@
 
 [[docsite]]
 name = "foundation"
-url = "https://github.com/threefoldfoundation/info_foundation"
+url = "https://github.com/threefoldfoundation/info_foundation/blob/development"
 publish = "/foundation"
 
 [[docsite]]
 name = "grid"
-url = "https://github.com/threefoldfoundation/info_grid"
+url = "https://github.com/threefoldfoundation/info_grid/blob/development"
 publish = "/grid"
 
 [[docsite]]
 name = "tokens"
-url = "https://github.com/threefoldfoundation/info_tokens"
+url = "https://github.com/threefoldfoundation/info_tokens/blob/development"
 publish = "/tokens"
 
 [[docsite]]
 name = "tech"
-url = "https://github.com/threefoldfoundation/info_tech"
+url = "https://github.com/threefoldfoundation/info_tech/blob/development"
 publish = "/tech"
 
 [[docsite]]
 name = "tools"
-url = "https://github.com/threefoldfoundation/info_tools"
+url = "https://github.com/threefoldfoundation/info_tools/blob/master"
 publish = "/tools"
 
 

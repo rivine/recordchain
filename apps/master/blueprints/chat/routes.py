@@ -12,12 +12,12 @@ def route_default():
 @blueprint.route('/session/<topic>')
 def route_chattopic(topic):
     #needs to return the session id
-    j.servers.gedis.latest.chatbot
-    return render_template("???")
+    session_id = j.servers.gedis.latest.chatbot.session_new(topic)
+    return render_template("chat_index.html", session_id=session_id)
 
 
 # @login_required
-@blueprint.route('/template/<template>')
+@blueprint.route('/<template>')
 def route_template(template):
     return render_template(template)
 

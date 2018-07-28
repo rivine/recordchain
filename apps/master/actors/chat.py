@@ -29,7 +29,7 @@ class chat(JSBASE):
         cat,msg = self.chatbot.session_work_get(sessionid)
         return {"cat":cat,"msg":msg}
 
-    def work_report(self, sessionid, result,schema_out):
+    def work_report(self, sessionid, result):
         """
         ```in
         sessionid = "" (S)
